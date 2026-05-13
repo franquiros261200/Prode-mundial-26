@@ -153,7 +153,7 @@ function Login({onLogin}){
           <div style={{marginBottom:18}}><label style={{color:"var(--txt3)",fontSize:10,letterSpacing:2,display:"block",marginBottom:5}}>CONTRASEÑA</label><input className="inp" type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="••••••"/></div>
           {err&&<div style={{color:"var(--red)",fontSize:12,textAlign:"center",marginBottom:10}}>{err}</div>}
           <button className="btn-gold" onClick={go} disabled={loading} style={{width:"100%",fontSize:16}}>{loading?"...":mode==="login"?"ENTRAR":"REGISTRARME"}</button>
-          {mode==="register"&&<p style={{color:"var(--txt3)",fontSize:10,textAlign:"center",marginTop:10}}>El admin te tiene que habilitar después de registrarte.</p>}
+          {mode==="register"&&<div style={{marginTop:14,background:"rgba(212,168,67,.08)",border:"1px solid rgba(212,168,67,.25)",borderRadius:8,padding:14}}><p style={{color:"var(--gold)",fontSize:13,fontWeight:700,textAlign:"center",marginBottom:8}}>💰 PARA PODER JUGAR</p><p style={{color:"var(--txt)",fontSize:12,textAlign:"center",lineHeight:1.6}}>Transferí <strong style={{color:"var(--gold)"}}>$25.000</strong> a este alias de Mercado Pago:</p><div style={{background:"rgba(0,0,0,.3)",borderRadius:6,padding:"8px 12px",margin:"8px 0",textAlign:"center"}}><span style={{color:"var(--white)",fontFamily:"Bebas Neue,sans-serif",fontSize:20,letterSpacing:2}}>fran.quiros.mp</span></div><p style={{color:"var(--txt)",fontSize:12,textAlign:"center",lineHeight:1.6}}>Después mandá el comprobante al <strong style={{color:"var(--white)"}}>2235638732</strong></p><p style={{color:"var(--txt3)",fontSize:10,textAlign:"center",marginTop:6}}>El organizador te habilita cuando confirme el pago.</p></div>}
         </div>
       </div>
     </div>
@@ -274,9 +274,16 @@ function Compare({users,results}){
 }
 
 function Rules(){
-  const sections=[{t:"Puntuación",items:["✅ 3 puntos — Resultado exacto","🟡 1 punto — Acertás el signo","❌ 0 puntos — No acertás nada"]},{t:"Bonus por Rachas de Exactos",items:["🔥 +1 punto extra por 3 exactos seguidos","🔥🔥 +3 puntos extra por 5 exactos seguidos","Solo cuentan los EXACTOS para las rachas"]},{t:"Desempate",items:["🏆 Más resultados exactos gana"]},{t:"Plazos",items:["📅 Predicciones editables hasta el 9/06","🔒 Después se bloquean y se habilita la tabla","👀 Después del 9/06 ves las predicciones de todos"]},{t:"Premios",items:["💰 Cada inscripción suma $25.000 al pozo","🥇 1° → 70%","🥈 2° → 20%","🥉 3° → 10%","Sin pagar jugás pero no aparecés en la tabla"]}];
-  return(<div style={{maxWidth:700,margin:"0 auto",padding:"28px 16px"}} className="fade-in"><h2 className="hdr" style={{fontSize:28,textAlign:"center",marginBottom:22}}>📋 REGLAS</h2>{sections.map(s=>(<div key={s.t} className="card" style={{marginBottom:10}}><h3 className="hdr" style={{fontSize:16,marginBottom:10}}>{s.t}</h3>{s.items.map((item,i)=><p key={i} style={{color:"var(--txt)",fontSize:12,margin:"5px 0",lineHeight:1.6}}>{item}</p>)}</div>))}</div>);
-}
+  const sections=[
+    {t:"Puntuación",items:["✅ 3 puntos — Resultado exacto (decís 2-1 y termina 2-1)","🟡 1 punto — Acertás el signo (decís 1-0 y termina 3-2, ganó el mismo)","❌ 0 puntos — No acertás nada"]},
+    {t:"Bonus por Rachas de Exactos",items:["🔥 +1 punto extra por 3 resultados exactos seguidos","🔥🔥 +3 puntos extra por 5 resultados exactos seguidos","Solo cuentan los resultados EXACTOS (3 pts) para las rachas"]},
+    {t:"Desempate",items:["🏆 Si dos personas empatan en puntos, gana quien tenga más resultados exactos"]},
+    {t:"Plazos",items:["📅 Las predicciones se pueden cargar y editar hasta el 9 de junio","🔒 Después del 9/06 se bloquean y se habilita la tabla general","👀 Después del 9/06 podés ver las predicciones de todos en la sección Comparar"]},
+    {t:"Premios",items:["💰 La inscripción es de $25.000 por persona","🥇 1er puesto → 70% del pozo total","🥈 2do puesto → 20% del pozo total","🥉 3er puesto → 10% del pozo total","Si no pagás podés jugar y ver tus puntos, pero no aparecés en la tabla ni ganás premios"]},
+  ];
+  return(
+    <div style={{maxWidth:700,margin:"0 auto",padding:"28px 16px"}} className="fade-in">
+      <h2 className="hdr" style={{fontSize:28
 
 function Admin({users,setUsers,results,setResults}){
   const[tab,setTab]=useState("users");const[saving,setSaving]=useState(false);const[localR,setLocalR]=useState({...results});const[filter,setFilter]=useState("all");
