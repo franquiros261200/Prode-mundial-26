@@ -663,7 +663,15 @@ function Home({users,results}){
 }
 
 function IAPredsEditor({aiId,preds:initP}){
-  const[preds,setPreds]=useState(initP);const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
+  // Pre-populate from hardcoded AI_PREDS if stored preds are empty
+  const defaultP=useMemo(()=>{
+    const hard=AI_PREDS[aiId]||{};
+    const stored=initP||{};
+    const hasSome=Object.values(stored).some(p=>p&&p.h!=="");
+    if(hasSome)return stored;
+    return hard;
+  },[aiId,initP]);
+  const[preds,setPreds]=useState(defaultP);const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
   const chg=(n,side,val)=>{const v=val.replace(/[^0-9]/g,"").slice(0,2);setPreds(p=>({...p,[n]:{...(p[n]||{h:"",a:""}),[side]:v}}));setSaved(false);};
   const save=async()=>{setSaving(true);await dbSet(`preds-${aiId}`,preds);setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2000);};
   const groups=[...new Set(M.map(m=>m.g))].sort();const filtered=filter==="all"?M:M.filter(m=>m.g===filter);
