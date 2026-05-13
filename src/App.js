@@ -663,15 +663,26 @@ function Home({users,results}){
 }
 
 function IAPredsEditor({aiId,preds:initP}){
-  // Pre-populate from hardcoded AI_PREDS if stored preds are empty
+  // Always start with hardcoded preds merged with any saved overrides
   const defaultP=useMemo(()=>{
     const hard=AI_PREDS[aiId]||{};
     const stored=initP||{};
-    const hasSome=Object.values(stored).some(p=>p&&p.h!=="");
-    if(hasSome)return stored;
-    return hard;
+    const merged={};
+    for(let n=1;n<=72;n++){
+      const s=stored[n];
+      const h=hard[n]||{h:"",a:""};
+      merged[n]=(s&&s.h!==""&&s.a!=="")?s:h;
+    }
+    return merged;
   },[aiId,initP]);
-  const[preds,setPreds]=useState(defaultP);const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
+  const[preds,setPreds]=useState(defaultP);
+  // Auto-save to Firebase on first load if not saved yet
+  useEffect(()=>{
+    const hasSaved=Object.values(initP||{}).some(p=>p&&p.h!=="");
+    if(!hasSaved&&Object.keys(AI_PREDS[aiId]||{}).length>0){
+      dbSet(`preds-${aiId}`,defaultP);
+    }
+  },[aiId]);const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
   const chg=(n,side,val)=>{const v=val.replace(/[^0-9]/g,"").slice(0,2);setPreds(p=>({...p,[n]:{...(p[n]||{h:"",a:""}),[side]:v}}));setSaved(false);};
   const save=async()=>{setSaving(true);await dbSet(`preds-${aiId}`,preds);setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2000);};
   const groups=[...new Set(M.map(m=>m.g))].sort();const filtered=filter==="all"?M:M.filter(m=>m.g===filter);
