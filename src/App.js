@@ -86,7 +86,7 @@ const css=`
 
 function Header({user,isAdmin,onLogout,view,setView}){
   const locked=new Date()>=LOCK;
-  const items=[{id:"home",l:"Inicio"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"compare",l:"Comparar"},{id:"rules",l:"Reglas"}];
+  const items=[{id:"home",l:"Inicio"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"compare",l:"Comparar"},{id:"rules",l:"Reglas"},{id:"game",l:"🎮 Jugar"}];
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
       <div style={{maxWidth:1100,margin:"0 auto",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
@@ -319,6 +319,20 @@ function Admin({users,setUsers,results,setResults}){
   );
 }
 
+
+function FootballGame(){
+  return(
+    <div style={{width:"100%",height:"calc(100vh - 60px)",position:"relative",overflow:"hidden"}}>
+      <iframe
+        src="/football.html"
+        style={{width:"100%",height:"100%",border:"none",display:"block"}}
+        title="Football Heads Mundial 2026"
+        allow="autoplay"
+      />
+    </div>
+  );
+}
+
 export default function App(){
   const[user,setUser]=useState(null);const[isAdmin,setIsAdmin]=useState(false);const[users,setUsers]=useState({});const[results,setResults]=useState({});const[view,setView]=useState("home");const[loading,setLoading]=useState(true);
   useEffect(()=>{(async()=>{const u=await dbGet("users");if(u)setUsers(u);const r=await dbGet("results");if(r)setResults(r);
@@ -333,7 +347,7 @@ export default function App(){
     <div style={{minHeight:"100vh",background:"var(--bg)"}}><style>{css}</style>
       <Header user={isAdmin?"ADMIN":users[user]?.name||user} isAdmin={isAdmin} onLogout={logout} view={view} setView={setView}/>
       {!approved&&!isAdmin?(<div style={{textAlign:"center",padding:50}} className="fade-in"><div style={{fontSize:48,marginBottom:12}}>⏳</div><h2 className="hdr" style={{fontSize:24}}>ESPERANDO APROBACIÓN</h2><p style={{color:"var(--txt2)",fontSize:13,marginTop:6}}>El organizador tiene que habilitarte.</p></div>):(
-        <>{view==="home"&&<Home users={users} results={results}/>}{view==="preds"&&!isAdmin&&<Preds currentUser={user} results={results}/>}{view==="preds"&&isAdmin&&<div style={{textAlign:"center",padding:50,color:"var(--txt2)"}}>Como admin, cargá resultados desde Admin.</div>}{view==="table"&&<Table users={users} results={results} currentUser={user}/>}{view==="compare"&&<Compare users={users} results={results}/>}{view==="rules"&&<Rules/>}{view==="admin"&&isAdmin&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults}/>}</>
+        <>{view==="home"&&<Home users={users} results={results}/>}{view==="preds"&&!isAdmin&&<Preds currentUser={user} results={results}/>}{view==="preds"&&isAdmin&&<div style={{textAlign:"center",padding:50,color:"var(--txt2)"}}>Como admin, cargá resultados desde Admin.</div>}{view==="table"&&<Table users={users} results={results} currentUser={user}/>}{view==="compare"&&<Compare users={users} results={results}/>}{view==="rules"&&<Rules/>}{view==="admin"&&isAdmin&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults}/>}{view==="game"&&<FootballGame/>}</>
       )}
     </div>
   );
