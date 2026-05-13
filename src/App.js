@@ -281,9 +281,8 @@ function Rules(){
     {t:"Plazos",items:["📅 Las predicciones se pueden cargar y editar hasta el 9 de junio","🔒 Después del 9/06 se bloquean y se habilita la tabla general","👀 Después del 9/06 podés ver las predicciones de todos en la sección Comparar"]},
     {t:"Premios",items:["💰 La inscripción es de $25.000 por persona","🥇 1er puesto → 70% del pozo total","🥈 2do puesto → 20% del pozo total","🥉 3er puesto → 10% del pozo total","Si no pagás podés jugar y ver tus puntos, pero no aparecés en la tabla ni ganás premios"]},
   ];
-  return(
-    <div style={{maxWidth:700,margin:"0 auto",padding:"28px 16px"}} className="fade-in">
-      <h2 className="hdr" style={{fontSize:28
+  return(<div style={{maxWidth:700,margin:"0 auto",padding:"28px 16px"}} className="fade-in"><h2 className="hdr" style={{fontSize:28,textAlign:"center",marginBottom:22}}>📋 REGLAS</h2>{sections.map(s=>(<div key={s.t} className="card" style={{marginBottom:10}}><h3 className="hdr" style={{fontSize:16,marginBottom:10}}>{s.t}</h3>{s.items.map((item,i)=><p key={i} style={{color:"var(--txt)",fontSize:12,margin:"5px 0",lineHeight:1.6}}>{item}</p>)}</div>))}</div>);
+}
 
 function Admin({users,setUsers,results,setResults}){
   const[tab,setTab]=useState("users");const[saving,setSaving]=useState(false);const[localR,setLocalR]=useState({...results});const[filter,setFilter]=useState("all");
