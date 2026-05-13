@@ -47,6 +47,8 @@ const FEE=25000;
 const fmt$=n=>"$"+n.toLocaleString("es-AR");
 const AI_IDS=["claude_ai","gemini_ai","chatgpt_ai"];
 const AI_INFO={claude_ai:{name:"Claude",flag:"🤖",color:"#d97706"},gemini_ai:{name:"Gemini",flag:"🔮",color:"#7c3aed"},chatgpt_ai:{name:"ChatGPT",flag:"🧠",color:"#16a34a"}};
+const AI_PREDS={chatgpt_ai:{1:{h:"2",a:"0"},2:{h:"1",a:"1"},3:{h:"2",a:"1"},4:{h:"2",a:"0"},5:{h:"3",a:"1"},6:{h:"1",a:"2"},7:{h:"0",a:"2"},8:{h:"0",a:"1"},9:{h:"5",a:"0"},10:{h:"1",a:"1"},11:{h:"2",a:"1"},12:{h:"1",a:"0"},13:{h:"4",a:"0"},14:{h:"0",a:"2"},15:{h:"2",a:"0"},16:{h:"1",a:"0"},17:{h:"2",a:"1"},18:{h:"0",a:"2"},19:{h:"3",a:"0"},20:{h:"2",a:"0"},21:{h:"2",a:"1"},22:{h:"2",a:"1"},23:{h:"4",a:"0"},24:{h:"1",a:"2"},25:{h:"2",a:"0"},26:{h:"2",a:"1"},27:{h:"3",a:"1"},28:{h:"2",a:"1"},29:{h:"6",a:"0"},30:{h:"1",a:"1"},31:{h:"2",a:"1"},32:{h:"2",a:"1"},33:{h:"2",a:"1"},34:{h:"3",a:"0"},35:{h:"1",a:"0"},36:{h:"1",a:"2"},37:{h:"3",a:"0"},38:{h:"2",a:"0"},39:{h:"2",a:"1"},40:{h:"1",a:"1"},41:{h:"4",a:"0"},42:{h:"1",a:"1"},43:{h:"2",a:"0"},44:{h:"0",a:"1"},45:{h:"3",a:"1"},46:{h:"0",a:"2"},47:{h:"3",a:"1"},48:{h:"2",a:"0"},49:{h:"0",a:"3"},50:{h:"2",a:"0"},51:{h:"1",a:"1"},52:{h:"2",a:"0"},53:{h:"1",a:"1"},54:{h:"1",a:"1"},55:{h:"1",a:"3"},56:{h:"0",a:"2"},57:{h:"0",a:"2"},58:{h:"1",a:"1"},59:{h:"1",a:"2"},60:{h:"2",a:"1"},61:{h:"1",a:"2"},62:{h:"2",a:"0"},63:{h:"0",a:"4"},64:{h:"1",a:"1"},65:{h:"1",a:"2"},66:{h:"1",a:"1"},67:{h:"0",a:"4"},68:{h:"2",a:"1"},69:{h:"0",a:"5"},70:{h:"1",a:"2"},71:{h:"1",a:"2"},72:{h:"0",a:"1"}},gemini_ai:{1:{h:"2",a:"1"},2:{h:"1",a:"1"},3:{h:"2",a:"0"},4:{h:"3",a:"1"},5:{h:"2",a:"0"},6:{h:"1",a:"2"},7:{h:"0",a:"3"},8:{h:"1",a:"2"},9:{h:"4",a:"0"},10:{h:"1",a:"1"},11:{h:"2",a:"1"},12:{h:"2",a:"0"},13:{h:"3",a:"0"},14:{h:"0",a:"2"},15:{h:"2",a:"1"},16:{h:"1",a:"0"},17:{h:"3",a:"1"},18:{h:"0",a:"2"},19:{h:"3",a:"0"},20:{h:"2",a:"0"},21:{h:"1",a:"1"},22:{h:"2",a:"1"},23:{h:"4",a:"1"},24:{h:"0",a:"2"},25:{h:"2",a:"1"},26:{h:"2",a:"0"},27:{h:"3",a:"1"},28:{h:"1",a:"2"},29:{h:"5",a:"0"},30:{h:"1",a:"1"},31:{h:"2",a:"1"},32:{h:"2",a:"0"},33:{h:"2",a:"1"},34:{h:"3",a:"0"},35:{h:"2",a:"2"},36:{h:"0",a:"1"},37:{h:"2",a:"0"},38:{h:"4",a:"0"},39:{h:"3",a:"0"},40:{h:"0",a:"2"},41:{h:"4",a:"0"},42:{h:"1",a:"1"},43:{h:"2",a:"0"},44:{h:"1",a:"2"},45:{h:"3",a:"1"},46:{h:"0",a:"3"},47:{h:"2",a:"0"},48:{h:"3",a:"1"},49:{h:"0",a:"2"},50:{h:"4",a:"0"},51:{h:"1",a:"1"},52:{h:"2",a:"1"},53:{h:"1",a:"2"},54:{h:"0",a:"2"},55:{h:"1",a:"2"},56:{h:"0",a:"2"},57:{h:"0",a:"3"},58:{h:"1",a:"2"},59:{h:"1",a:"2"},60:{h:"1",a:"1"},61:{h:"0",a:"2"},62:{h:"3",a:"0"},63:{h:"0",a:"4"},64:{h:"1",a:"0"},65:{h:"1",a:"1"},66:{h:"1",a:"2"},67:{h:"0",a:"4"},68:{h:"2",a:"1"},69:{h:"0",a:"5"},70:{h:"1",a:"1"},71:{h:"1",a:"2"},72:{h:"1",a:"1"}},claude_ai:{}};
+
 
 function calcPts(p,r){
   if(p.h===""||p.a===""||r.h===""||r.a==="")return null;
@@ -423,28 +425,203 @@ function Compare({users,results,allPreds}){
   );
 }
 
-function IAView({results,allPreds}){
+function IAView({results,allPreds,users,currentUser}){
   const locked=new Date()>=LOCK;
+  const[tab,setTab]=useState("tabla");
+  const[selAI,setSelAI]=useState("chatgpt_ai");
+  const[selUser,setSelUser]=useState(currentUser||"");
+
+  // Merge stored preds with hardcoded preds for IAs
+  const getAIPreds=(id)=>{
+    const stored=allPreds[id]||{};
+    const hard=AI_PREDS[id]||{};
+    const merged={};
+    for(let n=1;n<=72;n++){
+      merged[n]=stored[n]&&stored[n].h!==""?stored[n]:hard[n]||{h:"",a:""};
+    }
+    return merged;
+  };
+
+  // Similarity: how many matches a user predicted the same as an AI
+  function similarity(userPreds,aiId){
+    const aiP=getAIPreds(aiId);
+    let exactMatch=0,signMatch=0,total=0;
+    for(let n=1;n<=72;n++){
+      const up=userPreds[n]||{h:"",a:""};
+      const ap=aiP[n]||{h:"",a:""};
+      if(up.h===""||up.a===""||ap.h===""||ap.a==="")continue;
+      total++;
+      if(up.h===ap.h&&up.a===ap.a){exactMatch++;signMatch++;}
+      else{
+        const uSign=+up.h>+up.a?1:+up.h<+up.a?-1:0;
+        const aSign=+ap.h>+ap.a?1:+ap.h<+ap.a?-1:0;
+        if(uSign===aSign)signMatch++;
+      }
+    }
+    return{exactMatch,signMatch,total};
+  }
+
+  const approvedUsers=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
+
+  // Top 5 most similar users per AI
+  const top5=(aiId)=>approvedUsers
+    .map(([id,u])=>{const s=similarity(allPreds[id]||{},aiId);return{id,name:u.name,...s};})
+    .sort((a,b)=>b.exactMatch-a.exactMatch||b.signMatch-a.signMatch)
+    .slice(0,5);
+
+  // Match by match comparison: user vs AI
+  const matchComparison=(userId,aiId)=>{
+    const up=allPreds[userId]||{};
+    const ap=getAIPreds(aiId);
+    return M.map(m=>{
+      const u=up[m.n]||{h:"",a:""};
+      const a=ap[m.n]||{h:"",a:""};
+      const r=results[m.n]||{h:"",a:""};
+      const hasU=u.h!==""&&u.a!=="";
+      const hasA=a.h!==""&&a.a!=="";
+      const agree=hasU&&hasA&&u.h===a.h&&u.a===a.a?"exact":
+        hasU&&hasA&&(+u.h>+u.a&&+a.h>+a.a||+u.h<+u.a&&+a.h<+a.a||+u.h===+u.a&&+a.h===+a.a)?"sign":"diff";
+      return{...m,u,a,r,agree,hasU,hasA};
+    });
+  };
+
   return(
-    <div style={{maxWidth:900,margin:"0 auto",padding:"24px 16px"}} className="fi">
+    <div style={{maxWidth:920,margin:"0 auto",padding:"24px 16px"}} className="fi">
       <h2 className="hdr" style={{fontSize:24,textAlign:"center",marginBottom:4}}>🤖 IAs vs MUNDIAL</h2>
-      <p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",marginBottom:20}}>Tabla separada — no compiten por premios</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginBottom:22}}>
-        {AI_IDS.map(id=>{const inf=AI_INFO[id];const s=calcTotal(allPreds[id]||{},results);return(
+      <p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",marginBottom:16}}>Tabla separada — no compiten por premios</p>
+
+      {/* AI Score Cards */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:10,marginBottom:18}}>
+        {AI_IDS.map(id=>{const inf=AI_INFO[id];const s=calcTotal(getAIPreds(id),results);return(
           <div key={id} className="card" style={{textAlign:"center",borderColor:inf.color+"44"}}>
-            <div style={{fontSize:30,marginBottom:4}}>{inf.flag}</div>
-            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:inf.color}}>{inf.name}</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:4,marginTop:8}}>
-              {[{v:s.tot,l:"pts"},{v:s.ex,l:"exactos"},{v:s.bo,l:"bonus"}].map(x=>(<div key={x.l} style={{background:"rgba(0,0,0,.3)",borderRadius:5,padding:"5px 3px"}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"var(--wht)"}}>{x.v}</div><div style={{color:"var(--txt3)",fontSize:8}}>{x.l}</div></div>))}
+            <div style={{fontSize:28,marginBottom:3}}>{inf.flag}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,color:inf.color}}>{inf.name}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:3,marginTop:8}}>
+              {[{v:s.tot,l:"pts"},{v:s.ex,l:"exactos"},{v:s.bo,l:"bonus"}].map(x=>(<div key={x.l} style={{background:"rgba(0,0,0,.3)",borderRadius:5,padding:"5px 3px"}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,color:"var(--wht)"}}>{x.v}</div><div style={{color:"var(--txt3)",fontSize:8}}>{x.l}</div></div>))}
             </div>
           </div>
         );})}
       </div>
-      {!locked&&<p style={{textAlign:"center",color:"var(--txt3)",fontSize:12}}>Las predicciones de las IAs se muestran después del 9/06.</p>}
-      {locked&&<div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}><thead><tr style={{background:"var(--bg2)"}}><th style={{padding:"7px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"left"}}>Partido</th><th style={{padding:"7px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>Real</th>{AI_IDS.map(id=><th key={id} style={{padding:"7px 5px",color:AI_INFO[id].color,fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>{AI_INFO[id].flag} {AI_INFO[id].name}</th>)}</tr></thead>
-        <tbody>{M.map(m=>{const r=results[m.n]||{h:"",a:""};const hr=r.h!==""&&r.a!=="";return(<tr key={m.n} style={{borderBottom:"1px solid var(--bd)22"}}><td style={{padding:"4px 5px",fontSize:10,whiteSpace:"nowrap"}}>{FL[m.h]||""}{m.h} vs {m.a}{FL[m.a]||""}</td><td style={{padding:"4px 5px",textAlign:"center",color:hr?"var(--wht)":"var(--txt3)",fontWeight:700}}>{hr?`${r.h}-${r.a}`:"—"}</td>{AI_IDS.map(id=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};const pt=calcPts(p,r);const hp=p.h!==""&&p.a!=="";const bg=pt===3?"rgba(34,197,94,.15)":pt===1?"rgba(245,158,11,.1)":pt===0?"rgba(220,53,69,.08)":"transparent";return<td key={id} style={{padding:"4px 5px",textAlign:"center",background:bg,color:hp?"var(--txt)":"var(--txt3)"}}>{hp?`${p.h}-${p.a}`:"—"}</td>;})}
-        </tr>);})}
-        </tbody></table></div>}
+
+      {!locked&&<div className="card" style={{textAlign:"center"}}><p style={{color:"var(--txt3)",fontSize:13}}>🔒 Las comparaciones y predicciones se muestran después del 9/06.</p></div>}
+
+      {locked&&<>
+        {/* Tabs */}
+        <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+          {[{id:"tabla",l:"📊 Predicciones"},{id:"top5",l:"🏅 Quién pensó como cada IA"},{id:"vsIA",l:"🔍 Vos vs IA"}].map(t=>(
+            <button key={t.id} className={`nb${tab===t.id?" act":""}`} onClick={()=>setTab(t.id)}>{t.l}</button>
+          ))}
+        </div>
+
+        {/* Tab: Predictions table */}
+        {tab==="tabla"&&<div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+            <thead><tr style={{background:"var(--bg2)"}}>
+              <th style={{padding:"7px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"left"}}>Partido</th>
+              <th style={{padding:"7px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>Real</th>
+              {AI_IDS.map(id=><th key={id} style={{padding:"7px 5px",color:AI_INFO[id].color,fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>{AI_INFO[id].flag} {AI_INFO[id].name}</th>)}
+            </tr></thead>
+            <tbody>{M.map(m=>{
+              const r=results[m.n]||{h:"",a:""};const hr=r.h!==""&&r.a!=="";
+              return(<tr key={m.n} style={{borderBottom:"1px solid var(--bd)22"}}>
+                <td style={{padding:"4px 5px",fontSize:10,whiteSpace:"nowrap"}}>{FL[m.h]||""}{m.h} vs {m.a}{FL[m.a]||""}</td>
+                <td style={{padding:"4px 5px",textAlign:"center",color:hr?"var(--wht)":"var(--txt3)",fontWeight:700}}>{hr?`${r.h}-${r.a}`:"—"}</td>
+                {AI_IDS.map(id=>{const p=getAIPreds(id)[m.n]||{h:"",a:""};const pt=calcPts(p,r);const hp=p.h!==""&&p.a!=="";const bg=pt===3?"rgba(34,197,94,.15)":pt===1?"rgba(245,158,11,.1)":pt===0?"rgba(220,53,69,.08)":"transparent";return<td key={id} style={{padding:"4px 5px",textAlign:"center",background:bg,color:hp?"var(--txt)":"var(--txt3)"}}>{hp?`${p.h}-${p.a}`:"—"}</td>;})}
+              </tr>);
+            })}</tbody>
+          </table>
+        </div>}
+
+        {/* Tab: Top 5 most similar users per AI */}
+        {tab==="top5"&&<div>
+          <p style={{color:"var(--txt3)",fontSize:11,marginBottom:14}}>Los participantes que pusieron predicciones más parecidas a cada IA.</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:12}}>
+            {AI_IDS.map(aiId=>{
+              const inf=AI_INFO[aiId];
+              const top=top5(aiId);
+              return(
+                <div key={aiId} className="card" style={{borderColor:inf.color+"44"}}>
+                  <h3 style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,color:inf.color,marginBottom:10}}>{inf.flag} Más parecidos a {inf.name}</h3>
+                  {top.length===0?<p style={{color:"var(--txt3)",fontSize:12}}>Sin datos</p>:
+                    top.map((u,i)=>(
+                      <div key={u.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:i<top.length-1?"1px solid var(--bd)22":"none"}}>
+                        <span style={{fontFamily:"'Bebas Neue',sans-serif",color:inf.color,fontSize:16,width:20}}>{i+1}</span>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:12,color:"var(--wht)",fontWeight:600}}>{u.name}</div>
+                          <div style={{fontSize:10,color:"var(--txt3)"}}>de {u.total} partidos comparables</div>
+                        </div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontSize:11,color:"var(--grn)"}}>{u.exactMatch} exactos iguales</div>
+                          <div style={{fontSize:10,color:"var(--org)"}}>{u.signMatch} signos iguales</div>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              );
+            })}
+          </div>
+        </div>}
+
+        {/* Tab: User vs IA match by match */}
+        {tab==="vsIA"&&<div>
+          <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+            <div>
+              <label style={{color:"var(--txt3)",fontSize:10,display:"block",marginBottom:4}}>PARTICIPANTE</label>
+              <select value={selUser} onChange={e=>setSelUser(e.target.value)} style={{padding:"6px 12px",background:"var(--bg)",border:"1px solid var(--bd)",borderRadius:7,color:"var(--wht)",fontSize:12,outline:"none"}}>
+                <option value="">— Elegí uno —</option>
+                {approvedUsers.map(([id,u])=><option key={id} value={id}>{u.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{color:"var(--txt3)",fontSize:10,display:"block",marginBottom:4}}>IA</label>
+              <select value={selAI} onChange={e=>setSelAI(e.target.value)} style={{padding:"6px 12px",background:"var(--bg)",border:"1px solid var(--bd)",borderRadius:7,color:"var(--wht)",fontSize:12,outline:"none"}}>
+                {AI_IDS.map(id=><option key={id} value={id}>{AI_INFO[id].flag} {AI_INFO[id].name}</option>)}
+              </select>
+            </div>
+          </div>
+          {selUser&&(()=>{
+            const cmp=matchComparison(selUser,selAI);
+            const exactAg=cmp.filter(m=>m.agree==="exact").length;
+            const signAg=cmp.filter(m=>m.agree==="sign"||m.agree==="exact").length;
+            const total=cmp.filter(m=>m.hasU&&m.hasA).length;
+            const inf=AI_INFO[selAI];
+            const uName=users[selUser]?.name||selUser;
+            return(<div>
+              <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+                {[{v:total,l:"comparables"},{v:exactAg,l:"exactos iguales",c:"var(--grn)"},{v:signAg,l:"signos iguales",c:"var(--org)"},{v:total-signAg,l:"distintos",c:"var(--red)"}].map(x=>(
+                  <div key={x.l} className="card" style={{textAlign:"center",padding:"12px 16px",flex:1,minWidth:100}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:x.c||"var(--wht)"}}>{x.v}</div>
+                    <div style={{color:"var(--txt3)",fontSize:9}}>{x.l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                  <thead><tr style={{background:"var(--bg2)"}}>
+                    <th style={{padding:"6px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"left"}}>Partido</th>
+                    <th style={{padding:"6px 5px",color:"var(--gold)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>{uName}</th>
+                    <th style={{padding:"6px 5px",color:inf.color,fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>{inf.flag} {inf.name}</th>
+                    <th style={{padding:"6px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>Real</th>
+                    <th style={{padding:"6px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>Acuerdo</th>
+                  </tr></thead>
+                  <tbody>{cmp.map(m=>{
+                    const rowBg=m.agree==="exact"?"rgba(34,197,94,.08)":m.agree==="sign"?"rgba(245,158,11,.06)":"transparent";
+                    return(<tr key={m.n} style={{borderBottom:"1px solid var(--bd)11",background:rowBg}}>
+                      <td style={{padding:"4px 5px",fontSize:10,whiteSpace:"nowrap"}}>{FL[m.h]||""}{m.h} vs {m.a}{FL[m.a]||""}</td>
+                      <td style={{padding:"4px 5px",textAlign:"center",color:m.hasU?"var(--wht)":"var(--txt3)"}}>{m.hasU?`${m.u.h}-${m.u.a}`:"—"}</td>
+                      <td style={{padding:"4px 5px",textAlign:"center",color:m.hasA?inf.color:"var(--txt3)"}}>{m.hasA?`${m.a.h}-${m.a.a}`:"—"}</td>
+                      <td style={{padding:"4px 5px",textAlign:"center",color:m.r.h!==""?"var(--wht)":"var(--txt3)",fontWeight:700}}>{m.r.h!==""?`${m.r.h}-${m.r.a}`:"—"}</td>
+                      <td style={{padding:"4px 5px",textAlign:"center"}}>{m.agree==="exact"?<span className="bex">= Exacto</span>:m.agree==="sign"?<span className="bsi">≈ Signo</span>:m.hasU&&m.hasA?<span className="bms">✗</span>:"—"}</td>
+                    </tr>);
+                  })}</tbody>
+                </table>
+              </div>
+            </div>);
+          })()}
+          {!selUser&&<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>Elegí un participante para comparar.</p>}
+        </div>}
+      </>}
     </div>
   );
 }
@@ -585,7 +762,7 @@ export default function App(){
           {view==="preds"&&isAdmin&&adminMode&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
           {view==="table"&&<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>}
           {view==="compare"&&<Compare users={users} results={results} allPreds={allPreds}/>}
-          {view==="ia"&&<IAView results={results} allPreds={allPreds}/>}
+          {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="rules"&&<Rules/>}
           {view==="admin"&&isAdmin&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
           {view==="game"&&<FootballGame/>}
