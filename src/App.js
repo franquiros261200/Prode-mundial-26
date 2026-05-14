@@ -59,10 +59,31 @@ function calcPts(p,r){
   return 0;
 }
 function calcStreak(pts){
+  // Bonus: EXACTOS SEGUIDOS only. Sign OR error breaks the bonus streak.
+  // +1 at 3 exactos, +3 at 5 exactos, cycle resets at 5.
+  // 10 exactos = 2 cycles of 5 = +8
+  // Boost: active when 2+ exactos in a row, stays while NO ERROR (sign keeps boost), error kills boost.
   let bonus=0,s=0,ms3=0,ms5=0,ls=0,cur=0;
-  for(const p of pts){if(p===3){s++;cur++;if(s===3){bonus+=1;ms3++;}if(s===5){bonus+=3;ms5++;}}else{if(cur>ls)ls=cur;s=0;cur=0;}}
+  let boostActive=false,boostLen=0;
+  let sInCycle=0;
+  for(const p of pts){
+    if(p===3){
+      s++;cur++;sInCycle++;
+      if(sInCycle===3){bonus+=1;ms3++;}
+      if(sInCycle===5){bonus+=3;ms5++;sInCycle=0;}
+      if(s>=2){if(!boostActive)boostActive=true;boostLen++;}
+    }else if(p===1){
+      // Sign: BREAKS bonus streak, but boost stays active
+      if(cur>ls)ls=cur;s=0;cur=0;sInCycle=0;
+      // boost continues (not an error)
+    }else{
+      // Error: breaks everything including boost
+      if(cur>ls)ls=cur;s=0;cur=0;sInCycle=0;
+      boostActive=false;boostLen=0;
+    }
+  }
   if(cur>ls)ls=cur;
-  return{bonus,ms3,ms5,ls};
+  return{bonus,ms3,ms5,ls,boostActive,boostLen};
 }
 function calcTotal(preds,res){
   const p=M.map(m=>calcPts(preds[m.n]||{h:"",a:""},res[m.n]||{h:"",a:""}));
