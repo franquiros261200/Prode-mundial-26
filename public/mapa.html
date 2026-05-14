@@ -2124,10 +2124,10 @@ function useWorldAtlas() {
     let dead = false;
     fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(r => r.json()).then(j => {
       if (dead) return;
-      const features = topojson.feature(j, j.objects.countries).features;
+      const topojson = window.topojson; const features = topojson.feature(j, j.objects.countries).features;
       setData({
         features,
-        mesh: topojson.mesh(j, j.objects.countries, (a, b) => a !== b)
+        mesh: window.topojson.mesh(j, j.objects.countries, (a, b) => a !== b)
       });
     });
     return () => {
@@ -2154,7 +2154,7 @@ function WorldMap({
   const width = 1000,
     height = 520;
   const projection = useMemo(() => {
-    if (!d3) return null;
+    const d3 = window.d3; if (!d3) return null;
     return d3.geoNaturalEarth1().scale(195).translate([width / 2, height / 2 + 10]);
   }, []);
   const pathGen = useMemo(() => projection ? d3.geoPath(projection) : null, [projection]);
@@ -2383,7 +2383,7 @@ function HostMap({
   const width = 1000,
     height = 520;
   const fullProj = useMemo(() => {
-    if (!d3) return null;
+    const d3 = window.d3; if (!d3) return null;
     // Manual Mercator centered on continental US, sized to fit Vancouver→Boston, MEX→Edmonton.
     return d3.geoMercator().center([-97, 38]).scale(640).translate([width / 2, height / 2]);
   }, []);
