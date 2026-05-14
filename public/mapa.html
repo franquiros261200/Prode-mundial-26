@@ -90,11 +90,14 @@ svg text{user-select:none;}
       const p = await dbGet(`preds-${id}`);
       if (p) allPreds[id] = p;
     }));
+    const avance = await dbGet("avance");
+
     window.__PRODE_DATA = {
       users: users || {},
       results: results || {},
       allPreds,
       champions,
+      avance: avance || {},
       currentUser: JSON.parse(localStorage.getItem("prode-session") || "null")?.user || ""
     };
     window.__DATA_LOADED = true;
@@ -3845,7 +3848,8 @@ function App() {
     users: approvedUsers,
     results: data.results,
     currentUser: data.currentUser,
-    champions: data.champions
+    champions: data.champions,
+    avance: data.avance || {}
   });
 }
 const root = ReactDOM.createRoot(document.getElementById("root"));
