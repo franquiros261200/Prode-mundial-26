@@ -1223,10 +1223,17 @@ function outlineToPath(coords){return coords.map((c,i)=>{const[x,y]=projectNA(c[
 function HostMapView({results, isAdmin}){
   const[hovered,setHovered]=useState(null);
   const[selected,setSelected]=useState(null);
+  const[winW,setWinW]=useState(typeof window!=="undefined"?window.innerWidth:800);
+  useEffect(()=>{
+    const onResize=()=>setWinW(window.innerWidth);
+    window.addEventListener("resize",onResize);
+    return()=>window.removeEventListener("resize",onResize);
+  },[]);
+  const isMobile=winW<640;
   const[knockouts,setKnockouts]=useState({});
   const[editKO,setEditKO]=useState(false);
   const[localKO,setLocalKO]=useState({});
-  const W=1000,H=520;
+  const W=isMobile?700:1000,H=isMobile?400:520;
   const focus=selected||hovered;
   const focusSede=focus?SEDES_DATA.find(s=>s.city===focus):null;
   const usaPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.USA),[]);
@@ -1291,7 +1298,7 @@ function HostMapView({results, isAdmin}){
         <div className="card" style={{marginBottom:16,borderColor:"#7c3aed44"}}>
           <h3 className="hdr" style={{fontSize:15,color:"#a78bfa",marginBottom:12}}>⚙️ CARGAR CRUCES DE ELIMINATORIAS</h3>
           <p style={{color:"var(--txt3)",fontSize:11,marginBottom:12}}>Agregá los cruces por sede. Ejemplo: "1A vs 2B", "Ganador partido 49", etc.</p>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
             {SEDES_DATA.filter(s=>s.type!=="grupos").map(s=>(
               <div key={s.city} style={{background:"var(--bg2)",borderRadius:8,padding:10}}>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color:SEDE_COLORS[s.type],marginBottom:6}}>{s.city} — {SEDE_LABELS[s.type]}</div>
@@ -1317,7 +1324,7 @@ function HostMapView({results, isAdmin}){
         </div>
       )}
 
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 300px",gap:12,alignItems:"start"}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"minmax(0,1fr) 300px",gap:12,alignItems:"start"}}>
         {/* MAP */}
         <div className="card" style={{padding:0,overflow:"hidden"}}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 50%,#0a1d3a 0%,#050c18 75%)"}}>
@@ -1336,13 +1343,13 @@ function HostMapView({results, isAdmin}){
               const[x,y]=projectNA(s.lon,s.lat);
               const color=SEDE_COLORS[s.type];
               const active=hovered===s.city||selected===s.city;
-              const r=5+s.games*0.6;
+              const r=(isMobile?7:5)+s.games*(isMobile?0.8:0.6);
               return(
                 <g key={s.city} style={{cursor:"pointer"}} onMouseEnter={()=>setHovered(s.city)} onMouseLeave={()=>setHovered(null)} onClick={()=>setSelected(selected===s.city?null:s.city)}>
                   {active&&<circle cx={x} cy={y} r={r+10} fill="url(#hm-glow)"/>}
                   <circle cx={x} cy={y} r={r+3} fill={color} opacity={0.25}/>
                   <circle cx={x} cy={y} r={r} fill={color} stroke={active?"#fff":"rgba(0,0,0,0.4)"} strokeWidth={active?2:1}/>
-                  <text x={x} y={y-r-5} textAnchor="middle" fontSize={active?11:9} fontFamily="'Bebas Neue',sans-serif" fill="#fff" stroke="#050c18" strokeWidth="2.5" paintOrder="stroke" letterSpacing="0.8">{s.city.toUpperCase()}</text>
+                  <text x={x} y={y-r-5} textAnchor="middle" fontSize={active?(isMobile?13:11):(isMobile?10:9)} fontFamily="'Bebas Neue',sans-serif" fill="#fff" stroke="#050c18" strokeWidth="2.5" paintOrder="stroke" letterSpacing="0.8">{s.city.toUpperCase()}</text>
                   {active&&<text x={x} y={y+r+12} textAnchor="middle" fontSize="8" fontFamily="DM Sans,sans-serif" fill={color} stroke="#050c18" strokeWidth="2" paintOrder="stroke">{s.stadium}</text>}
                 </g>
               );
@@ -1433,7 +1440,7 @@ function HostMapView({results, isAdmin}){
             /* Sede list */
             <div className="card" style={{padding:14}}>
               <div className="hdr" style={{fontSize:14,letterSpacing:2,marginBottom:10}}>16 SEDES</div>
-              <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:500,overflowY:"auto"}}>
+              <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:isMobile?280:500,overflowY:"auto"}}>
                 {["USA","MEX","CAN"].map(c=>{
                   const list=SEDES_DATA.filter(s=>s.country===c);
                   const flag={USA:"🇺🇸",MEX:"🇲🇽",CAN:"🇨🇦"}[c];
