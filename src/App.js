@@ -1536,7 +1536,9 @@ export default function App(){
           {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="chat"&&<Chat currentUser={user} users={users}/>}
           {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
-          {view==="map"&&<MapView allPreds={allPreds} users={users} currentUser={user}/>}
+          {view==="map"&&<div style={{width:"100%",height:"calc(100vh - 60px)",position:"relative",overflow:"hidden"}}>
+            <iframe src="/mapa.html" style={{width:"100%",height:"100%",border:"none",display:"block"}} title="Mapa Mundial 2026" allow="autoplay"/>
+          </div>}
           {view==="thermo"&&<Thermometer allPreds={allPreds} users={users} currentUser={user} results={results}/>}
           {view==="perfil"&&<Profile userId={user} users={users} allPreds={allPreds} results={results}/>}
           {view==="stats"&&<div style={{maxWidth:850,margin:"0 auto",padding:"24px 16px"}} className="fi">
