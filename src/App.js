@@ -180,8 +180,13 @@ function PayBanner(){
           <div style={{color:"#dc3545",fontWeight:700,fontSize:13,marginBottom:5}}>IMPORTANTE: Tenés hasta el 8 de junio para pagar ({d} día{d!==1?"s":""} restante{d!==1?"s":""})</div>
           <div style={{color:"var(--txt2)",fontSize:12,lineHeight:1.6}}>Transferí <strong style={{color:"var(--gold)"}}>$25.000</strong> al alias:</div>
           <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6,flexWrap:"wrap"}}>
-            <span style={{background:"rgba(0,0,0,.3)",padding:"5px 14px",borderRadius:6,fontFamily:"'Bebas Neue',sans-serif",fontSize:17,color:"var(--wht)",letterSpacing:2}}>fran.quiros.mp</span>
-            <span style={{color:"var(--txt2)",fontSize:12}}>Comprobante al <strong style={{color:"var(--wht)"}}>2235638732</strong></span>
+            <button onClick={()=>{navigator.clipboard.writeText("fran.quiros.mp").then(()=>{const el=document.getElementById("alias-copied");if(el){el.style.display="inline";setTimeout(()=>el.style.display="none",2000);}});}} style={{background:"rgba(0,0,0,.3)",padding:"5px 14px",borderRadius:6,fontFamily:"'Bebas Neue',sans-serif",fontSize:17,color:"var(--wht)",letterSpacing:2,border:"1px solid rgba(255,215,0,.3)",cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
+              fran.quiros.mp <span style={{fontSize:12}}>📋</span>
+            </button>
+            <span id="alias-copied" style={{display:"none",color:"var(--grn)",fontSize:11,fontWeight:700}}>✓ Copiado!</span>
+            <a href="https://wa.me/542235638732" target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",gap:6,background:"#25D366",color:"#fff",padding:"5px 14px",borderRadius:6,fontSize:12,fontWeight:600,textDecoration:"none"}}>
+              📲 Enviar comprobante
+            </a>
           </div>
         </div>
       </div>
@@ -277,8 +282,11 @@ function Login({onLogin}){
           {mode==="register"&&<div style={{marginTop:12,background:"rgba(212,168,67,.08)",border:"1px solid rgba(212,168,67,.25)",borderRadius:8,padding:12}}>
             <p style={{color:"var(--gold)",fontSize:12,fontWeight:700,textAlign:"center",marginBottom:6}}>💰 PARA PODER JUGAR</p>
             <p style={{color:"var(--txt)",fontSize:11,textAlign:"center"}}>Transferí <strong style={{color:"var(--gold)"}}>$25.000</strong> al alias:</p>
-            <div style={{background:"rgba(0,0,0,.3)",borderRadius:6,padding:"6px 10px",margin:"6px 0",textAlign:"center"}}><span style={{color:"var(--wht)",fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2}}>fran.quiros.mp</span></div>
-            <p style={{color:"var(--txt)",fontSize:11,textAlign:"center"}}>Comprobante al <strong style={{color:"var(--wht)"}}>2235638732</strong></p>
+            <button onClick={()=>{navigator.clipboard.writeText("fran.quiros.mp").then(()=>{const el=document.getElementById("alias-copied-login");if(el){el.textContent="✓ Copiado!";el.style.color="var(--grn)";setTimeout(()=>{el.textContent="fran.quiros.mp";el.style.color="var(--wht)";},2000);}});}} style={{background:"rgba(0,0,0,.3)",borderRadius:6,padding:"6px 10px",margin:"6px 0",width:"100%",border:"1px solid rgba(255,215,0,.3)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <span id="alias-copied-login" style={{color:"var(--wht)",fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2}}>fran.quiros.mp</span>
+              <span style={{fontSize:12}}>📋</span>
+            </button>
+            <a href="https://wa.me/542235638732" target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:"#25D366",color:"#fff",padding:"6px 10px",borderRadius:6,fontSize:12,fontWeight:600,textDecoration:"none",margin:"4px 0"}}>📲 Enviar comprobante al 2235638732</a>
             <p style={{color:"var(--txt3)",fontSize:10,textAlign:"center",marginTop:4}}>Fecha límite: 8 de junio</p>
           </div>}
         </div>
