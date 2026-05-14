@@ -191,7 +191,7 @@ function PayBanner(){
 
 function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPreview}){
   const locked=new Date()>=LOCK;
-  const nav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"},{id:"leagues",l:"⚔️ Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"perfil",l:"👤 Perfil"},{id:"stats",l:"📊 Stats"},{id:"rules",l:"Reglas"},];
+  const nav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"h2h",l:"⚔️ H2H"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"},{id:"leagues",l:"🏅 Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"perfil",l:"👤 Perfil"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"},];
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
       <div style={{maxWidth:1200,margin:"0 auto",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
@@ -394,7 +394,7 @@ function Table({users,results,currentUser,allPreds}){
       {!myP&&users[currentUser]?.approved&&<div className="card" style={{borderColor:"var(--red)",marginBottom:16,textAlign:"center"}}><p style={{color:"var(--red)",fontSize:12,fontWeight:600}}>No aparecés en la tabla porque no pagaste.</p><div style={{display:"flex",justifyContent:"center",gap:18,marginTop:8}}>{[{v:myS.tot,l:"total"},{v:myS.ex,l:"exactos"},{v:myS.bo,l:"bonus"}].map(x=>(<div key={x.l}><span className="hdr" style={{fontSize:20,color:"var(--wht)"}}>{x.v}</span> <span style={{color:"var(--txt3)",fontSize:10}}>{x.l}</span></div>))}</div></div>}
       <div style={{overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-          <thead><tr style={{background:"var(--bg2)"}}>{["#","Participante","Pts","Bonus","Total","Ex","Si","R5","R3"].map(h=><th key={h} style={{padding:"8px 5px",color:"var(--txt3)",fontSize:10,letterSpacing:1,borderBottom:"2px solid var(--bd)",textAlign:"center",fontFamily:"'Bebas Neue',sans-serif"}}>{h}</th>)}</tr></thead>
+          <thead><tr style={{background:"var(--bg2)"}}>{["#","Participante","Pts","Bonus","Total","Ex","Si","R5","R3","⚡"].map(h=><th key={h} style={{padding:"8px 5px",color:"var(--txt3)",fontSize:10,letterSpacing:1,borderBottom:"2px solid var(--bd)",textAlign:"center",fontFamily:"'Bebas Neue',sans-serif"}}>{h}</th>)}</tr></thead>
           <tbody>{ranks.map((r,i)=>{const me=r.id===currentUser;const bg=i===0?"rgba(212,168,67,.1)":i===1?"rgba(192,192,192,.06)":i===2?"rgba(205,127,50,.06)":me?"rgba(46,117,182,.08)":"transparent";
             return(<tr key={r.id} style={{background:bg,borderBottom:"1px solid var(--bd)33"}}>
               <td style={{padding:"8px 5px",textAlign:"center",fontFamily:"'Bebas Neue',sans-serif",fontWeight:700,color:"var(--gold)"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td>
@@ -1885,6 +1885,274 @@ function AdminPreview({allPreds,results,onClose}){
 // ═══════════════════════════════════════════════════════
 // APP - MAIN COMPONENT
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// PODIUM VIEW - Animated end-of-tournament podium
+// ═══════════════════════════════════════════════════════
+function PodiumView({users,allPreds,results}){
+  const ranks=useMemo(()=>Object.entries(users)
+    .filter(([id,u])=>u.approved&&u.paid&&!AI_IDS.includes(id))
+    .map(([id,u])=>({id,name:u.name,...calcTotal(allPreds[id]||{},results)}))
+    .sort(cmp),[users,allPreds,results]);
+  const[show,setShow]=useState(false);
+  useEffect(()=>{setTimeout(()=>setShow(true),100);},[]);
+  if(ranks.length<3)return null;
+  const[first,second,third]=ranks;
+  const medals=[
+    {rank:second,pos:2,h:120,c:"#C0C0C0",i:"🥈",delay:"0.3s"},
+    {rank:first, pos:1,h:180,c:"#FFD700",i:"🥇",delay:"0s"},
+    {rank:third, pos:3,h:80, c:"#CD7F32",i:"🥉",delay:"0.6s"},
+  ];
+  return(
+    <div style={{maxWidth:700,margin:"0 auto",padding:"40px 16px",textAlign:"center"}}>
+      <h2 className="hdr" style={{fontSize:32,marginBottom:4}}>🏆 PODIO FINAL</h2>
+      <p style={{color:"var(--txt3)",fontSize:12,marginBottom:40}}>Prode Mundial 2026</p>
+      {/* Confetti */}
+      {show&&[...Array(30)].map((_,i)=>(
+        <div key={i} style={{position:"fixed",left:`${Math.random()*100}%`,top:"-20px",fontSize:`${10+Math.random()*14}px`,
+          animation:`cf ${2+Math.random()*2}s linear ${Math.random()*1}s forwards`,opacity:0,pointerEvents:"none",zIndex:50}}>
+          {["🌟","⭐","✨","🎉","🏆","⚽","🎊"][Math.floor(Math.random()*7)]}
+        </div>
+      ))}
+      {/* Podium */}
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"center",gap:8,marginBottom:32}}>
+        {medals.map(({rank,pos,h,c,i,delay})=>(
+          <div key={pos} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,
+            animation:show?`bi 0.5s ease ${delay} both`:"none",opacity:show?1:0}}>
+            <div style={{fontSize:24}}>{i}</div>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--wht)",maxWidth:100,textAlign:"center"}}>{rank.name}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:c}}>{rank.tot} pts</div>
+            <div style={{width:100,height:h,background:`linear-gradient(180deg,${c}44,${c}22)`,
+              border:`2px solid ${c}`,borderRadius:"8px 8px 0 0",display:"flex",alignItems:"center",
+              justifyContent:"center"}}>
+              <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:48,color:c,opacity:0.5}}>{pos}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Full ranking */}
+      <div className="card">
+        <h3 className="hdr" style={{fontSize:15,marginBottom:12}}>CLASIFICACIÓN COMPLETA</h3>
+        {ranks.map((r,i)=>(
+          <div key={r.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",
+            borderBottom:i<ranks.length-1?"1px solid var(--bd)22":"none"}}>
+            <span style={{fontSize:18,minWidth:28}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}`}</span>
+            <span style={{flex:1,fontWeight:i<3?700:400,color:i===0?"var(--gold)":"var(--wht)"}}>{r.name}</span>
+            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"var(--wht)"}}>{r.tot}</span>
+            <span style={{color:"var(--txt3)",fontSize:10}}>pts</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// HEAD TO HEAD - Direct comparison between two players
+// ═══════════════════════════════════════════════════════
+function HeadToHead({users,allPreds,results,currentUser}){
+  const locked=new Date()>=LOCK;
+  const[p1,setP1]=useState(currentUser);
+  const[p2,setP2]=useState("");
+  const approved=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
+
+  const stats=useMemo(()=>{
+    if(!p1||!p2)return null;
+    const preds1=allPreds[p1]||{};
+    const preds2=allPreds[p2]||{};
+    let p1wins=0,p2wins=0,draws=0,played=0;
+    const matches=M.map(m=>{
+      const r=results[m.n]||{h:"",a:""};
+      if(r.h===""||r.a==="")return null;
+      const pt1=calcPts(preds1[m.n]||{h:"",a:""},r);
+      const pt2=calcPts(preds2[m.n]||{h:"",a:""},r);
+      if(pt1===null&&pt2===null)return null;
+      played++;
+      const pts1=pt1??0,pts2=pt2??0;
+      if(pts1>pts2)p1wins++;
+      else if(pts2>pts1)p2wins++;
+      else draws++;
+      return{m,pt1:pt1??0,pt2:pt2??0,r,pred1:preds1[m.n]||{h:"",a:""},pred2:preds2[m.n]||{h:"",a:""}};
+    }).filter(Boolean);
+    return{p1wins,p2wins,draws,played,matches};
+  },[p1,p2,allPreds,results]);
+
+  const u1=users[p1],u2=p2?users[p2]:null;
+  return(
+    <div style={{maxWidth:900,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:24,textAlign:"center",marginBottom:16}}>⚔️ HEAD TO HEAD</h2>
+      <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:12,alignItems:"center",marginBottom:20}}>
+        <div>
+          <label style={{color:"var(--txt3)",fontSize:10,letterSpacing:2,display:"block",marginBottom:4}}>JUGADOR 1</label>
+          <select value={p1} onChange={e=>setP1(e.target.value)}
+            style={{width:"100%",padding:"8px 12px",background:"var(--bg)",border:"1px solid var(--bd)",borderRadius:7,color:"var(--wht)",fontSize:13,outline:"none"}}>
+            {approved.map(([id,u])=><option key={id} value={id}>{u.name}</option>)}
+          </select>
+        </div>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:"var(--gold)"}}>VS</div>
+        <div>
+          <label style={{color:"var(--txt3)",fontSize:10,letterSpacing:2,display:"block",marginBottom:4}}>JUGADOR 2</label>
+          <select value={p2} onChange={e=>setP2(e.target.value)}
+            style={{width:"100%",padding:"8px 12px",background:"var(--bg)",border:"1px solid var(--bd)",borderRadius:7,color:"var(--wht)",fontSize:13,outline:"none"}}>
+            <option value="">— Elegí —</option>
+            {approved.filter(([id])=>id!==p1).map(([id,u])=><option key={id} value={id}>{u.name}</option>)}
+          </select>
+        </div>
+      </div>
+      {stats&&p2&&(
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+            {[{v:stats.p1wins,l:`Victorias ${u1?.name||""}`,c:"var(--gold)"},{v:stats.draws,l:"Empates",c:"var(--txt2)"},{v:stats.p2wins,l:`Victorias ${u2?.name||""}`,c:"#3b82f6"}].map(x=>(
+              <div key={x.l} className="card" style={{textAlign:"center",padding:14}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,color:x.c}}>{x.v}</div>
+                <div style={{color:"var(--txt3)",fontSize:10}}>{x.l}</div>
+              </div>
+            ))}
+          </div>
+          {locked&&<div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+            <thead><tr style={{background:"var(--bg2)"}}>
+              <th style={{padding:"6px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"left"}}>Partido</th>
+              <th style={{padding:"6px 5px",color:"var(--gold)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>{u1?.name}</th>
+              <th style={{padding:"6px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>Real</th>
+              <th style={{padding:"6px 5px",color:"#3b82f6",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>{u2?.name}</th>
+              <th style={{padding:"6px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center"}}>Ganó</th>
+            </tr></thead>
+            <tbody>{stats.matches.map(({m,pt1,pt2,r,pred1,pred2})=>{
+              const winner=pt1>pt2?"p1":pt2>pt1?"p2":"draw";
+              return(<tr key={m.n} style={{borderBottom:"1px solid var(--bd)11",background:winner==="p1"?"rgba(212,168,67,.05)":winner==="p2"?"rgba(59,130,246,.05)":"transparent"}}>
+                <td style={{padding:"4px 5px",fontSize:10}}>{FL[m.h]||""}{m.h} vs {m.a}{FL[m.a]||""}</td>
+                <td style={{padding:"4px 5px",textAlign:"center",color:pt1===3?"var(--grn)":pt1===1?"var(--org)":"var(--red)"}}>{pred1.h!=""?`${pred1.h}-${pred1.a}`:"—"} <span style={{fontSize:9}}>+{pt1}</span></td>
+                <td style={{padding:"4px 5px",textAlign:"center",fontWeight:700,color:"var(--wht)"}}>{r.h}-{r.a}</td>
+                <td style={{padding:"4px 5px",textAlign:"center",color:pt2===3?"var(--grn)":pt2===1?"var(--org)":"var(--red)"}}>{pred2.h!=""?`${pred2.h}-${pred2.a}`:"—"} <span style={{fontSize:9}}>+{pt2}</span></td>
+                <td style={{padding:"4px 5px",textAlign:"center"}}>{winner==="p1"?"🟡":winner==="p2"?"🔵":"➖"}</td>
+              </tr>);
+            })}</tbody>
+          </table></div>}
+          {!locked&&<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>El detalle partido a partido se habilita el 9/06.</p>}
+        </div>
+      )}
+      {!p2&&<p style={{color:"var(--txt3)",fontSize:13,textAlign:"center",padding:30}}>Elegí dos jugadores para comparar.</p>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// RANKING HISTORY - Daily evolution stored in Firebase  
+// ═══════════════════════════════════════════════════════
+function RankingHistory({users,allPreds,results}){
+  const ranks=useMemo(()=>Object.entries(users)
+    .filter(([id,u])=>u.approved&&u.paid&&!AI_IDS.includes(id))
+    .map(([id,u])=>({id,name:u.name,...calcTotal(allPreds[id]||{},results)}))
+    .sort(cmp),[users,allPreds,results]);
+
+  if(ranks.length===0)return<p style={{color:"var(--txt3)",fontSize:13,textAlign:"center",padding:30}}>Sin datos todavía.</p>;
+
+  // Simple SVG line chart of current standings
+  const W=560,H=180,PAD=40;
+  const maxVal=Math.max(...ranks.map(r=>r.tot),1);
+  const colors=["#FFD700","#22c55e","#3b82f6","#ef4444","#a855f7","#06b6d4","#f97316","#ec4899","#84cc16","#f59e0b"];
+
+  return(
+    <div style={{maxWidth:800,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:24,textAlign:"center",marginBottom:16}}>📊 RANKING HISTÓRICO</h2>
+      <div className="card" style={{marginBottom:14}}>
+        <h3 className="hdr" style={{fontSize:15,marginBottom:12}}>PUNTOS ACUMULADOS</h3>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",background:"var(--bg2)",borderRadius:8}}>
+          {[0,.25,.5,.75,1].map(v=>(
+            <g key={v}>
+              <line x1={PAD} y1={H-PAD-(v*(H-PAD*2))} x2={W-PAD/2} y2={H-PAD-(v*(H-PAD*2))} stroke="var(--bd)" strokeWidth="1"/>
+              <text x={PAD-4} y={H-PAD-(v*(H-PAD*2))+4} fill="var(--txt3)" fontSize="9" textAnchor="end">{Math.round(maxVal*v)}</text>
+            </g>
+          ))}
+          {ranks.slice(0,8).map((r,i)=>{
+            const x=PAD+(i/(Math.max(ranks.length-1,1)))*(W-PAD*1.5);
+            const y=H-PAD-(r.tot/maxVal)*(H-PAD*2);
+            return(
+              <g key={r.id}>
+                <circle cx={x} cy={y} r={5} fill={colors[i%colors.length]}/>
+                <text x={x} y={y-8} textAnchor="middle" fontSize="8" fill={colors[i%colors.length]}>{r.name.slice(0,8)}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <div className="card">
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+          <thead><tr style={{background:"var(--bg2)"}}>
+            {["#","Nombre","Pts","Ex","Bo","⚡"].map(h=><th key={h} style={{padding:"7px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center",fontFamily:"'Bebas Neue',sans-serif"}}>{h}</th>)}
+          </tr></thead>
+          <tbody>{ranks.map((r,i)=>{
+            const sk=calcStreak(r.pts?.map(v=>v??-1)||[]);
+            return(<tr key={r.id} style={{borderBottom:"1px solid var(--bd)22"}}>
+              <td style={{padding:"7px 5px",textAlign:"center",color:"var(--gold)",fontFamily:"'Bebas Neue',sans-serif"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td>
+              <td style={{padding:"7px 5px",color:"var(--wht)",fontWeight:i<3?700:400}}>{r.name}</td>
+              <td style={{padding:"7px 5px",textAlign:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--wht)"}}>{r.tot}</td>
+              <td style={{padding:"7px 5px",textAlign:"center",color:"var(--grn)"}}>{r.ex}</td>
+              <td style={{padding:"7px 5px",textAlign:"center",color:"var(--org)"}}>{r.bo}</td>
+              <td style={{padding:"7px 5px",textAlign:"center"}}>{sk.boostActive?<span style={{animation:"fp 1s infinite",display:"inline-block"}}>⚡</span>:<span style={{color:"var(--txt3)",fontSize:10}}>—</span>}</td>
+            </tr>);
+          })}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// PLAYER SEARCH - Search players and view their profile
+// ═══════════════════════════════════════════════════════
+function PlayerSearch({users,allPreds,results,currentUser}){
+  const[query,setQuery]=useState("");
+  const[sel,setSel]=useState(null);
+  const approved=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
+  const filtered=query.trim()===""?approved:approved.filter(([,u])=>u.name.toLowerCase().includes(query.toLowerCase()));
+
+  return(
+    <div style={{maxWidth:800,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:24,textAlign:"center",marginBottom:16}}>🔍 BUSCAR PARTICIPANTES</h2>
+      {!sel?(
+        <div>
+          <input className="inp" value={query} onChange={e=>{setQuery(e.target.value);setSel(null);}}
+            placeholder="Buscá por nombre..." style={{marginBottom:14,fontSize:14}}/>
+          <div style={{display:"flex",flexDirection:"column",gap:5}}>
+            {filtered.map(([id,u])=>{
+              const s=calcTotal(allPreds[id]||{},results);
+              const sk=calcStreak(s.pts?.map(v=>v??-1)||[]);
+              const allRanks=Object.entries(users).filter(([i,us])=>us.approved&&us.paid&&!AI_IDS.includes(i))
+                .map(([i,us])=>({id:i,...calcTotal(allPreds[i]||{},results)})).sort(cmp);
+              const pos=allRanks.findIndex(r=>r.id===id)+1;
+              return(
+                <button key={id} onClick={()=>setSel(id)}
+                  style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:"var(--bg3)",
+                    border:"1px solid var(--bd)",borderRadius:10,cursor:"pointer",color:"var(--wht)",textAlign:"left",
+                    transition:"border .15s"}}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor="var(--gold)"}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor="var(--bd)"}>
+                  <div style={{fontSize:28}}>👤</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:13,color:id===currentUser?"var(--gold)":"var(--wht)"}}>{u.name}{id===currentUser?" (Vos)":""}</div>
+                    <div style={{color:"var(--txt3)",fontSize:10,marginTop:2}}>{u.paid?"💰 Pagó":"No pagó"} · {u.email||""}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    {u.paid&&pos>0&&<div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"var(--gold)"}}>{pos===1?"🥇":pos===2?"🥈":pos===3?"🥉":`#${pos}`}</div>}
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--wht)"}}>{s.tot} pts</div>
+                    {sk.boostActive&&<div style={{fontSize:14,animation:"fp 1s infinite"}}>⚡</div>}
+                  </div>
+                </button>
+              );
+            })}
+            {filtered.length===0&&<p style={{color:"var(--txt3)",fontSize:13,textAlign:"center",padding:20}}>No se encontró "{query}"</p>}
+          </div>
+        </div>
+      ):(
+        <div>
+          <button onClick={()=>setSel(null)} style={{background:"transparent",color:"var(--gold)",border:"1px solid var(--gold)",borderRadius:7,padding:"6px 14px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Volver</button>
+          <Profile userId={sel} users={users} allPreds={allPreds} results={results}/>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App(){
   const[user,setUser]=useState(null);
   const[isAdmin,setIsAdmin]=useState(false);
@@ -1920,10 +2188,26 @@ export default function App(){
   useEffect(()=>{
     if(!user)return;
     const prevR=JSON.parse(localStorage.getItem("prode-lastresults")||"{}");
+    let prevRanks=[];
     const iv=setInterval(async()=>{
       const u=await dbGet("users");if(u)setUsers(u);
       const r=await dbGet("results");if(r){
         setResults(r);
+        // Check if someone passed current user in rankings
+        if(u&&r&&user&&!isAdmin){
+          const ranks=Object.entries(u).filter(([id,us])=>us.approved&&us.paid&&!AI_IDS.includes(id))
+            .map(([id])=>id);
+          const myPrevPos=prevRanks.indexOf(user);
+          const myNewPos=ranks.indexOf(user);
+          if(myPrevPos>=0&&myNewPos>myPrevPos){
+            const passerIdx=myNewPos-1;
+            if(passerIdx>=0&&passerIdx<ranks.length){
+              const passerName=u[ranks[passerIdx]]?.name||"Alguien";
+              sendNotif("📊 Te superaron en la tabla",`${passerName} te pasó y ahora estás en el puesto #${myNewPos+1}`);
+            }
+          }
+          prevRanks=ranks;
+        }
         // Check for new results and notify
         M.forEach(m=>{
           const prev=prevR[m.n]||{h:"",a:""};
@@ -2004,6 +2288,10 @@ export default function App(){
             <TournamentStats allPreds={allPreds} results={results} users={users}/>
           </div>}
           {view==="rules"&&<Rules/>}
+          {view==="podio"&&<PodiumView users={users} allPreds={allPreds} results={results}/>}
+          {view==="h2h"&&<HeadToHead users={users} allPreds={allPreds} results={results} currentUser={user}/>}
+          {view==="buscar"&&<PlayerSearch users={users} allPreds={allPreds} results={results} currentUser={user}/>}
+          {view==="ranking"&&<RankingHistory users={users} allPreds={allPreds} results={results}/>}
           {view==="bracket"&&<BracketView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="admin"&&isAdmin&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
           <MobileNav view={view} setView={setView} isAdmin={isAdmin}/>
