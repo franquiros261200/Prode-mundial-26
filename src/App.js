@@ -1115,6 +1115,33 @@ function Chat({currentUser,users}){
 
 
 // ═══════════════════════════════════════════════════════
+// MAP SECTION - wrapper with tabs
+// ═══════════════════════════════════════════════════════
+function MapSection({results, isAdmin, allPreds, users}){
+  const[tab,setTab]=useState("mundo");
+  return(
+    <div style={{width:"100%"}}>
+      <div style={{display:"flex",gap:6,padding:"12px 16px 0",maxWidth:1100,margin:"0 auto"}}>
+        <button className={`nb${tab==="mundo"?" act":""}`} onClick={()=>setTab("mundo")}>🌍 Mapa Mundial</button>
+        <button className={`nb${tab==="sedes"?" act":""}`} onClick={()=>setTab("sedes")}>🏟️ Sedes 2026</button>
+      </div>
+      {tab==="mundo"&&(
+        <div style={{width:"100%",height:"calc(100vh - 110px)",position:"relative",overflow:"hidden"}}>
+          <iframe
+            src="/mapa.html"
+            style={{width:"100%",height:"100%",border:"none",display:"block"}}
+            title="Mapa Mundial 2026"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          />
+        </div>
+      )}
+      {tab==="sedes"&&<HostMapView results={results} isAdmin={isAdmin}/>}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════
 // HOST MAP - Sedes Mundial 2026 (pure React, no D3)
 // ═══════════════════════════════════════════════════════
 const SEDES_DATA = [
@@ -1847,7 +1874,7 @@ export default function App(){
           {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="chat"&&<Chat currentUser={user} users={users}/>}
           {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
-          {view==="map"&&<HostMapView results={results} isAdmin={isAdmin}/>}
+          {view==="map"&&<MapSection results={results} isAdmin={isAdmin} allPreds={allPreds} users={users}/>}
           {view==="thermo"&&<Thermometer allPreds={allPreds} users={users} currentUser={user} results={results}/>}
           {view==="perfil"&&<Profile userId={user} users={users} allPreds={allPreds} results={results}/>}
           {view==="stats"&&<div style={{maxWidth:850,margin:"0 auto",padding:"24px 16px"}} className="fi">
