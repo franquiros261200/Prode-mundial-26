@@ -168,7 +168,7 @@ function PayBanner(){
   );
 }
 
-function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode}){
+function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPreview}){
   const locked=new Date()>=LOCK;
   const nav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"},{id:"leagues",l:"⚔️ Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"perfil",l:"👤 Perfil"},{id:"stats",l:"📊 Stats"},{id:"rules",l:"Reglas"},];
   return(
@@ -181,7 +181,7 @@ function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode}){
         <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
           {nav.map(v=><button key={v.id} className={`nb${view===v.id?" act":""}`} onClick={()=>setView(v.id)}>{v.l}</button>)}
           {isAdmin&&<button className={`nb${view==="admin"?" act":""}`} onClick={()=>setView("admin")} style={{color:view==="admin"?"#fff":"var(--red)",borderColor:"var(--red)",background:view==="admin"?"var(--red)":"transparent"}}>Admin</button>}
-          {isAdmin&&<button onClick={()=>setAdminMode(!adminMode)} style={{padding:"4px 8px",background:adminMode?"#7c3aed":"transparent",color:adminMode?"#fff":"#a78bfa",border:"1px solid #7c3aed44",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>{adminMode?"👑 Admin":"👤 User"}</button>}
+          {isAdmin&&<button onClick={()=>setShowPreview(true)} style={{padding:"4px 8px",background:"#7c3aed",color:"#fff",border:"none",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>👁 Preview</button>}{isAdmin&&onPreview&&<button onClick={onPreview} style={{padding:"4px 8px",background:"#7c3aed",color:"#fff",border:"none",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>👁 Preview</button>}{isAdmin&&<button onClick={()=>setAdminMode(!adminMode)} style={{padding:"4px 8px",background:adminMode?"#7c3aed":"transparent",color:adminMode?"#fff":"#a78bfa",border:"1px solid #7c3aed44",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>{adminMode?"👑 Admin":"👤 User"}</button>}
           <div style={{display:"flex",alignItems:"center",gap:5,marginLeft:4}}>
             <span style={{color:"var(--gold)",fontSize:11,fontWeight:700}}>{user}</span>
             {locked&&<span className="tg" style={{background:"var(--red)",color:"#fff",fontSize:7,animation:"pls 2s infinite"}}>LOCKED</span>}
@@ -1357,6 +1357,181 @@ function Admin({users,setUsers,results,setResults,allPreds}){
       {tab==="stats_s"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
         {[{l:"Registrados",v:Object.keys(users).filter(id=>!AI_IDS.includes(id)).length},{l:"Habilitados",v:Object.values(users).filter(u=>u.approved).length},{l:"Pagaron",v:paid},{l:"Pendientes",v:pending},{l:"Pozo",v:fmt$(pool)},{l:"1°",v:fmt$(Math.floor(pool*.7))},{l:"2°",v:fmt$(Math.floor(pool*.2))},{l:"3°",v:fmt$(Math.floor(pool*.1))}].map(s=>(<div key={s.l} className="card" style={{textAlign:"center",padding:12}}><div style={{color:"var(--txt3)",fontSize:9,letterSpacing:2}}>{s.l}</div><div className="hdr" style={{fontSize:22,color:"var(--wht)"}}>{s.v}</div></div>))}
       </div>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// ADMIN PREVIEW
+// ═══════════════════════════════════════════════════════
+function AdminPreview({allPreds,results,onClose}){
+  const[tab,setTab]=useState("anims");
+  const[animType,setAnimType]=useState(null);
+  const pattern=[3,3,3,1,0,3,3,3,3,3,1,0,0,3,3,3,3,3,3,3];
+  const mockPreds={};const mockResults={};
+  M.forEach((m,i)=>{const pt=pattern[i%pattern.length];if(pt===3){mockPreds[m.n]={h:"2",a:"1"};mockResults[m.n]={h:"2",a:"1"};}else if(pt===1){mockPreds[m.n]={h:"1",a:"0"};mockResults[m.n]={h:"3",a:"2"};}else{mockPreds[m.n]={h:"1",a:"2"};mockResults[m.n]={h:"3",a:"0"};}});
+  const mockUsers={"pu":{name:"Preview User",approved:true,paid:true},"u2":{name:"Jugador 2",approved:true,paid:true},"u3":{name:"Jugador 3",approved:true,paid:true}};
+  const mockAP={"pu":mockPreds,"u2":Object.fromEntries(M.map(m=>[m.n,{h:"1",a:"0"}])),"u3":Object.fromEntries(M.map(m=>[m.n,{h:"0",a:"1"}]))};
+  const tabs=[{id:"anims",l:"🎭 Animaciones"},{id:"badges",l:"🏅 Medallas"},{id:"chart",l:"📈 Gráfico"},{id:"thermo",l:"🌡️ Confianza"},{id:"profile",l:"👤 Perfil"},{id:"map",l:"🌍 Mapa"}];
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.96)",zIndex:200,overflowY:"auto"}}>
+      <style>{CSS}</style>
+      {animType&&<Anim type={animType} onDone={()=>setAnimType(null)}/>}
+      <div style={{position:"sticky",top:0,background:"#111827",borderBottom:"2px solid #7c3aed",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",zIndex:10,flexWrap:"wrap",gap:8}}>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#a78bfa",letterSpacing:2}}>👁 MODO PREVIEW ADMIN</div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          {tabs.map(t=><button key={t.id} className={`nb${tab===t.id?" act":""}`} onClick={()=>setTab(t.id)} style={{fontSize:10,padding:"5px 10px"}}>{t.l}</button>)}
+          <button onClick={onClose} style={{background:"var(--red)",color:"#fff",border:"none",borderRadius:6,padding:"5px 14px",cursor:"pointer",fontFamily:"'Bebas Neue',sans-serif",fontSize:13}}>✕ CERRAR</button>
+        </div>
+      </div>
+      <div style={{padding:"0 0 40px"}}>
+        {tab==="anims"&&<div style={{maxWidth:600,margin:"0 auto",padding:"30px 16px"}}>
+          <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:20}}>🎭 ANIMACIONES</h2>
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {[{type:"exact",title:"🎯 Resultado Exacto",desc:"Confetti dorado, aparece cuando el usuario acertó 3 puntos",color:"#22c55e"},{type:"sign",title:"🔥 Acertó el Signo",desc:"Lluvia de fuego, aparece cuando acertó el ganador",color:"#f59e0b"},{type:"miss",title:"😬 Erró el Pronóstico",desc:"Lluvia de agua, aparece cuando no acertó nada",color:"#dc3545"}].map(a=>(
+              <div key={a.type} className="card" style={{borderColor:a.color+"44",display:"flex",alignItems:"center",gap:16}}>
+                <div style={{flex:1}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:a.color}}>{a.title}</div><div style={{color:"var(--txt3)",fontSize:12,marginTop:4}}>{a.desc}</div></div>
+                <button onClick={()=>setAnimType(a.type)} style={{background:a.color,color:"#fff",border:"none",borderRadius:7,padding:"8px 18px",cursor:"pointer",fontFamily:"'Bebas Neue',sans-serif",fontSize:13}}>▶ VER</button>
+              </div>
+            ))}
+          </div>
+          <div className="card" style={{marginTop:16,borderColor:"#f59e0b44"}}>
+            <h3 className="hdr" style={{fontSize:14,marginBottom:8}}>⚡ BOOST ACTIVO (aparece en perfil)</h3>
+            <div style={{background:"linear-gradient(135deg,#f59e0b,#ef4444)",borderRadius:10,padding:"10px 18px",display:"inline-flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:22}}>⚡</span><div><div style={{color:"#fff",fontWeight:700,fontSize:14}}>BOOST ACTIVO</div><div style={{color:"rgba(255,255,255,.8)",fontSize:11}}>8+ exactos seguidos</div></div>
+            </div>
+          </div>
+        </div>}
+        {tab==="badges"&&<div style={{maxWidth:700,margin:"0 auto",padding:"30px 16px"}}>
+          <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:16}}>🏅 MEDALLAS (Preview con datos de prueba)</h2>
+          <BadgesView preds={mockPreds} results={mockResults} userName="Preview User"/>
+        </div>}
+        {tab==="chart"&&<div style={{maxWidth:850,margin:"0 auto",padding:"30px 16px"}}>
+          <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:16}}>📈 GRÁFICO DE EVOLUCIÓN (Preview)</h2>
+          <EvolutionChart allPreds={mockAP} results={mockResults} users={mockUsers} currentUser="pu"/>
+        </div>}
+        {tab==="thermo"&&<Thermometer allPreds={mockAP} users={mockUsers} currentUser="pu" results={mockResults}/>}
+        {tab==="profile"&&<div style={{maxWidth:700,margin:"0 auto",padding:"30px 16px"}}>
+          <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:16}}>👤 PERFIL (Preview)</h2>
+          <Profile userId="pu" users={mockUsers} allPreds={mockAP} results={mockResults}/>
+        </div>}
+        {tab==="map"&&<MapView allPreds={mockAP} users={mockUsers} currentUser="pu"/>}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// APP - MAIN COMPONENT
+// ═══════════════════════════════════════════════════════
+export default function App(){
+  const[user,setUser]=useState(null);
+  const[isAdmin,setIsAdmin]=useState(false);
+  const[users,setUsers]=useState({});
+  const[results,setResults]=useState({});
+  const[allPreds,setAllPreds]=useState({});
+  const[view,setView]=useState("home");
+  const[loading,setLoading]=useState(true);
+  const[adminMode,setAdminMode]=useState(true);
+  const[animType,setAnimType]=useState(null);
+  const[showPreview,setShowPreview]=useState(false);
+
+  const showAnim=useCallback((type)=>{setAnimType(type);setTimeout(()=>setAnimType(null),4000);},[]);
+
+  useEffect(()=>{(async()=>{
+    const u=await dbGet("users");if(u)setUsers(u);
+    const r=await dbGet("results");if(r)setResults(r);
+    const sess=JSON.parse(localStorage.getItem("prode-session")||"null");
+    if(sess){setUser(sess.user);setIsAdmin(sess.isAdmin);}
+    setLoading(false);
+  })()},[]);
+
+  useEffect(()=>{
+    if(!user)return;
+    (async()=>{
+      const ap={};
+      const all=[...Object.keys(users),...AI_IDS];
+      for(const id of all){const d=await dbGet(`preds-${id}`);ap[id]=d||{};}
+      setAllPreds(ap);
+    })();
+  },[users,user]);
+
+  useEffect(()=>{
+    if(!user)return;
+    const iv=setInterval(async()=>{
+      const u=await dbGet("users");if(u)setUsers(u);
+      const r=await dbGet("results");if(r)setResults(r);
+    },15000);
+    return()=>clearInterval(iv);
+  },[user]);
+
+  const login=async(id,admin)=>{
+    setUser(id);setIsAdmin(admin);
+    localStorage.setItem("prode-session",JSON.stringify({user:id,isAdmin:admin}));
+    const u=await dbGet("users");if(u)setUsers(u);
+    const r=await dbGet("results");if(r)setResults(r);
+  };
+  const logout=()=>{setUser(null);setIsAdmin(false);setView("home");localStorage.removeItem("prode-session");};
+
+  if(loading)return(
+    <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <style>{CSS}</style>
+      <div style={{textAlign:"center"}}>
+        <div style={{fontSize:44}}>⚽</div>
+        <div className="hdr" style={{fontSize:18,marginTop:8,animation:"pls 1.5s infinite"}}>CARGANDO...</div>
+      </div>
+    </div>
+  );
+
+  if(!user)return<><style>{CSS}</style><Login onLogin={login}/></>;
+
+  const approved=isAdmin||users[user]?.approved;
+
+  return(
+    <div style={{minHeight:"100vh",background:"var(--bg)"}}>
+      <style>{CSS}</style>
+      {showPreview&&isAdmin&&<AdminPreview allPreds={allPreds} results={results} onClose={()=>setShowPreview(false)}/>}
+      {animType&&<Anim type={animType} onDone={()=>setAnimType(null)}/>}
+      <Hdr
+        user={isAdmin?"ADMIN":users[user]?.name||user}
+        isAdmin={isAdmin}
+        onLogout={logout}
+        view={view}
+        setView={setView}
+        adminMode={adminMode}
+        setAdminMode={setAdminMode}
+        onPreview={()=>setShowPreview(true)}
+      />
+      {!approved&&!isAdmin?(
+        <div style={{textAlign:"center",padding:50}} className="fi">
+          <div style={{fontSize:44,marginBottom:10}}>⏳</div>
+          <h2 className="hdr" style={{fontSize:22}}>ESPERANDO APROBACIÓN</h2>
+          <p style={{color:"var(--txt2)",fontSize:13,marginTop:5}}>El organizador tiene que habilitarte.</p>
+        </div>
+      ):(
+        <>
+          {!isAdmin&&!users[user]?.paid&&<div style={{maxWidth:700,margin:"16px auto 0",padding:"0 16px"}}><PayBanner/></div>}
+          {view==="home"&&<Home users={users} results={results}/>}
+          {view==="hoy"&&<HoyView users={users} results={results} allPreds={allPreds}/>}
+          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim}/>}
+          {view==="preds"&&isAdmin&&adminMode&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
+          {view==="table"&&<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>}
+          {view==="compare"&&<Compare users={users} results={results} allPreds={allPreds}/>}
+          {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
+          {view==="chat"&&<Chat currentUser={user} users={users}/>}
+          {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
+          {view==="map"&&<MapView allPreds={allPreds} users={users} currentUser={user}/>}
+          {view==="thermo"&&<Thermometer allPreds={allPreds} users={users} currentUser={user} results={results}/>}
+          {view==="perfil"&&<Profile userId={user} users={users} allPreds={allPreds} results={results}/>}
+          {view==="stats"&&<div style={{maxWidth:850,margin:"0 auto",padding:"24px 16px"}} className="fi">
+            <h2 className="hdr" style={{fontSize:24,textAlign:"center",marginBottom:20}}>📊 ESTADÍSTICAS DEL TORNEO</h2>
+            <div style={{marginBottom:20}}><h3 className="hdr" style={{fontSize:16,marginBottom:12}}>📈 Evolución de Puntos</h3><EvolutionChart allPreds={allPreds} results={results} users={users} currentUser={user}/></div>
+            <TournamentStats allPreds={allPreds} results={results} users={users}/>
+          </div>}
+          {view==="rules"&&<Rules/>}
+          {view==="admin"&&isAdmin&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
+        </>
+      )}
     </div>
   );
 }
