@@ -1634,6 +1634,105 @@ function IAPredsEditor({aiId,preds:initP}){
   return(<div><div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:8}}><button className={`fb${filter==="all"?" act":""}`} onClick={()=>setFilter("all")}>Todos</button>{groups.map(g=><button key={g} className={`fb${filter===g?" act":""}`} onClick={()=>setFilter(g)}>{g}</button>)}</div><div style={{display:"flex",flexDirection:"column",gap:2,maxHeight:280,overflowY:"auto"}}>{filtered.map(m=>{const p=preds[m.n]||{h:"",a:""};return(<div key={m.n} style={{display:"flex",alignItems:"center",gap:5,padding:"3px 6px"}}><span style={{color:"var(--txt3)",fontSize:10,width:22}}>#{m.n}</span><span style={{fontSize:10,color:"var(--txt)",flex:1,textAlign:"right"}}>{m.h}</span><input className="si" value={p.h} onChange={e=>chg(m.n,"h",e.target.value)} style={{width:28,height:28,fontSize:12}} maxLength={2}/><span style={{color:"var(--txt3)",fontSize:9}}>-</span><input className="si" value={p.a} onChange={e=>chg(m.n,"a",e.target.value)} style={{width:28,height:28,fontSize:12}} maxLength={2}/><span style={{fontSize:10,color:"var(--txt)",flex:1}}>{m.a}</span></div>);})}</div><div style={{marginTop:8,textAlign:"right"}}><button className="bg" onClick={save} disabled={saving} style={{padding:"5px 14px",fontSize:11,background:saved?"var(--grn)":"",color:saved?"#fff":""}}>{saving?"...":saved?"✓":"Guardar"}</button></div></div>);
 }
 
+// ═══════════════════════════════════════════════════════
+// AVANCE ADMIN - Manage bracket advancement
+// ═══════════════════════════════════════════════════════
+const ROUNDS = [
+  {id:"r32",   label:"Ronda de 32",  teams:32},
+  {id:"r16",   label:"Octavos",      teams:16},
+  {id:"qf",    label:"Cuartos",      teams:8},
+  {id:"sf",    label:"Semifinales",  teams:4},
+  {id:"final", label:"Final",        teams:2},
+  {id:"winner",label:"Campeón",      teams:1},
+];
+
+function AvanceAdmin(){
+  const[avance,setAvance]=useState({});
+  const[saving,setSaving]=useState(false);
+  const[saved,setSaved]=useState(false);
+  const[selRound,setSelRound]=useState("r32");
+
+  useEffect(()=>{(async()=>{
+    const d=await dbGet("avance");
+    if(d)setAvance(d);
+  })();},[]);
+
+  const toggleTeam=(round,team)=>{
+    setAvance(prev=>{
+      const curr=prev[round]||[];
+      const exists=curr.includes(team);
+      return{...prev,[round]:exists?curr.filter(t=>t!==team):[...curr,team]};
+    });
+    setSaved(false);
+  };
+
+  const save=async()=>{
+    setSaving(true);
+    await dbSet("avance",avance);
+    setSaving(false);setSaved(true);
+    setTimeout(()=>setSaved(false),2500);
+  };
+
+  const round=ROUNDS.find(r=>r.id===selRound);
+  const selected=avance[selRound]||[];
+
+  return(
+    <div>
+      <p style={{color:"var(--txt3)",fontSize:12,marginBottom:14}}>
+        Marcá los equipos que clasificaron a cada fase. Se refleja en el tab AVANCE del mapa.
+      </p>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+        {ROUNDS.map(r=>(
+          <button key={r.id} className={`nb${selRound===r.id?" act":""}`}
+            onClick={()=>setSelRound(r.id)}
+            style={selRound===r.id?{background:"var(--red)",borderColor:"var(--red)"}:{}}>
+            {r.label} {avance[r.id]?.length>0&&<span style={{color:"var(--gold)",fontSize:9}}>({avance[r.id].length})</span>}
+          </button>
+        ))}
+      </div>
+      <div style={{marginBottom:10,color:"var(--txt2)",fontSize:12}}>
+        Seleccionados: <strong style={{color:"var(--gold)"}}>{selected.length}</strong> de {round?.teams} esperados
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:6,marginBottom:14}}>
+        {TEAMS.sort((a,b)=>a.name.localeCompare(b.name)).map(t=>{
+          const isSelected=selected.includes(t.name);
+          return(
+            <button key={t.id} onClick={()=>toggleTeam(selRound,t.name)}
+              style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:8,
+                background:isSelected?"rgba(34,197,94,0.15)":"var(--bg3)",
+                border:`1px solid ${isSelected?"var(--grn)":"var(--bd)"}`,
+                cursor:"pointer",color:"var(--wht)",textAlign:"left",transition:"all .15s"}}>
+              <span style={{fontSize:16}}>{FL[t.name]||"🏳️"}</span>
+              <span style={{fontSize:11,flex:1}}>{t.name}</span>
+              {isSelected&&<span style={{color:"var(--grn)",fontSize:14}}>✓</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{color:"var(--txt3)",fontSize:11}}>
+          Los cambios se ven en 🌍 Mapa → AVANCE
+        </div>
+        <button className="bg" onClick={save} disabled={saving}
+          style={{background:saved?"var(--grn)":"",color:saved?"#fff":""}}>
+          {saving?"Guardando...":saved?"✓ Guardado":"GUARDAR AVANCE"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Teams list for avance admin
+const TEAMS_LIST = [
+  "México","Sudáfrica","Corea del Sur","Chequia","Canadá","Bosnia","Qatar","Suiza",
+  "Brasil","Marruecos","Haití","Escocia","Estados Unidos","Paraguay","Australia","Turquía",
+  "Alemania","Curazao","Costa de Marfil","Ecuador","Países Bajos","Japón","Suecia","Túnez",
+  "España","Cabo Verde","Arabia Saudita","Uruguay","Bélgica","Egipto","Irán","Nueva Zelanda",
+  "Francia","Senegal","Irak","Noruega","Argentina","Argelia","Austria","Jordania",
+  "Inglaterra","Croacia","Ghana","Panamá","Portugal","RD Congo","Uzbekistán","Colombia"
+];
+
+
 function Admin({users,setUsers,results,setResults,allPreds}){
   const[tab,setTab]=useState("users");const[saving,setSaving]=useState(false);const[localR,setLocalR]=useState({...results});const[filter,setFilter]=useState("all");const[showPass,setShowPass]=useState({});const[liveMsg,setLiveMsg]=useState("");const[liveLoading,setLiveLoading]=useState(false);
   const approve=async(id)=>{const u={...users,[id]:{...users[id],approved:true}};setUsers(u);await dbSet("users",u)};
@@ -1653,7 +1752,7 @@ function Admin({users,setUsers,results,setResults,allPreds}){
         <button onClick={dlAll} style={{padding:"7px 14px",background:"var(--grn)",color:"#fff",border:"none",borderRadius:7,fontSize:12,cursor:"pointer",fontWeight:600}}>📥 Descargar TODO en Excel</button>
       </div>
       <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
-        {[{id:"users",l:`Usuarios${pending>0?` (${pending})`:""}`},{id:"results",l:"Resultados"},{id:"ia_admin",l:"🤖 IA"},{id:"stats_s",l:"Resumen"}].map(t=>(
+        {[{id:"users",l:`Usuarios${pending>0?` (${pending})`:""}`},{id:"results",l:"Resultados"},{id:"avance_admin",l:"📈 Avance"},{id:"ia_admin",l:"🤖 IA"},{id:"stats_s",l:"Resumen"}].map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)} className="nb" style={{background:tab===t.id?"var(--red)":"transparent",color:tab===t.id?"#fff":"var(--red)",borderColor:"var(--red)"}}>{t.l}</button>
         ))}
       </div>
@@ -1693,6 +1792,7 @@ function Admin({users,setUsers,results,setResults,allPreds}){
         </div>
         <div style={{textAlign:"center",marginTop:12}}><button className="br" onClick={saveR} disabled={saving}>{saving?"...":"GUARDAR RESULTADOS"}</button></div>
       </div>}
+      {tab==="avance_admin"&&<AvanceAdmin/>}
       {tab==="ia_admin"&&<div>{AI_IDS.map(aiId=>{const inf=AI_INFO[aiId];return(<div key={aiId} className="card" style={{marginBottom:14,borderColor:inf.color+"44"}}><h3 style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,color:inf.color,marginBottom:10}}>{inf.flag} {inf.name}</h3><IAPredsEditor aiId={aiId} preds={allPreds[aiId]||{}}/></div>);})}</div>}
       {tab==="stats_s"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
         {[{l:"Registrados",v:Object.keys(users).filter(id=>!AI_IDS.includes(id)).length},{l:"Habilitados",v:Object.values(users).filter(u=>u.approved).length},{l:"Pagaron",v:paid},{l:"Pendientes",v:pending},{l:"Pozo",v:fmt$(pool)},{l:"1°",v:fmt$(Math.floor(pool*.7))},{l:"2°",v:fmt$(Math.floor(pool*.2))},{l:"3°",v:fmt$(Math.floor(pool*.1))}].map(s=>(<div key={s.l} className="card" style={{textAlign:"center",padding:12}}><div style={{color:"var(--txt3)",fontSize:9,letterSpacing:2}}>{s.l}</div><div className="hdr" style={{fontSize:22,color:"var(--wht)"}}>{s.v}</div></div>))}
