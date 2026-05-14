@@ -170,7 +170,7 @@ function PayBanner(){
 
 function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode}){
   const locked=new Date()>=LOCK;
-  const nav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"rules",l:"Reglas"},{id:"game",l:"🎮 Jugar"}];
+  const nav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"},{id:"leagues",l:"⚔️ Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"perfil",l:"👤 Perfil"},{id:"stats",l:"📊 Stats"},{id:"rules",l:"Reglas"},];
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
       <div style={{maxWidth:1200,margin:"0 auto",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
@@ -626,6 +626,611 @@ function IAView({results,allPreds,users,currentUser}){
   );
 }
 
+
+// ═══════════════════════════════════════════════════════
+// BADGES / LOGROS
+// ═══════════════════════════════════════════════════════
+function calcBadges(pts){
+  // pts = array of calcPts results (3,1,0,null)
+  const badges=[];
+  let streak=0,maxStreak=0;
+  let streak3count=0,streak5count=0,streak10count=0;
+  let boostActive=false,boostStart=0;
+
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i];
+    if(p===3){
+      streak++;
+      if(streak>maxStreak)maxStreak=streak;
+      if(streak===3){streak3count++;badges.push({type:"silver",label:"Racha x3",icon:"🥈",desc:"3 exactos seguidos",idx:i});}
+      if(streak===5){streak5count++;badges.push({type:"gold",label:"Racha x5",icon:"🥇",desc:"5 exactos seguidos",idx:i});}
+      if(streak===8&&!boostActive){boostActive=true;boostStart=i;badges.push({type:"boost",label:"BOOST",icon:"⚡",desc:"8 exactos seguidos - modo boost!",idx:i});}
+      if(streak===10){streak10count++;badges.push({type:"gold",label:"Racha x10",icon:"🏆",desc:"10 exactos seguidos",idx:i});boostActive=false;}
+    }else if(p!==null){
+      if(boostActive){badges.push({type:"boost_end",label:"Boost terminado",icon:"💨",desc:`Boost activo por ${i-boostStart} partidos`,idx:i});boostActive=false;}
+      streak=0;
+    }
+  }
+  return{badges,maxStreak,streak3count,streak5count,streak10count,boostActive};
+}
+
+function BadgesView({preds,results,userName}){
+  const pts=M.map(m=>calcPts(preds[m.n]||{h:"",a:""},results[m.n]||{h:"",a:""}));
+  const{badges,maxStreak,streak3count,streak5count,streak10count,boostActive}=calcBadges(pts);
+  const gold=badges.filter(b=>b.type==="gold");
+  const silver=badges.filter(b=>b.type==="silver");
+  const boosts=badges.filter(b=>b.type==="boost");
+
+  if(badges.length===0&&!boostActive)return(
+    <div style={{textAlign:"center",padding:"20px 0",color:"var(--txt3)",fontSize:12}}>
+      Todavía no ganaste ninguna medalla. ¡Pegá 3 exactos seguidos para la primera!
+    </div>
+  );
+
+  return(
+    <div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+        {boostActive&&<div style={{background:"linear-gradient(135deg,#f59e0b,#ef4444)",borderRadius:10,padding:"8px 14px",display:"flex",alignItems:"center",gap:8,animation:"fp 1s infinite"}}>
+          <span style={{fontSize:20}}>⚡</span><div><div style={{color:"#fff",fontWeight:700,fontSize:12}}>BOOST ACTIVO</div><div style={{color:"rgba(255,255,255,.8)",fontSize:10}}>¡8+ exactos seguidos!</div></div>
+        </div>}
+        {[{v:gold.length,l:"Medallas de Oro",c:"#FFD700",i:"🥇"},{v:silver.length,l:"Medallas de Plata",c:"#C0C0C0",i:"🥈"},{v:boosts.length,l:"Boosts",c:"#f59e0b",i:"⚡"},{v:maxStreak,l:"Mejor racha",c:"var(--grn)",i:"🔥"}].map(x=>(
+          <div key={x.l} style={{background:"var(--bg3)",border:`1px solid ${x.c}44`,borderRadius:8,padding:"8px 14px",textAlign:"center",flex:1,minWidth:80}}>
+            <div style={{fontSize:18}}>{x.i}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:x.c}}>{x.v}</div>
+            <div style={{color:"var(--txt3)",fontSize:9}}>{x.l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+        {[...badges].reverse().map((b,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 12px",background:"var(--bg3)",border:`1px solid ${b.type==="gold"?"#FFD70044":b.type==="silver"?"#C0C0C044":b.type==="boost"||b.type==="boost_end"?"#f59e0b44":"var(--bd)"}`,borderRadius:8}}>
+            <span style={{fontSize:20}}>{b.icon}</span>
+            <div style={{flex:1}}>
+              <div style={{color:"var(--wht)",fontSize:12,fontWeight:600}}>{b.label}</div>
+              <div style={{color:"var(--txt3)",fontSize:10}}>{b.desc} • Partido #{M[b.idx]?.n} — {M[b.idx]?.h} vs {M[b.idx]?.a}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// EVOLUTION CHART (SVG)
+// ═══════════════════════════════════════════════════════
+function EvolutionChart({allPreds,results,users,currentUser}){
+  const paid=Object.entries(users).filter(([id,u])=>u.approved&&u.paid&&!AI_IDS.includes(id));
+  const W=600,H=200,PAD=40;
+
+  const series=useMemo(()=>paid.map(([id,u])=>{
+    let cum=0;
+    const points=M.map(m=>{
+      const p=(allPreds[id]||{})[m.n]||{h:"",a:""};
+      const r=results[m.n]||{h:"",a:""};
+      const pt=calcPts(p,r);
+      cum+=(pt??0);
+      return cum;
+    });
+    return{id,name:u.name,points,isMe:id===currentUser};
+  }),[allPreds,results,users]);
+
+  const maxVal=Math.max(...series.flatMap(s=>s.points),1);
+  const played=M.filter(m=>results[m.n]&&results[m.n].h!=="").length;
+  if(played===0)return<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>El gráfico aparece cuando se carguen resultados.</p>;
+
+  const colors=["#d4a843","#22c55e","#3b82f6","#ef4444","#a855f7","#06b6d4","#f97316","#ec4899"];
+  const xScale=i=>(i/(Math.max(played,1)-1||1))*(W-PAD*2)+PAD;
+  const yScale=v=>H-PAD-(v/maxVal)*(H-PAD*2);
+
+  return(
+    <div style={{overflowX:"auto"}}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:W,background:"var(--bg3)",borderRadius:10,border:"1px solid var(--bd)"}}>
+        {/* Grid lines */}
+        {[0,.25,.5,.75,1].map(v=>(
+          <g key={v}>
+            <line x1={PAD} y1={yScale(maxVal*v)} x2={W-PAD} y2={yScale(maxVal*v)} stroke="var(--bd)" strokeWidth="1"/>
+            <text x={PAD-4} y={yScale(maxVal*v)+4} fill="var(--txt3)" fontSize="8" textAnchor="end">{Math.round(maxVal*v)}</text>
+          </g>
+        ))}
+        {/* Lines */}
+        {series.map((s,si)=>{
+          const playedPts=s.points.slice(0,played);
+          const path=playedPts.map((v,i)=>`${i===0?"M":"L"}${xScale(i)},${yScale(v)}`).join(" ");
+          return(
+            <g key={s.id}>
+              <path d={path} fill="none" stroke={s.isMe?colors[0]:colors[(si+1)%colors.length]} strokeWidth={s.isMe?3:1.5} strokeOpacity={s.isMe?1:0.5}/>
+              {s.isMe&&playedPts.length>0&&<circle cx={xScale(playedPts.length-1)} cy={yScale(playedPts[playedPts.length-1])} r="4" fill={colors[0]}/>}
+            </g>
+          );
+        })}
+        {/* Legend - top 3 + me */}
+        {series.slice(0,4).map((s,si)=>(
+          <g key={s.id}>
+            <rect x={PAD+si*100} y={H-16} width={10} height={3} fill={s.isMe?colors[0]:colors[(si+1)%colors.length]} opacity={s.isMe?1:0.7}/>
+            <text x={PAD+si*100+13} y={H-10} fill="var(--txt2)" fontSize="8">{s.name.slice(0,10)}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// TOURNAMENT STATS
+// ═══════════════════════════════════════════════════════
+function TournamentStats({allPreds,results,users}){
+  const paid=Object.entries(users).filter(([id,u])=>u.approved&&u.paid&&!AI_IDS.includes(id));
+  const playedMatches=M.filter(m=>results[m.n]&&results[m.n].h!=="");
+
+  // Most guessed exact result per match
+  const topExact=useMemo(()=>{
+    return playedMatches.map(m=>{
+      const r=results[m.n]||{h:"",a:""};
+      const who=paid.filter(([id])=>calcPts((allPreds[id]||{})[m.n]||{h:"",a:""},r)===3).map(([,u])=>u.name);
+      return{match:m,result:r,count:who.length,who};
+    }).sort((a,b)=>b.count-a.count).slice(0,5);
+  },[allPreds,results]);
+
+  // Hardest match (least exact guesses)
+  const hardest=useMemo(()=>[...topExact].reverse().slice(0,3),[topExact]);
+
+  // Most wrong result (0 pts)
+  const mostWrong=useMemo(()=>{
+    return playedMatches.map(m=>{
+      const r=results[m.n]||{h:"",a:""};
+      const count=paid.filter(([id])=>calcPts((allPreds[id]||{})[m.n]||{h:"",a:""},r)===0).length;
+      return{match:m,result:r,count};
+    }).sort((a,b)=>b.count-a.count).slice(0,3);
+  },[allPreds,results]);
+
+  // Team most predicted as winner
+  const teamVotes=useMemo(()=>{
+    const votes={};
+    M.forEach(m=>{
+      paid.forEach(([id])=>{
+        const p=(allPreds[id]||{})[m.n]||{h:"",a:""};
+        if(!p.h||!p.a)return;
+        const winner=+p.h>+p.a?m.h:+p.a>+p.h?m.a:"empate";
+        votes[winner]=(votes[winner]||0)+1;
+      });
+    });
+    return Object.entries(votes).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  },[allPreds]);
+
+  if(playedMatches.length===0)return<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>Las estadísticas aparecen cuando se carguen resultados.</p>;
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <div className="card">
+        <h3 className="hdr" style={{fontSize:15,marginBottom:10}}>🎯 Partidos con más exactos</h3>
+        {topExact.map((e,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid var(--bd)22"}}>
+            <span style={{color:"var(--gold)",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,width:20}}>{i+1}</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:12,color:"var(--wht)"}}>{e.match.h} {e.result.h}-{e.result.a} {e.match.a}</div>
+              <div style={{fontSize:10,color:"var(--txt3)"}}>{e.who.slice(0,4).join(", ")}{e.who.length>4?` +${e.who.length-4} más`:""}</div>
+            </div>
+            <div style={{background:"rgba(34,197,94,.2)",borderRadius:6,padding:"3px 10px",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--grn)"}}>{e.count}</div>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <h3 className="hdr" style={{fontSize:15,marginBottom:10}}>😬 Partidos más difíciles (menos exactos)</h3>
+        {hardest.map((e,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid var(--bd)22"}}>
+            <div style={{flex:1}}><div style={{fontSize:12,color:"var(--wht)"}}>{e.match.h} {e.result.h}-{e.result.a} {e.match.a}</div></div>
+            <div style={{background:"rgba(220,53,69,.2)",borderRadius:6,padding:"3px 10px",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--red)"}}>{e.count} exactos</div>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <h3 className="hdr" style={{fontSize:15,marginBottom:10}}>🏳️ Selecciones más apostadas como ganadoras</h3>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:6}}>
+          {teamVotes.map(([team,votes])=>(
+            <div key={team} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 8px",background:"rgba(0,0,0,.2)",borderRadius:6}}>
+              <span style={{fontSize:14}}>{FL[team]||"🏳️"}</span>
+              <span style={{fontSize:11,color:"var(--txt)",flex:1}}>{team}</span>
+              <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,color:"var(--gold)"}}>{votes}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// PERSONAL PROFILE
+// ═══════════════════════════════════════════════════════
+function Profile({userId,users,allPreds,results}){
+  const u=users[userId];
+  if(!u)return null;
+  const preds=allPreds[userId]||{};
+  const stats=calcTotal(preds,results);
+  const pts=stats.pts;
+  const {badges,maxStreak,boostActive}=calcBadges(pts.map(v=>v??-1));
+  const filled=M.filter(m=>preds[m.n]&&preds[m.n].h!==""&&preds[m.n].a!=="").length;
+  const pct=filled>0?Math.round((stats.ex/Math.max(filled,1))*100):0;
+
+  // Current streak
+  let curStreak=0;
+  for(let i=pts.length-1;i>=0;i--){if(pts[i]===3)curStreak++;else if(pts[i]!==null)break;}
+
+  // Fav team (most predicted wins)
+  const teamWins={};
+  M.forEach(m=>{const p=preds[m.n];if(!p||!p.h||!p.a)return;const w=+p.h>+p.a?m.h:+p.a>+p.h?m.a:null;if(w)teamWins[w]=(teamWins[w]||0)+1;});
+  const favTeam=Object.entries(teamWins).sort((a,b)=>b[1]-a[1])[0];
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      <div className="card" style={{textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:6}}>👤</div>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--gold)"}}>{u.name}</div>
+        {!u.paid&&<span style={{background:"rgba(220,53,69,.2)",color:"var(--red)",padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:600}}>No pagó</span>}
+        {boostActive&&<div style={{marginTop:8,background:"linear-gradient(135deg,#f59e0b,#ef4444)",borderRadius:8,padding:"5px 14px",display:"inline-block"}}><span style={{color:"#fff",fontWeight:700,fontSize:12}}>⚡ BOOST ACTIVO</span></div>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
+        {[{v:stats.tot,l:"Puntos totales",c:"var(--gold)",i:"🏆"},{v:stats.ex,l:"Exactos",c:"var(--grn)",i:"🎯"},{v:stats.si,l:"Signos",c:"var(--org)",i:"🔥"},{v:stats.bo,l:"Bonus",c:"#a855f7",i:"⭐"},{v:maxStreak,l:"Mejor racha",c:"var(--grn)",i:"📈"},{v:curStreak,l:"Racha actual",c:curStreak>0?"var(--grn)":"var(--txt3)",i:"⚡"},{v:`${pct}%`,l:"% de aciertos",c:"var(--gold)",i:"📊"},{v:filled,l:"Completados",c:"var(--txt2)",i:"✅"}].map(x=>(
+          <div key={x.l} className="card" style={{textAlign:"center",padding:"10px 8px"}}>
+            <div style={{fontSize:16}}>{x.i}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:x.c}}>{x.v}</div>
+            <div style={{color:"var(--txt3)",fontSize:9,marginTop:2}}>{x.l}</div>
+          </div>
+        ))}
+      </div>
+      {favTeam&&<div className="card" style={{display:"flex",alignItems:"center",gap:12}}>
+        <span style={{fontSize:28}}>{FL[favTeam[0]]||"🏳️"}</span>
+        <div><div style={{color:"var(--txt3)",fontSize:10}}>SELECCIÓN MÁS APOSTADA COMO GANADORA</div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"var(--wht)"}}>{favTeam[0]}</div><div style={{color:"var(--txt3)",fontSize:10}}>{favTeam[1]} veces</div></div>
+      </div>}
+      <div className="card">
+        <h3 className="hdr" style={{fontSize:14,marginBottom:10}}>🏅 MIS MEDALLAS ({badges.length})</h3>
+        <BadgesView preds={preds} results={results} userName={u.name}/>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// THERMOMETER (confidence per match)
+// ═══════════════════════════════════════════════════════
+function Thermometer({allPreds,users,currentUser,results}){
+  const paid=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
+  const locked=new Date()>=LOCK;
+  const[filter,setFilter]=useState("all");
+  const groups=[...new Set(M.map(m=>m.g))].sort();
+  const filtered=filter==="all"?M:M.filter(m=>m.g===filter);
+  const myPreds=allPreds[currentUser]||{};
+
+  return(
+    <div style={{maxWidth:900,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:4}}>🌡️ TERMÓMETRO DE CONFIANZA</h2>
+      <p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",marginBottom:16}}>Cuántos participantes apostaron igual que vos en cada partido</p>
+      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:12}}>
+        <button className={`fb${filter==="all"?" act":""}`} onClick={()=>setFilter("all")}>Todos</button>
+        {groups.map(g=><button key={g} className={`fb${filter===g?" act":""}`} onClick={()=>setFilter(g)}>{g}</button>)}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+        {filtered.map(m=>{
+          const myP=myPreds[m.n]||{h:"",a:""};
+          const hasMy=myP.h!==""&&myP.a!=="";
+          const r=results[m.n]||{h:"",a:""};
+          const hasR=r.h!==""&&r.a!=="";
+
+          // Count who predicted same exact result
+          const sameExact=paid.filter(([id])=>{
+            if(id===currentUser)return false;
+            const p=(allPreds[id]||{})[m.n]||{h:"",a:""};
+            return p.h===myP.h&&p.a===myP.a&&p.h!=="";
+          });
+          // Count who predicted same sign
+          const sameSign=paid.filter(([id])=>{
+            if(id===currentUser)return false;
+            const p=(allPreds[id]||{})[m.n]||{h:"",a:""};
+            if(!p.h||!p.a||!myP.h||!myP.a)return false;
+            const mySign=+myP.h>+myP.a?1:+myP.h<+myP.a?-1:0;
+            const thSign=+p.h>+p.a?1:+p.h<+p.a?-1:0;
+            return mySign===thSign;
+          });
+
+          const total=paid.length-1;
+          const pct=total>0?Math.round((sameSign.length/total)*100):0;
+          const barColor=pct>=70?"var(--grn)":pct>=40?"var(--org)":"var(--red)";
+
+          return(
+            <div key={m.n} className="mr" style={{flexWrap:"wrap",gap:6}}>
+              <div style={{width:28,textAlign:"center"}}><div style={{color:"var(--txt3)",fontSize:10,fontWeight:600}}>#{m.n}</div><div style={{color:"var(--txt3)",fontSize:9}}>{m.d}</div></div>
+              <span className="tg" style={{background:"var(--bd)",color:"var(--gold)",fontSize:9}}>G{m.g}</span>
+              <div style={{flex:1,display:"flex",alignItems:"center",gap:5,minWidth:200}}>
+                <span style={{fontSize:11,flex:1,textAlign:"right"}}>{FL[m.h]||""} {m.h}</span>
+                <span style={{color:hasMy?"var(--gold)":"var(--txt3)",fontSize:14,fontWeight:700,minWidth:44,textAlign:"center"}}>{hasMy?`${myP.h}-${myP.a}`:"—"}</span>
+                <span style={{fontSize:11,flex:1}}>{m.a} {FL[m.a]||""}</span>
+              </div>
+              {hasMy&&<div style={{minWidth:160}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                  <span style={{fontSize:10,color:"var(--txt3)"}}>
+                    {sameExact.length>0?`${sameExact.length} exacto igual`:"Nadie igual"}
+                    {locked&&sameExact.length>0&&` (${sameExact.slice(0,2).map(([,u])=>u.name).join(", ")})`}
+                  </span>
+                  <span style={{fontSize:10,color:barColor,fontWeight:600}}>{pct}%</span>
+                </div>
+                <div style={{background:"var(--bd)",borderRadius:4,height:5,overflow:"hidden"}}>
+                  <div style={{width:`${pct}%`,height:"100%",background:barColor,borderRadius:4,transition:"width .5s"}}/>
+                </div>
+                <div style={{fontSize:9,color:"var(--txt3)",marginTop:2}}>{sameSign.length} de {total} apostaron igual ganador</div>
+              </div>}
+              {!hasMy&&<div style={{color:"var(--txt3)",fontSize:10,minWidth:100}}>Sin predicción</div>}
+              {hasR&&<span className="tg" style={{background:"var(--bd)",color:"var(--txt2)",fontSize:9}}>Real: {r.h}-{r.a}</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// MINI LEAGUES
+// ═══════════════════════════════════════════════════════
+function Leagues({users,allPreds,results,currentUser}){
+  const[leagues,setLeagues]=useState({});
+  const[newName,setNewName]=useState("");
+  const[sel,setSel]=useState(null);
+  const[inviteCode,setInviteCode]=useState("");
+  const[msg,setMsg]=useState("");
+
+  useEffect(()=>{(async()=>{const d=await dbGet("leagues");if(d)setLeagues(d);})();},[]);
+
+  const createLeague=async()=>{
+    if(!newName.trim())return;
+    const code=Math.random().toString(36).slice(2,8).toUpperCase();
+    const updated={...leagues,[code]:{name:newName.trim(),creator:currentUser,members:[currentUser],created:Date.now()}};
+    setLeagues(updated);await dbSet("leagues",updated);setNewName("");setMsg(`Liga creada! Código: ${code}`);setSel(code);
+    setTimeout(()=>setMsg(""),4000);
+  };
+
+  const joinLeague=async()=>{
+    const code=inviteCode.trim().toUpperCase();
+    if(!leagues[code]){setMsg("Código inválido");setTimeout(()=>setMsg(""),2000);return;}
+    if(leagues[code].members.includes(currentUser)){setMsg("Ya estás en esa liga");setTimeout(()=>setMsg(""),2000);return;}
+    const updated={...leagues,[code]:{...leagues[code],members:[...leagues[code].members,currentUser]}};
+    setLeagues(updated);await dbSet("leagues",updated);setInviteCode("");setMsg("¡Te uniste a la liga!");setSel(code);
+    setTimeout(()=>setMsg(""),3000);
+  };
+
+  const myLeagues=Object.entries(leagues).filter(([,l])=>l.members?.includes(currentUser));
+
+  const LeagueTable=({leagueCode})=>{
+    const league=leagues[leagueCode];
+    if(!league)return null;
+    const members=league.members||[];
+    const rows=members
+      .filter(id=>users[id])
+      .map(id=>({id,name:users[id]?.name||id,...calcTotal(allPreds[id]||{},results)}))
+      .sort(cmp);
+    return(
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"var(--gold)"}}>{league.name}</div><div style={{color:"var(--txt3)",fontSize:10}}>Código: <strong style={{color:"var(--wht)",letterSpacing:2}}>{leagueCode}</strong> • {members.length} miembro{members.length!==1?"s":""}</div></div>
+        </div>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+          <thead><tr style={{background:"var(--bg2)"}}>{["#","Nombre","Total","Ex","Si"].map(h=><th key={h} style={{padding:"7px 5px",color:"var(--txt3)",fontSize:10,borderBottom:"2px solid var(--bd)",textAlign:"center",fontFamily:"'Bebas Neue',sans-serif"}}>{h}</th>)}</tr></thead>
+          <tbody>{rows.map((r,i)=>{const me=r.id===currentUser;return(
+            <tr key={r.id} style={{background:me?"rgba(212,168,67,.08)":"transparent",borderBottom:"1px solid var(--bd)22"}}>
+              <td style={{padding:"7px 5px",textAlign:"center",color:"var(--gold)",fontFamily:"'Bebas Neue',sans-serif"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td>
+              <td style={{padding:"7px 5px",color:me?"var(--gold)":"var(--txt)",fontWeight:me?700:400}}>{r.name}{me?" ✓":""}</td>
+              <td style={{padding:"7px 5px",textAlign:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:18,fontWeight:700,color:"var(--wht)"}}>{r.tot}</td>
+              <td style={{padding:"7px 5px",textAlign:"center",color:"var(--grn)"}}>{r.ex}</td>
+              <td style={{padding:"7px 5px",textAlign:"center",color:"var(--org)"}}>{r.si}</td>
+            </tr>
+          );})}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  return(
+    <div style={{maxWidth:750,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:4}}>⚔️ MINI-LIGAS</h2>
+      <p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",marginBottom:16}}>Creá tu grupo y competí entre amigos</p>
+      {msg&&<div style={{background:"rgba(34,197,94,.15)",border:"1px solid rgba(34,197,94,.4)",borderRadius:8,padding:"8px 14px",marginBottom:12,color:"var(--grn)",fontSize:13,textAlign:"center"}}>{msg}</div>}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+        <div className="card">
+          <h3 className="hdr" style={{fontSize:14,marginBottom:8}}>+ CREAR LIGA</h3>
+          <input className="inp" value={newName} onChange={e=>setNewName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&createLeague()} placeholder="Nombre de tu liga..." style={{marginBottom:8,fontSize:12,padding:"7px 10px"}}/>
+          <button className="bg" onClick={createLeague} style={{width:"100%",padding:"7px 0",fontSize:12}}>CREAR</button>
+        </div>
+        <div className="card">
+          <h3 className="hdr" style={{fontSize:14,marginBottom:8}}>🔗 UNIRME</h3>
+          <input className="inp" value={inviteCode} onChange={e=>setInviteCode(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinLeague()} placeholder="Código de liga..." style={{marginBottom:8,fontSize:12,padding:"7px 10px",textTransform:"uppercase"}}/>
+          <button className="bg" onClick={joinLeague} style={{width:"100%",padding:"7px 0",fontSize:12}}>UNIRME</button>
+        </div>
+      </div>
+      {myLeagues.length===0?<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>No estás en ninguna liga todavía. ¡Creá una o pedile el código a alguien!</p>:(
+        <div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+            {myLeagues.map(([code,l])=><button key={code} className={`nb${sel===code?" act":""}`} onClick={()=>setSel(code)}>{l.name}</button>)}
+          </div>
+          {sel&&<div className="card"><LeagueTable leagueCode={sel}/></div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════════════════════
+function Chat({currentUser,users}){
+  const[msgs,setMsgs]=useState([]);const[text,setText]=useState("");const[sending,setSending]=useState(false);
+  const bottomRef=useRef(null);
+
+  useEffect(()=>{
+    (async()=>{const d=await dbGet("chat");if(d)setMsgs(d);})();
+    const iv=setInterval(async()=>{const d=await dbGet("chat");if(d)setMsgs(d);},5000);
+    return()=>clearInterval(iv);
+  },[]);
+
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
+
+  const send=async()=>{
+    if(!text.trim()||sending)return;
+    setSending(true);
+    const name=users[currentUser]?.name||currentUser;
+    const newMsg={user:currentUser,name,text:text.trim(),ts:Date.now()};
+    const updated=[...msgs.slice(-99),newMsg];
+    setMsgs(updated);await dbSet("chat",updated);setText("");setSending(false);
+  };
+
+  const formatTime=(ts)=>{const d=new Date(ts);return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;};
+
+  return(
+    <div style={{maxWidth:700,margin:"0 auto",padding:"24px 16px",height:"calc(100vh - 120px)",display:"flex",flexDirection:"column"}} className="fi">
+      <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:12}}>💬 CHAT</h2>
+      <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:6,padding:"0 4px",marginBottom:12}}>
+        {msgs.length===0&&<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>Nadie escribió todavía. ¡Sé el primero!</p>}
+        {msgs.map((m,i)=>{
+          const isMe=m.user===currentUser;
+          return(
+            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start"}}>
+              {!isMe&&<span style={{color:"var(--txt3)",fontSize:10,marginBottom:2,marginLeft:6}}>{m.name}</span>}
+              <div style={{maxWidth:"75%",padding:"8px 12px",borderRadius:isMe?"14px 14px 4px 14px":"14px 14px 14px 4px",background:isMe?"var(--gold)":"var(--bg3)",border:isMe?"none":"1px solid var(--bd)",color:isMe?"var(--bg)":"var(--wht)",fontSize:13,lineHeight:1.4}}>
+                {m.text}
+              </div>
+              <span style={{color:"var(--txt3)",fontSize:9,marginTop:2,marginLeft:isMe?0:6,marginRight:isMe?6:0}}>{formatTime(m.ts)}</span>
+            </div>
+          );
+        })}
+        <div ref={bottomRef}/>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <input className="inp" value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Escribí algo..." style={{flex:1,padding:"10px 14px"}}/>
+        <button className="bg" onClick={send} disabled={sending||!text.trim()} style={{padding:"10px 18px",fontSize:13}}>Enviar</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// MAP VIEW (SVG world map - simplified)
+// ═══════════════════════════════════════════════════════
+const TEAM_COORDS={
+  "Argentina":[-65,-34],"Brasil":[-51,-10],"Uruguay":[-56,-33],"Colombia":[-74,4],"Ecuador":[-78,-2],"Paraguay":[-58,-23],
+  "México":[-102,24],"Estados Unidos":[-98,38],"Canadá":[-96,60],"Panamá":[-80,9],"Haití":[-72,19],
+  "España":[-4,40],"Francia":[2,46],"Alemania":[10,51],"Portugal":[-8,39],"Inglaterra":[-2,52],"Países Bajos":[5,52],
+  "Bélgica":[4,50],"Suecia":[18,59],"Suiza":[8,47],"Croacia":[16,45],"Austria":[15,47],"Bosnia":[17,44],"Chequia":[16,50],"Escocia":[-4,57],"Noruega":[10,62],
+  "Marruecos":[-6,32],"Senegal":[-14,14],"Ghana":[-1,7],"Costa de Marfil":[-5,6],"Egipto":[30,26],"Argelia":[3,28],"Sudáfrica":[25,-29],"Cabo Verde":[-24,16],"RD Congo":[24,-2],
+  "Turquía":[35,39],"Arabia Saudita":[45,24],"Irán":[53,32],"Irak":[44,33],"Jordania":[37,31],"Uzbekistán":[64,41],
+  "Japón":[138,35],"Corea del Sur":[128,37],"Australia":[134,-25],"Nueva Zelanda":[174,-41],"Qatar":[51,25],
+  "Túnez":[9,34],"Curazao":[-69,12],"RD Congo":[24,-2]
+};
+
+function MapView({allPreds,users,currentUser}){
+  const locked=new Date()>=LOCK;
+  const[hover,setHover]=useState(null);
+  const[selMatch,setSelMatch]=useState(null);
+
+  const paid=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
+
+  // For each team in each match, count how many predicted them as winner
+  const teamStats=useMemo(()=>{
+    const stats={};
+    M.forEach(m=>{
+      [m.h,m.a].forEach(team=>{
+        if(!stats[team])stats[team]={wins:0,draws:0,losses:0,voters:[],total:0};
+      });
+      paid.forEach(([id,u])=>{
+        const p=(allPreds[id]||{})[m.n]||{h:"",a:""};
+        if(!p.h||!p.a)return;
+        const ph=+p.h,pa=+p.a;
+        if(ph>pa){stats[m.h].wins++;stats[m.h].voters.push({name:u.name,match:`${m.h} vs ${m.a}`,pred:`${ph}-${pa}`});stats[m.h].total++;stats[m.a].losses++;stats[m.a].total++;}
+        else if(ph<pa){stats[m.a].wins++;stats[m.a].voters.push({name:u.name,match:`${m.h} vs ${m.a}`,pred:`${ph}-${pa}`});stats[m.a].total++;stats[m.h].losses++;stats[m.h].total++;}
+        else{stats[m.h].draws++;stats[m.h].total++;stats[m.a].draws++;stats[m.a].total++;}
+      });
+    });
+    return stats;
+  },[allPreds,users]);
+
+  // Project coords to SVG
+  const proj=(lon,lat)=>[(lon+180)/360*800,(90-lat)/180*400];
+
+  const maxWins=Math.max(...Object.values(teamStats).map(s=>s.wins),1);
+
+  return(
+    <div style={{maxWidth:920,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:4}}>🌍 MAPA DE PRONÓSTICOS</h2>
+      <p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",marginBottom:16}}>
+        {locked?"Hacé click en un país para ver quién apostó por él":"Cuántos participantes apostaron por cada selección como ganadora"}
+      </p>
+      <div style={{position:"relative",background:"#0a1628",borderRadius:12,border:"1px solid var(--bd)",overflow:"hidden"}}>
+        <svg viewBox="0 0 800 400" style={{width:"100%"}}>
+          {/* Simple world background */}
+          <rect width="800" height="400" fill="#0a1628"/>
+          {/* Ocean lines */}
+          {[...Array(8)].map((_,i)=><line key={i} x1={0} y1={i*50+25} x2={800} y2={i*50+25} stroke="#162845" strokeWidth="0.5"/>)}
+          {[...Array(16)].map((_,i)=><line key={i} x1={i*50+25} y1={0} x2={i*50+25} y2={400} stroke="#162845" strokeWidth="0.5"/>)}
+          {/* Team dots */}
+          {Object.entries(TEAM_COORDS).map(([team,[lon,lat]])=>{
+            const s=teamStats[team];
+            if(!s)return null;
+            const[x,y]=proj(lon,lat);
+            const r=4+Math.sqrt(s.wins/maxWins)*18;
+            const opacity=s.wins>0?0.85:0.3;
+            const color=s.wins>8?"#FFD700":s.wins>4?"#22c55e":s.wins>0?"#3b82f6":"#3d556b";
+            const isHovered=hover===team;
+            return(
+              <g key={team} style={{cursor:"pointer"}} onMouseEnter={()=>setHover(team)} onMouseLeave={()=>setHover(null)} onClick={()=>setHover(hover===team?null:team)}>
+                <circle cx={x} cy={y} r={r} fill={color} opacity={opacity} stroke={isHovered?"#fff":"transparent"} strokeWidth={2}/>
+                {s.wins>0&&<text x={x} y={y+r+8} textAnchor="middle" fill="rgba(255,255,255,.6)" fontSize="7">{FL[team]||""}</text>}
+                {isHovered&&<>
+                  <circle cx={x} cy={y} r={r+3} fill="none" stroke="#fff" strokeWidth={1.5} opacity={0.6}/>
+                </>}
+              </g>
+            );
+          })}
+        </svg>
+        {/* Hover tooltip */}
+        {hover&&teamStats[hover]&&(()=>{
+          const s=teamStats[hover];
+          return(
+            <div style={{position:"absolute",top:10,right:10,background:"rgba(11,24,41,.95)",border:"1px solid var(--bd)",borderRadius:10,padding:14,minWidth:200,maxWidth:260}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                <span style={{fontSize:22}}>{FL[hover]||"🏳️"}</span>
+                <div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--gold)"}}>{hover}</div></div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:4,marginBottom:8}}>
+                {[{v:s.wins,l:"Victorias",c:"var(--grn)"},{v:s.draws,l:"Empates",c:"var(--org)"},{v:s.losses,l:"Derrotas",c:"var(--red)"}].map(x=>(
+                  <div key={x.l} style={{textAlign:"center",background:"rgba(0,0,0,.3)",borderRadius:5,padding:"4px"}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:x.c}}>{x.v}</div>
+                    <div style={{color:"var(--txt3)",fontSize:8}}>{x.l}</div>
+                  </div>
+                ))}
+              </div>
+              {locked&&s.voters.length>0&&(
+                <div>
+                  <div style={{color:"var(--txt3)",fontSize:9,marginBottom:4}}>APOSTARON VICTORIA:</div>
+                  {[...new Set(s.voters.map(v=>v.name))].slice(0,5).map((n,i)=>(
+                    <div key={i} style={{fontSize:10,color:"var(--txt)",padding:"2px 0",borderBottom:"1px solid var(--bd)11"}}>{n}</div>
+                  ))}
+                  {[...new Set(s.voters.map(v=>v.name))].length>5&&<div style={{fontSize:9,color:"var(--txt3)"}}>+{[...new Set(s.voters.map(v=>v.name))].length-5} más</div>}
+                </div>
+              )}
+              {!locked&&<div style={{color:"var(--txt3)",fontSize:10}}>{[...new Set(s.voters.map(v=>v.name))].length} participantes apostaron victorias</div>}
+            </div>
+          );
+        })()}
+      </div>
+      {/* Legend */}
+      <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:10,flexWrap:"wrap"}}>
+        {[{c:"#FFD700",l:"9+ victorias apostadas"},{c:"#22c55e",l:"5-8 victorias"},{c:"#3b82f6",l:"1-4 victorias"},{c:"#3d556b",l:"Sin victorias apostadas"}].map(x=>(
+          <div key={x.l} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:10,height:10,borderRadius:"50%",background:x.c}}/><span style={{color:"var(--txt3)",fontSize:10}}>{x.l}</span></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Rules(){
   const sec=[
     {t:"Puntuación",i:["✅ 3 puntos — Resultado exacto","🟡 1 punto — Acertás el signo","❌ 0 puntos — No acertás nada"]},
@@ -752,41 +1357,6 @@ function Admin({users,setUsers,results,setResults,allPreds}){
       {tab==="stats_s"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
         {[{l:"Registrados",v:Object.keys(users).filter(id=>!AI_IDS.includes(id)).length},{l:"Habilitados",v:Object.values(users).filter(u=>u.approved).length},{l:"Pagaron",v:paid},{l:"Pendientes",v:pending},{l:"Pozo",v:fmt$(pool)},{l:"1°",v:fmt$(Math.floor(pool*.7))},{l:"2°",v:fmt$(Math.floor(pool*.2))},{l:"3°",v:fmt$(Math.floor(pool*.1))}].map(s=>(<div key={s.l} className="card" style={{textAlign:"center",padding:12}}><div style={{color:"var(--txt3)",fontSize:9,letterSpacing:2}}>{s.l}</div><div className="hdr" style={{fontSize:22,color:"var(--wht)"}}>{s.v}</div></div>))}
       </div>}
-    </div>
-  );
-}
-
-function FootballGame(){return(<div style={{width:"100%",height:"calc(100vh - 60px)",position:"relative",overflow:"hidden"}}><iframe src="/football.html" style={{width:"100%",height:"100%",border:"none",display:"block"}} title="Football Heads Mundial 2026" allow="autoplay"/></div>);}
-
-export default function App(){
-  const[user,setUser]=useState(null);const[isAdmin,setIsAdmin]=useState(false);const[users,setUsers]=useState({});const[results,setResults]=useState({});const[allPreds,setAllPreds]=useState({});const[view,setView]=useState("home");const[loading,setLoading]=useState(true);const[adminMode,setAdminMode]=useState(true);const[animType,setAnimType]=useState(null);
-  const showAnim=useCallback((type)=>{setAnimType(type);setTimeout(()=>setAnimType(null),4000);},[]);
-  useEffect(()=>{(async()=>{const u=await dbGet("users");if(u)setUsers(u);const r=await dbGet("results");if(r)setResults(r);const sess=JSON.parse(localStorage.getItem("prode-session")||"null");if(sess){setUser(sess.user);setIsAdmin(sess.isAdmin);}setLoading(false);})()},[]);
-  useEffect(()=>{if(!user)return;(async()=>{const ap={};const all=[...Object.keys(users),...AI_IDS];for(const id of all){const d=await dbGet(`preds-${id}`);ap[id]=d||{};}setAllPreds(ap);})();},[users,user]);
-  useEffect(()=>{if(!user)return;const iv=setInterval(async()=>{const u=await dbGet("users");if(u)setUsers(u);const r=await dbGet("results");if(r)setResults(r);},15000);return()=>clearInterval(iv);},[user]);
-  const login=async(id,admin)=>{setUser(id);setIsAdmin(admin);localStorage.setItem("prode-session",JSON.stringify({user:id,isAdmin:admin}));const u=await dbGet("users");if(u)setUsers(u);const r=await dbGet("results");if(r)setResults(r);};
-  const logout=()=>{setUser(null);setIsAdmin(false);setView("home");localStorage.removeItem("prode-session");};
-  if(loading)return(<div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><div style={{textAlign:"center"}}><div style={{fontSize:44}}>⚽</div><div className="hdr" style={{fontSize:18,marginTop:8,animation:"pls 1.5s infinite"}}>CARGANDO...</div></div></div>);
-  if(!user)return<><style>{CSS}</style><Login onLogin={login}/></>;
-  const approved=isAdmin||users[user]?.approved;
-  return(
-    <div style={{minHeight:"100vh",background:"var(--bg)"}}><style>{CSS}</style>
-      {animType&&<Anim type={animType} onDone={()=>setAnimType(null)}/>}
-      <Hdr user={isAdmin?"ADMIN":users[user]?.name||user} isAdmin={isAdmin} onLogout={logout} view={view} setView={setView} adminMode={adminMode} setAdminMode={setAdminMode}/>
-      {!approved&&!isAdmin?(<div style={{textAlign:"center",padding:50}} className="fi"><div style={{fontSize:44,marginBottom:10}}>⏳</div><h2 className="hdr" style={{fontSize:22}}>ESPERANDO APROBACIÓN</h2><p style={{color:"var(--txt2)",fontSize:13,marginTop:5}}>El organizador tiene que habilitarte.</p></div>):(
-        <>{!isAdmin&&!users[user]?.paid&&<div style={{maxWidth:700,margin:"16px auto 0",padding:"0 16px"}}><PayBanner/></div>}
-          {view==="home"&&<Home users={users} results={results}/>}
-          {view==="hoy"&&<HoyView users={users} results={results} allPreds={allPreds}/>}
-          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim}/>}
-          {view==="preds"&&isAdmin&&adminMode&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
-          {view==="table"&&<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>}
-          {view==="compare"&&<Compare users={users} results={results} allPreds={allPreds}/>}
-          {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
-          {view==="rules"&&<Rules/>}
-          {view==="admin"&&isAdmin&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
-          {view==="game"&&<FootballGame/>}
-        </>
-      )}
     </div>
   );
 }
