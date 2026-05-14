@@ -170,7 +170,7 @@ function PayBanner(){
 
 function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPreview}){
   const locked=new Date()>=LOCK;
-  const nav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"},{id:"leagues",l:"⚔️ Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"perfil",l:"👤 Perfil"},{id:"stats",l:"📊 Stats"},{id:"rules",l:"Reglas"},];
+  const nav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"},{id:"leagues",l:"⚔️ Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"perfil",l:"👤 Perfil"},{id:"stats",l:"📊 Stats"},{id:"rules",l:"Reglas"},];
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
       <div style={{maxWidth:1200,margin:"0 auto",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
@@ -879,7 +879,8 @@ function Profile({userId,users,allPreds,results}){
           </div>
         ))}
       </div>
-      {favTeam&&<div className="card" style={{display:"flex",alignItems:"center",gap:12}}>
+      <div style={{textAlign:"center",marginBottom:8}}><ShareButton userId={userId} users={users} allPreds={allPreds} results={results}/></div>
+    {favTeam&&<div className="card" style={{display:"flex",alignItems:"center",gap:12}}>
         <span style={{fontSize:28}}>{FL[favTeam[0]]||"🏳️"}</span>
         <div><div style={{color:"var(--txt3)",fontSize:10}}>SELECCIÓN MÁS APOSTADA COMO GANADORA</div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"var(--wht)"}}>{favTeam[0]}</div><div style={{color:"var(--txt3)",fontSize:10}}>{favTeam[1]} veces</div></div>
       </div>}
@@ -1249,7 +1250,8 @@ function Home({users,results}){
   const locked=new Date()>=LOCK;
   return(
     <div style={{maxWidth:800,margin:"0 auto",padding:"24px 16px"}} className="fi">
-      <div style={{textAlign:"center",marginBottom:22}}><h2 className="hdr" style={{fontSize:26}}>BIENVENIDO AL PRODE</h2><p style={{color:"var(--txt2)",fontSize:12,marginTop:3}}>Fase de Grupos • 72 partidos • 12 grupos</p></div>
+      <div style={{textAlign:"center",marginBottom:18}}><h2 className="hdr" style={{fontSize:26}}>BIENVENIDO AL PRODE</h2><p style={{color:"var(--txt2)",fontSize:12,marginTop:3}}>Fase de Grupos • 72 partidos • 12 grupos</p></div>
+      <Countdown/>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(155px,1fr))",gap:12,marginBottom:20}}>
         {[{i:"🏆",l:"POZO",v:fmt$(pool),s:`${paid} pagaron`},{i:"👥",l:"JUGADORES",v:approved,s:"habilitados"},{i:"⚽",l:"PARTIDOS",v:`${played}/72`,s:"jugados"},{i:locked?"🔒":"✏️",l:"PREDICCIONES",v:locked?"LOCKED":"ABIERTAS",s:locked?"Desde 9/06":"Hasta 9/06"}].map((c,i)=>(
           <div key={i} className="card" style={{textAlign:"center",padding:16}}><div style={{fontSize:24,marginBottom:4}}>{c.i}</div><div style={{color:"var(--txt3)",fontSize:8,letterSpacing:2}}>{c.l}</div><div className="hdr" style={{fontSize:22,color:"var(--wht)"}}>{c.v}</div><div style={{color:"var(--txt3)",fontSize:9}}>{c.s}</div></div>
@@ -1458,9 +1460,21 @@ export default function App(){
 
   useEffect(()=>{
     if(!user)return;
+    const prevR=JSON.parse(localStorage.getItem("prode-lastresults")||"{}");
     const iv=setInterval(async()=>{
       const u=await dbGet("users");if(u)setUsers(u);
-      const r=await dbGet("results");if(r)setResults(r);
+      const r=await dbGet("results");if(r){
+        setResults(r);
+        // Check for new results and notify
+        M.forEach(m=>{
+          const prev=prevR[m.n]||{h:"",a:""};
+          const curr=r[m.n]||{h:"",a:""};
+          if(curr.h!==""&&curr.a!==""&&(prev.h!==curr.h||prev.a!==curr.a)){
+            sendNotif(`⚽ Resultado: ${m.h} vs ${m.a}`,`${curr.h} - ${curr.a}`);
+          }
+        });
+        localStorage.setItem("prode-lastresults",JSON.stringify(r));
+      }
     },15000);
     return()=>clearInterval(iv);
   },[user]);
@@ -1472,6 +1486,8 @@ export default function App(){
     const r=await dbGet("results");if(r)setResults(r);
   };
   const logout=()=>{setUser(null);setIsAdmin(false);setView("home");localStorage.removeItem("prode-session");};
+  // Request notification permission after login
+  useEffect(()=>{if(user)requestNotifPermission();},[user]);
 
   if(loading)return(
     <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -1488,7 +1504,7 @@ export default function App(){
   const approved=isAdmin||users[user]?.approved;
 
   return(
-    <div style={{minHeight:"100vh",background:"var(--bg)"}}>
+    <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:60}}>
       <style>{CSS}</style>
       {showPreview&&isAdmin&&<AdminPreview allPreds={allPreds} results={results} onClose={()=>setShowPreview(false)}/>}
       {animType&&<Anim type={animType} onDone={()=>setAnimType(null)}/>}
@@ -1529,9 +1545,243 @@ export default function App(){
             <TournamentStats allPreds={allPreds} results={results} users={users}/>
           </div>}
           {view==="rules"&&<Rules/>}
+          {view==="bracket"&&<BracketView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="admin"&&isAdmin&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
+          <MobileNav view={view} setView={setView} isAdmin={isAdmin}/>
         </>
       )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════════════
+function Countdown(){
+  const[now,setNow]=useState(new Date());
+  useEffect(()=>{const iv=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(iv);},[]);
+  const FIRST=new Date("2026-06-11T16:00:00-05:00"); // Mexico vs Sudafrica, 16hs Ciudad de Mexico
+  const target=now<FIRST?FIRST:null;
+  // Find next today's match
+  const todayStr=`${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}`;
+  const todayMatches=M.filter(m=>m.d===todayStr);
+  const nextMatch=todayMatches.find(m=>{
+    const[h,min]=m.t.split(":").map(Number);
+    const mDate=new Date(now);mDate.setHours(h,min,0,0);
+    return mDate>now;
+  });
+  const calcDiff=(t)=>{
+    const diff=t-now;
+    if(diff<=0)return null;
+    const d=Math.floor(diff/86400000);
+    const h=Math.floor((diff%86400000)/3600000);
+    const m=Math.floor((diff%3600000)/60000);
+    const s=Math.floor((diff%60000)/1000);
+    return{d,h,m,s,diff};
+  };
+  const mainTarget=nextMatch?(()=>{
+    const[h,min]=nextMatch.t.split(":").map(Number);
+    const t=new Date(now);t.setHours(h,min,0,0);return t;
+  })():target;
+  const diff=mainTarget?calcDiff(mainTarget):null;
+  if(!diff)return null;
+  const label=nextMatch?`${nextMatch.h} vs ${nextMatch.a}`:now<FIRST?"⚽ Primer partido del Mundial":"";
+  if(!label)return null;
+  const units=nextMatch?[{v:diff.h,l:"HS"},{v:diff.m,l:"MIN"},{v:diff.s,l:"SEG"}]:[{v:diff.d,l:"DÍAS"},{v:diff.h,l:"HS"},{v:diff.m,l:"MIN"},{v:diff.s,l:"SEG"}];
+  return(
+    <div style={{background:"linear-gradient(135deg,rgba(212,168,67,.12),rgba(212,168,67,.04))",border:"1px solid rgba(212,168,67,.3)",borderRadius:12,padding:"14px 20px",marginBottom:16,textAlign:"center"}}>
+      <div style={{color:"var(--txt3)",fontSize:10,letterSpacing:3,textTransform:"uppercase",marginBottom:6}}>{nextMatch?"próximo partido hoy":"cuenta regresiva"}</div>
+      <div style={{color:"var(--gold)",fontSize:13,fontWeight:700,marginBottom:8}}>{label}</div>
+      <div style={{display:"flex",justifyContent:"center",gap:12}}>
+        {units.map(u=>(
+          <div key={u.l} style={{textAlign:"center"}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,color:"var(--wht)",lineHeight:1,minWidth:44}}>{String(u.v).padStart(2,"0")}</div>
+            <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:2}}>{u.l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// MOBILE NAV BAR
+// ═══════════════════════════════════════════════════════
+function MobileNav({view,setView,isAdmin}){
+  const items=[
+    {id:"home",l:"Inicio",i:"🏠"},{id:"hoy",l:"Hoy",i:"📅"},
+    {id:"preds",l:"Preds",i:"✏️"},{id:"table",l:"Tabla",i:"🏆"},
+    {id:"perfil",l:"Perfil",i:"👤"},
+  ];
+  return(
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(7,14,28,.97)",borderTop:"1px solid var(--bd)",display:"flex",zIndex:90,paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
+      {items.map(it=>(
+        <button key={it.id} onClick={()=>setView(it.id)} style={{flex:1,padding:"8px 4px 6px",background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all .15s"}}>
+          <span style={{fontSize:18,lineHeight:1}}>{it.i}</span>
+          <span style={{fontSize:9,color:view===it.id?"var(--gold)":"var(--txt3)",fontWeight:view===it.id?700:400,letterSpacing:.5}}>{it.l}</span>
+          {view===it.id&&<div style={{width:20,height:2,background:"var(--gold)",borderRadius:1,marginTop:1}}/>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// SHARE RESULT (WhatsApp image via canvas)
+// ═══════════════════════════════════════════════════════
+function ShareButton({userId,users,allPreds,results}){
+  const[sharing,setSharing]=useState(false);
+  const share=()=>{
+    setSharing(true);
+    const u=users[userId];
+    const s=calcTotal(allPreds[userId]||{},results);
+    const text=`⚽ *Prode Mundial 2026*\n👤 ${u?.name||userId}\n\n🏆 *${s.tot} puntos totales*\n🎯 ${s.ex} exactos\n🔥 ${s.si} signos\n⭐ ${s.bo} bonus\n\n¡Jugá en el prode!`;
+    const url=`https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url,"_blank");
+    setSharing(false);
+  };
+  return(
+    <button onClick={share} disabled={sharing} style={{padding:"8px 16px",background:"#25D366",color:"#fff",border:"none",borderRadius:7,fontSize:12,cursor:"pointer",fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
+      <span>📲</span>{sharing?"Compartiendo...":"Compartir por WhatsApp"}
+    </button>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// PUSH NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+async function requestNotifPermission(){
+  if(!("Notification" in window))return false;
+  if(Notification.permission==="granted")return true;
+  const perm=await Notification.requestPermission();
+  return perm==="granted";
+}
+function sendNotif(title,body){
+  if(Notification.permission==="granted"){
+    new Notification(title,{body,icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>"});
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// BRACKET VIEW
+// ═══════════════════════════════════════════════════════
+const GROUPS_DEF={
+  A:["México","Sudáfrica","Corea del Sur","Chequia"],B:["Canadá","Bosnia","Qatar","Suiza"],
+  C:["Brasil","Marruecos","Haití","Escocia"],D:["Estados Unidos","Paraguay","Australia","Turquía"],
+  E:["Alemania","Curazao","Costa de Marfil","Ecuador"],F:["Países Bajos","Japón","Suecia","Túnez"],
+  G:["Bélgica","Egipto","Irán","Nueva Zelanda"],H:["España","Cabo Verde","Arabia Saudita","Uruguay"],
+  I:["Francia","Senegal","Irak","Noruega"],J:["Argentina","Argelia","Austria","Jordania"],
+  K:["Portugal","RD Congo","Uzbekistán","Colombia"],L:["Inglaterra","Croacia","Ghana","Panamá"]
+};
+
+function calcGroupStandings(results){
+  const standings={};
+  Object.entries(GROUPS_DEF).forEach(([g,teams])=>{
+    teams.forEach(t=>{standings[t]={team:t,group:g,pts:0,gf:0,ga:0,gd:0,played:0};});
+  });
+  M.forEach(m=>{
+    const r=results[m.n]||{h:"",a:""};
+    if(r.h===""||r.a==="")return;
+    const rh=+r.h,ra=+r.a;
+    if(!standings[m.h]||!standings[m.a])return;
+    standings[m.h].gf+=rh;standings[m.h].ga+=ra;standings[m.h].gd+=rh-ra;standings[m.h].played++;
+    standings[m.a].gf+=ra;standings[m.a].ga+=rh;standings[m.a].gd+=ra-rh;standings[m.a].played++;
+    if(rh>ra){standings[m.h].pts+=3;}
+    else if(rh<ra){standings[m.a].pts+=3;}
+    else{standings[m.h].pts+=1;standings[m.a].pts+=1;}
+  });
+  const groupTables={};
+  Object.keys(GROUPS_DEF).forEach(g=>{
+    groupTables[g]=GROUPS_DEF[g].map(t=>standings[t]).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
+  });
+  return groupTables;
+}
+
+function BracketView({results,allPreds,users,currentUser}){
+  const[tab,setTab]=useState("groups");
+  const groupTables=useMemo(()=>calcGroupStandings(results),[results]);
+  const myPreds=allPreds[currentUser]||{};
+
+  // User's group standings based on their predictions
+  const myGroupTables=useMemo(()=>calcGroupStandings(
+    Object.fromEntries(M.map(m=>[m.n,myPreds[m.n]||{h:"",a:""}]))
+  ),[myPreds]);
+
+  const groupsDone=Object.values(groupTables).every(g=>g.every(t=>t.played>=3));
+
+  return(
+    <div style={{maxWidth:950,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:24,textAlign:"center",marginBottom:4}}>🏟️ BRACKET & GRUPOS</h2>
+      <p style={{color:"var(--txt3)",fontSize:11,textAlign:"center",marginBottom:14}}>Clasificación en tiempo real según resultados reales</p>
+      <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+        <button className={`nb${tab==="groups"?" act":""}`} onClick={()=>setTab("groups")}>📊 Grupos</button>
+        <button className={`nb${tab==="mypreds"?" act":""}`} onClick={()=>setTab("mypreds")}>🎯 Mis predicciones</button>
+        {groupsDone&&<button className={`nb${tab==="bracket"?" act":""}`} onClick={()=>setTab("bracket")}>🏆 Eliminatorias</button>}
+      </div>
+
+      {(tab==="groups"||tab==="mypreds")&&(()=>{
+        const tables=tab==="groups"?groupTables:myGroupTables;
+        const label=tab==="groups"?"Resultados reales":"Según tus predicciones";
+        return(
+          <div>
+            {tab==="mypreds"&&<div style={{background:"rgba(212,168,67,.08)",border:"1px solid rgba(212,168,67,.2)",borderRadius:8,padding:"8px 14px",marginBottom:12,fontSize:12,color:"var(--gold)"}}>📌 Así quedarían los grupos si todos tus pronósticos se cumplen</div>}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10}}>
+              {Object.entries(tables).sort().map(([g,teams])=>(
+                <div key={g} className="card" style={{padding:12}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:"var(--gold)",marginBottom:8,borderBottom:"1px solid var(--bd)",paddingBottom:6}}>GRUPO {g}</div>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                    <thead><tr>{["","Equipo","J","G","E","P","GF","GA","GD","Pts"].map(h=><th key={h} style={{padding:"2px 3px",color:"var(--txt3)",fontSize:9,textAlign:h==="Equipo"?"left":"center"}}>{h}</th>)}</tr></thead>
+                    <tbody>{teams.map((t,i)=>{
+                      const qual=i<2;
+                      return(
+                        <tr key={t.team} style={{background:qual?"rgba(34,197,94,.08)":"transparent",borderBottom:"1px solid var(--bd)11"}}>
+                          <td style={{padding:"3px 2px",textAlign:"center",fontSize:10}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":"4"}</td>
+                          <td style={{padding:"3px 2px",color:qual?"var(--grn)":"var(--txt)",fontWeight:qual?600:400,whiteSpace:"nowrap"}}>{FL[t.team]||""} {t.team.slice(0,8)}</td>
+                          {[t.played,Math.round((t.pts-t.played+(t.played-Math.round((t.pts)/3)))/1)||0,0,0,t.gf,t.ga,t.gd>=0?"+"+t.gd:t.gd,t.pts].map((v,vi)=>(
+                            <td key={vi} style={{padding:"3px 2px",textAlign:"center",color:vi===7?"var(--gold)":"var(--txt2)",fontWeight:vi===7?700:400,fontSize:vi===7?12:10}}>{v}</td>
+                          ))}
+                        </tr>
+                      );
+                    })}</tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {tab==="bracket"&&groupsDone&&(()=>{
+        // Get top 2 from each group + 8 best 3rd places
+        const top2=[];const thirds=[];
+        Object.entries(groupTables).sort().forEach(([g,teams])=>{
+          top2.push({...teams[0],pos:1,group:g});
+          top2.push({...teams[1],pos:2,group:g});
+          thirds.push({...teams[2],group:g});
+        });
+        thirds.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
+        const r32=[...top2,...thirds.slice(0,8)];
+        return(
+          <div>
+            <h3 className="hdr" style={{fontSize:16,marginBottom:12}}>🏆 RONDA DE 32 — Clasificados</h3>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
+              {r32.map((t,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:8}}>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",color:"var(--gold)",fontSize:14,minWidth:20}}>{i+1}</span>
+                  <span style={{fontSize:16}}>{FL[t.team]||"🏳️"}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,color:"var(--wht)",fontWeight:600}}>{t.team}</div>
+                    <div style={{fontSize:10,color:"var(--txt3)"}}>Grupo {t.group} • {t.pts} pts • GD: {t.gd>=0?"+":""}{t.gd}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {r32.length<32&&<p style={{color:"var(--txt3)",fontSize:11,textAlign:"center",marginTop:12}}>Faltan terminar algunos grupos para completar el bracket.</p>}
+          </div>
+        );
+      })()}
+
+      {tab==="bracket"&&!groupsDone&&<div style={{textAlign:"center",padding:40}}><div style={{fontSize:40,marginBottom:10}}>⏳</div><h3 className="hdr" style={{fontSize:18}}>FASE DE GRUPOS EN CURSO</h3><p style={{color:"var(--txt3)",fontSize:13,marginTop:6}}>El bracket de eliminatorias aparece cuando terminen todos los grupos.</p></div>}
     </div>
   );
 }
