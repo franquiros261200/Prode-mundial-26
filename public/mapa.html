@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * data: blob:;">
 <meta charset="utf-8"/>
 <title>Mapa · Prode Mundial 2026</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -27,6 +27,13 @@ input,button,select{font-family:inherit;}
 .nb:hover:not(.act){border-color:var(--gold);color:var(--gold);}
 .tg{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;}
 svg text{user-select:none;}
+@media(max-width:640px){
+  .grid-main{grid-template-columns:1fr !important;}
+  input,select{font-size:16px !important;}
+  /* Make tab buttons wrap nicely */
+  nav{flex-wrap:wrap !important;gap:4px !important;}
+  .nb{font-size:10px !important;padding:5px 8px !important;}
+}
 @media (max-width: 980px){.grid-main{grid-template-columns:1fr !important;}}
 </style>
 </head>
@@ -2163,8 +2170,8 @@ function WorldMap({
   valueKey = "wins"
 }) {
   const world = useWorldAtlas();
-  const width = 1000,
-    height = 520;
+  const width = isMobile ? 700 : 1000,
+    height = isMobile ? 380 : 520;
   const projection = useMemo(() => {
     const d3 = window.d3; if (!d3) return null;
     return d3.geoNaturalEarth1().scale(195).translate([width / 2, height / 2 + 10]);
@@ -2392,8 +2399,8 @@ function HostMap({
   onSelect
 }) {
   const world = useWorldAtlas();
-  const width = 1000,
-    height = 520;
+  const width = isMobile ? 700 : 1000,
+    height = isMobile ? 380 : 520;
   const fullProj = useMemo(() => {
     const d3 = window.d3; if (!d3) return null;
     // Manual Mercator centered on continental US, sized to fit Vancouver→Boston, MEX→Edmonton.
@@ -2654,6 +2661,13 @@ function MapaSection({
     heatPalette: "gold",
     showLabels: false
   });
+  const [winW, setWinW] = React.useState(typeof window !== "undefined" ? window.innerWidth : 800);
+  React.useEffect(() => {
+    const onResize = () => setWinW(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const isMobile = winW < 640;
   const [tab, setTab] = useState2("mundo");
   const [dataMode, setDataMode] = useState2("consenso");
   const [groupFilter, setGroupF] = useState2("all");
@@ -2892,7 +2906,7 @@ function MapaSection({
       className: "grid-main",
       style: {
         display: "grid",
-        gridTemplateColumns: "minmax(0,1fr) 320px",
+        gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1fr) 320px",
         gap: 12,
         alignItems: "start"
       },
@@ -2910,6 +2924,7 @@ function MapaSection({
           selected: selected,
           onHover: setHover,
           onSelect: setSelected,
+          isMobile: isMobile,
           showLabels: t.showLabels,
           valueKey: valueKey
         }), tab === "avance" && /*#__PURE__*/_jsx(WorldMap, {
@@ -2919,6 +2934,7 @@ function MapaSection({
           selected: selected,
           onHover: setHover,
           onSelect: setSelected,
+          isMobile: isMobile,
           showLabels: t.showLabels,
           valueKey: "alive"
         }), tab === "sedes" && /*#__PURE__*/_jsx(HostMap, {
