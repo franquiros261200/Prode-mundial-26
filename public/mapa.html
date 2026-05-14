@@ -1876,9 +1876,6 @@ Object.assign(window, {
   TEAM_CONF,
   SEDES
 });
-console.log("[PRODE DEBUG] SEDES:", typeof SEDES, SEDES ? SEDES.length : "UNDEFINED");
-console.log("[PRODE DEBUG] d3:", typeof window.d3);
-console.log("[PRODE DEBUG] topojson:", typeof window.topojson);
 
 // ─── MAP RENDERING (WorldMap, HostMap, computeTeamStats, etc.) ─
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2450,7 +2447,7 @@ function HostMap({
         stroke: "#2a4878",
         strokeWidth: 0.7
       }, f.id || "h-" + idx);
-    }), (console.log("HostMap SEDES:", typeof SEDES, SEDES ? SEDES.length : "undefined"), SEDES).map((s, i) => {
+    }), SEDES.map((s, i) => {
       const p = fullProj([s.lon, s.lat]);
       if (!p) return null;
       const [x, y] = p;
