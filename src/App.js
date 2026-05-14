@@ -1128,7 +1128,7 @@ function MapSection({results, isAdmin, allPreds, users}){
       {tab==="mundo"&&(
         <div style={{width:"100%",height:"calc(100vh - 110px)",position:"relative",overflow:"hidden"}}>
           <iframe
-            src="/mapa.html"
+            src="/mapa.html?nosedes=1"
             style={{width:"100%",height:"100%",border:"none",display:"block"}}
             title="Mapa Mundial 2026"
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
