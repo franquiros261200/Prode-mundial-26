@@ -1204,8 +1204,7 @@ const MATCH_SEDE = {
 const SEDE_COLORS = {inaugural:"#f0d060",final:"#f0d060",semi:"#d4a843",cuartos:"#3b82f6",octavos:"#22c55e",grupos:"#6b8299"};
 const SEDE_LABELS = {inaugural:"INAUGURAL",final:"FINAL",semi:"SEMIFINAL",cuartos:"CUARTOS",octavos:"OCTAVOS",grupos:"GRUPOS"};
 
-function projectNA(lon,lat){
-  const W=1000,H=520,scale=640;
+function projectNA(lon,lat,W=1000,H=520,scale=640){
   const x=(lon-(-97))*(Math.PI/180)*scale+W/2;
   const latRad=lat*Math.PI/180;
   const y=-Math.log(Math.tan(Math.PI/4+latRad/2))*scale+H/2+Math.log(Math.tan(Math.PI/4+38*Math.PI/360))*scale;
@@ -1218,7 +1217,7 @@ const COUNTRY_OUTLINES={
   CAN:[[-123,49],[-114,49],[-95.2,49],[-95.2,49.4],[-94.6,48.9],[-94,48.7],[-92,48.5],[-89.5,48],[-88.5,47.4],[-85.5,46.7],[-84.5,46.5],[-83.5,46],[-82.5,45.5],[-78.9,43.3],[-77,43.6],[-75.5,44.7],[-74.5,45],[-71.5,45],[-69.5,46.5],[-67.8,47.1],[-67,47],[-64.5,46.5],[-61,45.6],[-60,46.5],[-59,47.5],[-55,47.5],[-53,48],[-52.5,49],[-53,50.5],[-55,52],[-57,53.5],[-61,55],[-64,57],[-66,58.5],[-68,60],[-70,60.5],[-74,62],[-78,62],[-82,63],[-84,63.5],[-87,63.5],[-92,63.5],[-95,63],[-100,63],[-105,63],[-110,63],[-115,63],[-120,63],[-125,63],[-130,62],[-133,61.5],[-138,62],[-139,60],[-138,59],[-135,58.5],[-132,57.5],[-130,56],[-128,54.5],[-127,53.5],[-126,52],[-125.5,50.5],[-124.5,50],[-123,49]]
 };
 
-function outlineToPath(coords){return coords.map((c,i)=>{const[x,y]=projectNA(c[0],c[1]);return(i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1);}).join(" ")+" Z";}
+function outlineToPath(coords,W=1000,H=520,scale=640){return coords.map((c,i)=>{const[x,y]=projectNA(c[0],c[1],W,H,scale);return(i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1);}).join(" ")+" Z";}
 
 function HostMapView({results, isAdmin}){
   const[hovered,setHovered]=useState(null);
@@ -1233,13 +1232,13 @@ function HostMapView({results, isAdmin}){
   const[knockouts,setKnockouts]=useState({});
   const[editKO,setEditKO]=useState(false);
   const[localKO,setLocalKO]=useState({});
-  const W=isMobile?700:1000,H=isMobile?400:520;
+  const W=isMobile?620:1000,H=isMobile?360:520,SCALE=isMobile?440:640;
   const focus=selected||hovered;
   const focusSede=focus?SEDES_DATA.find(s=>s.city===focus):null;
-  const usaPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.USA),[]);
-  const mexPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.MEX),[]);
-  const canPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.CAN),[]);
-  const labelUSA=projectNA(-98,39),labelMEX=projectNA(-102,23),labelCAN=projectNA(-100,55);
+  const usaPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.USA,W,H,SCALE),[W,H,SCALE]);
+  const mexPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.MEX,W,H,SCALE),[W,H,SCALE]);
+  const canPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.CAN,W,H,SCALE),[W,H,SCALE]);
+  const labelUSA=projectNA(-98,39,W,H,SCALE),labelMEX=projectNA(-102,23,W,H,SCALE),labelCAN=projectNA(-100,55,W,H,SCALE);
 
   useEffect(()=>{(async()=>{const d=await dbGet("knockouts");if(d){setKnockouts(d);setLocalKO(d);}})();},[]);
 
@@ -1340,7 +1339,7 @@ function HostMapView({results, isAdmin}){
             <text x={labelUSA[0]} y={labelUSA[1]} textAnchor="middle" fontFamily="'Bebas Neue',sans-serif" fontSize="22" fill="#2a4d80" letterSpacing="6">ESTADOS UNIDOS</text>
             <text x={labelMEX[0]} y={labelMEX[1]} textAnchor="middle" fontFamily="'Bebas Neue',sans-serif" fontSize="22" fill="#1e3a6a" letterSpacing="6">MÉXICO</text>
             {SEDES_DATA.map(s=>{
-              const[x,y]=projectNA(s.lon,s.lat);
+              const[x,y]=projectNA(s.lon,s.lat,W,H,SCALE);
               const color=SEDE_COLORS[s.type];
               const active=hovered===s.city||selected===s.city;
               const r=(isMobile?7:5)+s.games*(isMobile?0.8:0.6);
