@@ -1135,6 +1135,24 @@ const SEDES_DATA = [
   {city:"Toronto",         stadium:"BMO Field",              lon:-79.42, lat:43.633, country:"CAN", games:6, type:"grupos"},
   {city:"Vancouver",       stadium:"BC Place",               lon:-123.11,lat:49.276, country:"CAN", games:7, type:"octavos"},
 ];
+
+// Match → sede mapping from fixture
+const MATCH_SEDE = {
+  1:"Ciudad de México",2:"Ciudad de México",3:"Toronto",4:"Dallas",5:"San Francisco",
+  6:"Los Angeles",7:"Seattle",8:"Vancouver",9:"Miami",10:"Houston",11:"Philadelphia",
+  12:"Boston",13:"Atlanta",14:"Kansas City",15:"Dallas",16:"Seattle",17:"Los Angeles",
+  18:"New York/NJ",19:"Miami",20:"Houston",21:"Philadelphia",22:"Boston",23:"Atlanta",
+  24:"Kansas City",25:"Dallas",26:"Vancouver",27:"Toronto",28:"Ciudad de México",
+  29:"San Francisco",30:"Guadalajara",31:"Los Angeles",32:"Seattle",33:"Philadelphia",
+  34:"Boston",35:"Miami",36:"Houston",37:"Atlanta",38:"Kansas City",39:"Dallas",
+  40:"Vancouver",41:"Toronto",42:"Ciudad de México",43:"Monterrey",44:"Guadalajara",
+  45:"Los Angeles",46:"Seattle",47:"San Francisco",48:"Miami",49:"Philadelphia",
+  50:"Boston",51:"Houston",52:"Atlanta",53:"Kansas City",54:"Dallas",55:"Vancouver",
+  56:"Toronto",57:"Ciudad de México",58:"Monterrey",59:"Guadalajara",60:"San Francisco",
+  61:"Los Angeles",62:"Seattle",63:"Philadelphia",64:"Boston",65:"Miami",66:"Houston",
+  67:"Atlanta",68:"Kansas City",69:"Dallas",70:"Vancouver",71:"Toronto",72:"Ciudad de México",
+};
+
 const SEDE_COLORS = {inaugural:"#f0d060",final:"#f0d060",semi:"#d4a843",cuartos:"#3b82f6",octavos:"#22c55e",grupos:"#6b8299"};
 const SEDE_LABELS = {inaugural:"INAUGURAL",final:"FINAL",semi:"SEMIFINAL",cuartos:"CUARTOS",octavos:"OCTAVOS",grupos:"GRUPOS"};
 
@@ -1154,9 +1172,12 @@ const COUNTRY_OUTLINES={
 
 function outlineToPath(coords){return coords.map((c,i)=>{const[x,y]=projectNA(c[0],c[1]);return(i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1);}).join(" ")+" Z";}
 
-function HostMapView(){
+function HostMapView({results, isAdmin}){
   const[hovered,setHovered]=useState(null);
   const[selected,setSelected]=useState(null);
+  const[knockouts,setKnockouts]=useState({});
+  const[editKO,setEditKO]=useState(false);
+  const[localKO,setLocalKO]=useState({});
   const W=1000,H=520;
   const focus=selected||hovered;
   const focusSede=focus?SEDES_DATA.find(s=>s.city===focus):null;
@@ -1164,11 +1185,92 @@ function HostMapView(){
   const mexPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.MEX),[]);
   const canPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.CAN),[]);
   const labelUSA=projectNA(-98,39),labelMEX=projectNA(-102,23),labelCAN=projectNA(-100,55);
+
+  useEffect(()=>{(async()=>{const d=await dbGet("knockouts");if(d){setKnockouts(d);setLocalKO(d);}})();},[]);
+
+  // Get group matches for a sede
+  const getSedeMatches=(city)=>{
+    return M.filter(m=>{
+      const sede=MATCH_SEDE[m.n];
+      return sede===city||(city==="Nueva York/NJ"&&sede==="New York/NJ");
+    });
+  };
+
+  // Get knockout matches for a sede
+  const getKOMatches=(city)=>{
+    if(!knockouts[city])return[];
+    return knockouts[city];
+  };
+
+  const saveKO=async()=>{
+    await dbSet("knockouts",localKO);
+    setKnockouts(localKO);
+    setEditKO(false);
+  };
+
+  const addKOMatch=(city)=>{
+    setLocalKO(p=>({...p,[city]:[...(p[city]||[]),{home:"",away:"",phase:"octavos",date:""}]}));
+  };
+
+  const updateKOMatch=(city,idx,field,val)=>{
+    setLocalKO(p=>{
+      const arr=[...(p[city]||[])];
+      arr[idx]={...arr[idx],[field]:val};
+      return{...p,[city]:arr};
+    });
+  };
+
+  const removeKOMatch=(city,idx)=>{
+    setLocalKO(p=>{
+      const arr=[...(p[city]||[])];
+      arr.splice(idx,1);
+      return{...p,[city]:arr};
+    });
+  };
+
   return(
     <div style={{maxWidth:1100,margin:"0 auto",padding:"24px 16px"}} className="fi">
-      <h2 className="hdr" style={{fontSize:26,textAlign:"center",marginBottom:4}}>🏟️ SEDES MUNDIAL 2026</h2>
-      <p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",marginBottom:16}}>11 sedes en Estados Unidos · 3 en México · 2 en Canadá</p>
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 280px",gap:12,alignItems:"start"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:8}}>
+        <div>
+          <h2 className="hdr" style={{fontSize:26}}>🏟️ SEDES MUNDIAL 2026</h2>
+          <p style={{color:"var(--txt3)",fontSize:12,marginTop:2}}>11 USA · 3 México · 2 Canadá · Click en una sede para ver sus partidos</p>
+        </div>
+        {isAdmin&&<button onClick={()=>setEditKO(!editKO)} style={{padding:"7px 16px",background:editKO?"var(--red)":"#7c3aed",color:"#fff",border:"none",borderRadius:7,fontSize:12,cursor:"pointer",fontWeight:600}}>{editKO?"✕ Cancelar":"⚙️ Editar Eliminatorias"}</button>}
+      </div>
+
+      {/* Admin KO Editor */}
+      {editKO&&isAdmin&&(
+        <div className="card" style={{marginBottom:16,borderColor:"#7c3aed44"}}>
+          <h3 className="hdr" style={{fontSize:15,color:"#a78bfa",marginBottom:12}}>⚙️ CARGAR CRUCES DE ELIMINATORIAS</h3>
+          <p style={{color:"var(--txt3)",fontSize:11,marginBottom:12}}>Agregá los cruces por sede. Ejemplo: "1A vs 2B", "Ganador partido 49", etc.</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
+            {SEDES_DATA.filter(s=>s.type!=="grupos").map(s=>(
+              <div key={s.city} style={{background:"var(--bg2)",borderRadius:8,padding:10}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color:SEDE_COLORS[s.type],marginBottom:6}}>{s.city} — {SEDE_LABELS[s.type]}</div>
+                {(localKO[s.city]||[]).map((m,idx)=>(
+                  <div key={idx} style={{display:"flex",gap:6,marginBottom:5,alignItems:"center"}}>
+                    <input className="inp" value={m.home} onChange={e=>updateKOMatch(s.city,idx,"home",e.target.value)} placeholder="Equipo/Clasificado 1" style={{fontSize:11,padding:"5px 8px",flex:1}}/>
+                    <span style={{color:"var(--txt3)",fontSize:11}}>vs</span>
+                    <input className="inp" value={m.away} onChange={e=>updateKOMatch(s.city,idx,"away",e.target.value)} placeholder="Equipo/Clasificado 2" style={{fontSize:11,padding:"5px 8px",flex:1}}/>
+                    <input className="inp" value={m.date||""} onChange={e=>updateKOMatch(s.city,idx,"date",e.target.value)} placeholder="Fecha" style={{fontSize:11,padding:"5px 8px",width:70}}/>
+                    <select value={m.phase} onChange={e=>updateKOMatch(s.city,idx,"phase",e.target.value)} style={{background:"var(--bg)",border:"1px solid var(--bd)",color:"var(--wht)",borderRadius:6,padding:"5px 6px",fontSize:10}}>
+                      {["octavos","cuartos","semi","final"].map(p=><option key={p} value={p}>{SEDE_LABELS[p]}</option>)}
+                    </select>
+                    <button onClick={()=>removeKOMatch(s.city,idx)} style={{background:"transparent",color:"var(--red)",border:"1px solid var(--red)",borderRadius:5,padding:"4px 8px",cursor:"pointer",fontSize:11}}>✕</button>
+                  </div>
+                ))}
+                <button onClick={()=>addKOMatch(s.city)} style={{background:"transparent",color:"#7c3aed",border:"1px solid #7c3aed44",borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:11,width:"100%",marginTop:2}}>+ Agregar cruce</button>
+              </div>
+            ))}
+          </div>
+          <div style={{textAlign:"right",marginTop:12}}>
+            <button className="bg" onClick={saveKO} style={{padding:"8px 24px",fontSize:13}}>GUARDAR CRUCES</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 300px",gap:12,alignItems:"start"}}>
+        {/* MAP */}
         <div className="card" style={{padding:0,overflow:"hidden"}}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 50%,#0a1d3a 0%,#050c18 75%)"}}>
             <defs>
@@ -1209,59 +1311,112 @@ function HostMapView(){
             </g>
           </svg>
         </div>
+
+        {/* SIDE PANEL */}
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          <div className="card" style={{padding:14}}>
-            <div className="hdr" style={{fontSize:14,letterSpacing:2,marginBottom:10}}>16 SEDES</div>
-            <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:440,overflowY:"auto"}}>
-              {["USA","MEX","CAN"].map(c=>{
-                const list=SEDES_DATA.filter(s=>s.country===c);
-                const flag={USA:"🇺🇸",MEX:"🇲🇽",CAN:"🇨🇦"}[c];
-                const name={USA:"Estados Unidos · 11",MEX:"México · 3",CAN:"Canadá · 2"}[c];
-                return(
-                  <div key={c}>
-                    <div style={{display:"flex",alignItems:"center",gap:7,padding:"4px 0",borderBottom:"1px solid var(--bd)",marginBottom:5}}>
-                      <span style={{fontSize:14}}>{flag}</span>
-                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:"var(--gold)",letterSpacing:1.5}}>{name}</span>
-                    </div>
-                    {list.map(s=>{
-                      const color=SEDE_COLORS[s.type];
-                      const isFocus=focus===s.city;
-                      return(
-                        <button key={s.city} onClick={()=>setSelected(isFocus?null:s.city)} onMouseEnter={()=>setHovered(s.city)} onMouseLeave={()=>setHovered(null)}
-                          style={{display:"flex",alignItems:"center",gap:8,padding:"6px 9px",borderRadius:7,background:isFocus?"rgba(212,168,67,0.12)":"var(--bg)",border:`1px solid ${isFocus?"var(--gold)":"var(--bd)"}`,cursor:"pointer",textAlign:"left",color:"var(--wht)",width:"100%",marginBottom:3}}>
-                          <span style={{width:8,height:8,borderRadius:"50%",background:color,flex:"0 0 8px"}}/>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:12,fontWeight:600}}>{s.city}</div>
-                            <div style={{color:"var(--txt3)",fontSize:9,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.stadium}</div>
-                          </div>
-                          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color}}>{s.games}</span>
-                          <span style={{color:"var(--txt3)",fontSize:8,width:24,textAlign:"right"}}>PJ</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          {focusSede&&(
-            <div className="card" style={{padding:14,borderColor:"rgba(212,168,67,0.35)"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",marginBottom:8}}>
+          {/* Sede detail */}
+          {focusSede?(
+            <div className="card" style={{borderColor:`${SEDE_COLORS[focusSede.type]}44`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",marginBottom:10}}>
                 <div>
-                  <div className="hdr" style={{fontSize:17,letterSpacing:1.5}}>{focusSede.city.toUpperCase()}</div>
+                  <div className="hdr" style={{fontSize:18,letterSpacing:1.5}}>{focusSede.city.toUpperCase()}</div>
                   <div style={{color:"var(--gold)",fontSize:11,fontWeight:600}}>{focusSede.stadium}</div>
                 </div>
                 <button onClick={()=>setSelected(null)} style={{background:"transparent",border:"1px solid var(--bd)",color:"var(--txt3)",borderRadius:5,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✕</button>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6}}>
-                <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"7px 4px",textAlign:"center"}}>
-                  <div className="hdr" style={{fontSize:20,color:"var(--gold)",lineHeight:1}}>{focusSede.games}</div>
-                  <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2}}>PARTIDOS</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>
+                <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"8px 4px",textAlign:"center"}}>
+                  <div className="hdr" style={{fontSize:22,color:"var(--gold)",lineHeight:1}}>{focusSede.games}</div>
+                  <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.2}}>PARTIDOS</div>
                 </div>
-                <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"7px 4px",textAlign:"center"}}>
-                  <div className="hdr" style={{fontSize:13,color:SEDE_COLORS[focusSede.type],lineHeight:1.2,marginTop:5}}>{SEDE_LABELS[focusSede.type]}</div>
-                  <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2}}>FASE MÁX.</div>
+                <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"8px 4px",textAlign:"center"}}>
+                  <div className="hdr" style={{fontSize:14,color:SEDE_COLORS[focusSede.type],lineHeight:1.3,marginTop:4}}>{SEDE_LABELS[focusSede.type]}</div>
+                  <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.2}}>FASE MÁX.</div>
                 </div>
+              </div>
+              {/* Group matches */}
+              {(()=>{
+                const ms=getSedeMatches(focusSede.city);
+                if(ms.length===0)return null;
+                return(
+                  <div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:"var(--txt3)",letterSpacing:2,marginBottom:6}}>PARTIDOS DE GRUPOS</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                      {ms.map(m=>{
+                        const r=results[m.n]||{h:"",a:""};
+                        const hasR=r.h!==""&&r.a!=="";
+                        return(
+                          <div key={m.n} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 8px",background:"var(--bg2)",borderRadius:6,fontSize:11}}>
+                            <span style={{color:"var(--txt3)",minWidth:22,fontSize:10}}>#{m.n}</span>
+                            <span style={{flex:1,color:"var(--txt)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{FL[m.h]||""} {m.h}</span>
+                            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:hasR?"var(--gold)":"var(--txt3)",minWidth:36,textAlign:"center"}}>{hasR?`${r.h}-${r.a}`:"vs"}</span>
+                            <span style={{flex:1,color:"var(--txt)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",textAlign:"right"}}>{m.a} {FL[m.a]||""}</span>
+                            <span style={{color:"var(--txt3)",fontSize:9,minWidth:28,textAlign:"right"}}>{m.d}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+              {/* KO matches */}
+              {(()=>{
+                const kos=getKOMatches(focusSede.city);
+                if(kos.length===0)return null;
+                return(
+                  <div style={{marginTop:10}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:"var(--txt3)",letterSpacing:2,marginBottom:6}}>ELIMINATORIAS</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                      {kos.map((m,i)=>(
+                        <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 8px",background:"var(--bg2)",border:`1px solid ${SEDE_COLORS[m.phase]||"var(--bd)"}33`,borderRadius:6,fontSize:11}}>
+                          <span className="tg" style={{background:`${SEDE_COLORS[m.phase]||"var(--bd)"}22`,color:SEDE_COLORS[m.phase]||"var(--txt3)",fontSize:8}}>{SEDE_LABELS[m.phase]||m.phase}</span>
+                          <span style={{flex:1,color:"var(--txt)"}}>{m.home}</span>
+                          <span style={{color:"var(--txt3)",fontSize:10}}>vs</span>
+                          <span style={{flex:1,color:"var(--txt)",textAlign:"right"}}>{m.away}</span>
+                          {m.date&&<span style={{color:"var(--txt3)",fontSize:9}}>{m.date}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          ):(
+            /* Sede list */
+            <div className="card" style={{padding:14}}>
+              <div className="hdr" style={{fontSize:14,letterSpacing:2,marginBottom:10}}>16 SEDES</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:500,overflowY:"auto"}}>
+                {["USA","MEX","CAN"].map(c=>{
+                  const list=SEDES_DATA.filter(s=>s.country===c);
+                  const flag={USA:"🇺🇸",MEX:"🇲🇽",CAN:"🇨🇦"}[c];
+                  const name={USA:"Estados Unidos · 11",MEX:"México · 3",CAN:"Canadá · 2"}[c];
+                  return(
+                    <div key={c}>
+                      <div style={{display:"flex",alignItems:"center",gap:7,padding:"4px 0",borderBottom:"1px solid var(--bd)",marginBottom:5}}>
+                        <span style={{fontSize:14}}>{flag}</span>
+                        <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:"var(--gold)",letterSpacing:1.5}}>{name}</span>
+                      </div>
+                      {list.map(s=>{
+                        const color=SEDE_COLORS[s.type];
+                        const isFocus=focus===s.city;
+                        const koCount=(knockouts[s.city]||[]).length;
+                        return(
+                          <button key={s.city} onClick={()=>setSelected(isFocus?null:s.city)} onMouseEnter={()=>setHovered(s.city)} onMouseLeave={()=>setHovered(null)}
+                            style={{display:"flex",alignItems:"center",gap:8,padding:"6px 9px",borderRadius:7,background:isFocus?"rgba(212,168,67,0.12)":"var(--bg)",border:`1px solid ${isFocus?"var(--gold)":"var(--bd)"}`,cursor:"pointer",textAlign:"left",color:"var(--wht)",width:"100%",marginBottom:3}}>
+                            <span style={{width:8,height:8,borderRadius:"50%",background:color,flex:"0 0 8px"}}/>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:12,fontWeight:600}}>{s.city}</div>
+                              <div style={{color:"var(--txt3)",fontSize:9,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.stadium}</div>
+                            </div>
+                            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color}}>{s.games}</span>
+                            {koCount>0&&<span style={{fontSize:8,color:"#a78bfa",background:"#7c3aed22",padding:"1px 5px",borderRadius:3}}>{koCount} KO</span>}
+                            <span style={{color:"var(--txt3)",fontSize:8,width:24,textAlign:"right"}}>PJ</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1692,7 +1847,7 @@ export default function App(){
           {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="chat"&&<Chat currentUser={user} users={users}/>}
           {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
-          {view==="map"&&<HostMapView/>}
+          {view==="map"&&<HostMapView results={results} isAdmin={isAdmin}/>}
           {view==="thermo"&&<Thermometer allPreds={allPreds} users={users} currentUser={user} results={results}/>}
           {view==="perfil"&&<Profile userId={user} users={users} allPreds={allPreds} results={results}/>}
           {view==="stats"&&<div style={{maxWidth:850,margin:"0 auto",padding:"24px 16px"}} className="fi">
