@@ -1536,12 +1536,8 @@ export default function App(){
           {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="chat"&&<Chat currentUser={user} users={users}/>}
           {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
-          {view==="map"&&<div style={{maxWidth:700,margin:"0 auto",padding:"60px 20px",textAlign:"center"}} className="fi">
-            <div style={{fontSize:64,marginBottom:16}}>🌍</div>
-            <h2 className="hdr" style={{fontSize:28,marginBottom:8}}>MAPA DEL PRODE</h2>
-            <p style={{color:"var(--txt2)",fontSize:14,marginBottom:24,lineHeight:1.6}}>El mapa interactivo con D3 se abre en una pestaña nueva para funcionar correctamente.</p>
-            <button onClick={()=>window.open('/mapa.html','_blank')} className="bg" style={{fontSize:16,padding:"14px 40px"}}>🗺️ ABRIR MAPA INTERACTIVO</button>
-            <p style={{color:"var(--txt3)",fontSize:11,marginTop:16}}>Mapa mundial · 16 sedes · Calor de pronósticos · Avance por fase</p>
+          {view==="map"&&<div style={{width:"100%",height:"calc(100vh - 60px)",position:"relative",overflow:"hidden"}}>
+            <iframe src="/mapa.html" style={{width:"100%",height:"100%",border:"none",display:"block"}} title="Mapa Mundial 2026" sandbox="allow-scripts allow-same-origin allow-popups"/>
           </div>}
           {view==="thermo"&&<Thermometer allPreds={allPreds} users={users} currentUser={user} results={results}/>}
           {view==="perfil"&&<Profile userId={user} users={users} allPreds={allPreds} results={results}/>}
