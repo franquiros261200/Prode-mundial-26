@@ -2622,10 +2622,10 @@ const {
 const TABS = [{
   id: "mundo",
   l: "🌍 MUNDO"
-}, {
+}, ...(new URLSearchParams(window.location.search).get("nosedes") ? [] : [{
   id: "sedes",
   l: "🏟️ SEDES 2026"
-}, {
+}]), {
   id: "avance",
   l: "📈 AVANCE"
 }];
