@@ -39,47 +39,57 @@ svg text{user-select:none;}
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
 <!-- Firebase SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCZ2ijjaotfBxIFFGnG2fwYi4NTYTeTKfQ",
-    authDomain: "prode-mundial-202.firebaseapp.com",
-    projectId: "prode-mundial-202",
-    storageBucket: "prode-mundial-202.firebasestorage.app",
-    messagingSenderId: "641198744773",
-    appId: "1:641198744773:web:e2ff6ef13c61e5739a7cac"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+<script>
+  // Firebase REST API - no SDK, no eval
+  const FIREBASE_PROJECT = "prode-mundial-202";
+  const FIREBASE_API_KEY = "AIzaSyCZ2ijjaotfBxIFFGnG2fwYi4NTYTeTKfQ";
 
   async function dbGet(key) {
     try {
-      const snap = await getDoc(doc(db, "prode", key));
-      return snap.exists() ? snap.data().value : null;
-    } catch(e) { console.error(e); return null; }
+      const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/prode/${key}?key=${FIREBASE_API_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.fields || !data.fields.value) return null;
+      // Parse Firestore value field
+      const val = data.fields.value;
+      if (val.stringValue !== undefined) {
+        try { return JSON.parse(val.stringValue); } catch { return val.stringValue; }
+      }
+      if (val.mapValue) return parseFirestoreMap(val.mapValue);
+      return null;
+    } catch(e) { console.error("dbGet error:", e); return null; }
   }
 
-  // Load all data from Firebase
-  async function loadData() {
-    const [users, results] = await Promise.all([
-      dbGet("users"),
-      dbGet("results"),
-    ]);
+  function parseFirestoreMap(mapVal) {
+    if (!mapVal || !mapVal.fields) return {};
+    const result = {};
+    for (const [k, v] of Object.entries(mapVal.fields)) {
+      result[k] = parseFirestoreValue(v);
+    }
+    return result;
+  }
 
+  function parseFirestoreValue(v) {
+    if (v.stringValue !== undefined) { try { return JSON.parse(v.stringValue); } catch { return v.stringValue; } }
+    if (v.integerValue !== undefined) return parseInt(v.integerValue);
+    if (v.doubleValue !== undefined) return parseFloat(v.doubleValue);
+    if (v.booleanValue !== undefined) return v.booleanValue;
+    if (v.mapValue) return parseFirestoreMap(v.mapValue);
+    if (v.arrayValue) return (v.arrayValue.values || []).map(parseFirestoreValue);
+    if (v.nullValue !== undefined) return null;
+    return null;
+  }
+
+  async function loadData() {
+    const [users, results] = await Promise.all([dbGet("users"), dbGet("results")]);
     const allPreds = {};
     const champions = {};
-    const approvedIds = users ? Object.keys(users).filter(id => users[id].approved) : [];
-
-    // Load preds for all approved users in parallel
+    const approvedIds = users ? Object.keys(users).filter(id => users[id] && users[id].approved) : [];
     await Promise.all(approvedIds.map(async id => {
       const p = await dbGet(`preds-${id}`);
       if (p) allPreds[id] = p;
-      if (users[id].champion) champions[id] = users[id].champion;
     }));
-
     window.__PRODE_DATA = {
       users: users || {},
       results: results || {},
@@ -87,7 +97,6 @@ svg text{user-select:none;}
       champions,
       currentUser: JSON.parse(localStorage.getItem("prode-session") || "null")?.user || ""
     };
-
     window.__DATA_LOADED = true;
     document.dispatchEvent(new Event("prode-data-ready"));
   }
