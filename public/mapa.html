@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="es">
 <head>
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
@@ -34,12 +35,17 @@ svg text{user-select:none;}
 <div id="root" style="padding:16px 0 60px"></div>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
 <!-- Firebase SDK -->
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
@@ -390,219 +396,223 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }) {
   return (
     <>
       <style>{__TWEAKS_STYLE}</style>
-      <div ref={dragRef} className="twk-panel" data-noncommentable=""
-           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
-        <div className="twk-hd" onMouseDown={onDragStart}>
-          <b>{title}</b>
-          <button className="twk-x" aria-label="Close tweaks"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={dismiss}>✕</button>
-        </div>
-        <div className="twk-body">
-          {children}
-          {hasDeckStage && railEnabled && !noDeckControls && (
-            <TweakSection label="Deck">
-              <TweakToggle label="Thumbnail rail" value={railVisible} onChange={toggleRail} />
-            </TweakSection>
-          )}
-        </div>
-      </div>
-    </>
-  );
+
+```
+  <div ref={dragRef} className="twk-panel" data-noncommentable=""
+       style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+    <div className="twk-hd" onMouseDown={onDragStart}>
+      <b>{title}</b>
+      <button className="twk-x" aria-label="Close tweaks"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={dismiss}>✕</button>
+    </div>
+    <div className="twk-body">
+      {children}
+      {hasDeckStage && railEnabled && !noDeckControls && (
+        <TweakSection label="Deck">
+          <TweakToggle label="Thumbnail rail" value={railVisible} onChange={toggleRail} />
+        </TweakSection>
+      )}
+    </div>
+  </div>
+</>
+```
+
+);
 }
 
 // ── Layout helpers ──────────────────────────────────────────────────────────
 
 function TweakSection({ label, children }) {
-  return (
-    <>
-      <div className="twk-sect">{label}</div>
-      {children}
-    </>
-  );
+return (
+<>
+<div className="twk-sect">{label}</div>
+{children}
+</>
+);
 }
 
 function TweakRow({ label, value, children, inline = false }) {
-  return (
-    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
-      <div className="twk-lbl">
-        <span>{label}</span>
-        {value != null && <span className="twk-val">{value}</span>}
-      </div>
-      {children}
-    </div>
-  );
+return (
+<div className={inline ? ‘twk-row twk-row-h’ : ‘twk-row’}>
+<div className="twk-lbl">
+<span>{label}</span>
+{value != null && <span className="twk-val">{value}</span>}
+</div>
+{children}
+</div>
+);
 }
 
 // ── Controls ────────────────────────────────────────────────────────────────
 
-function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
-  return (
-    <TweakRow label={label} value={`${value}${unit}`}>
-      <input type="range" className="twk-slider" min={min} max={max} step={step}
-             value={value} onChange={(e) => onChange(Number(e.target.value))} />
-    </TweakRow>
-  );
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = ‘’, onChange }) {
+return (
+<TweakRow label={label} value={`${value}${unit}`}>
+<input type=“range” className=“twk-slider” min={min} max={max} step={step}
+value={value} onChange={(e) => onChange(Number(e.target.value))} />
+</TweakRow>
+);
 }
 
 function TweakToggle({ label, value, onChange }) {
-  return (
-    <div className="twk-row twk-row-h">
-      <div className="twk-lbl"><span>{label}</span></div>
-      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
-              role="switch" aria-checked={!!value}
-              onClick={() => onChange(!value)}><i /></button>
-    </div>
-  );
+return (
+<div className="twk-row twk-row-h">
+<div className="twk-lbl"><span>{label}</span></div>
+<button type=“button” className=“twk-toggle” data-on={value ? ‘1’ : ‘0’}
+role=“switch” aria-checked={!!value}
+onClick={() => onChange(!value)}><i /></button>
+</div>
+);
 }
 
 function TweakRadio({ label, value, options, onChange }) {
-  const trackRef = React.useRef(null);
-  const [dragging, setDragging] = React.useState(false);
-  // The active value is read by pointer-move handlers attached for the lifetime
-  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
-  const valueRef = React.useRef(value);
-  valueRef.current = value;
+const trackRef = React.useRef(null);
+const [dragging, setDragging] = React.useState(false);
+// The active value is read by pointer-move handlers attached for the lifetime
+// of a drag — ref it so a stale closure doesn’t fire onChange for every move.
+const valueRef = React.useRef(value);
+valueRef.current = value;
 
-  // Segments wrap mid-word once per-segment width runs out. The track is
-  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
-  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
-  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
-  // back to a dropdown rather than wrap.
-  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
-  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
-  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
-  if (!fitsAsSegments) {
-    // <select> emits strings — map back to the original option value so the
-    // fallback stays type-preserving (numbers, booleans) like the segment path.
-    const resolve = (s) => {
-      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
-      return m === undefined ? s : typeof m === 'object' ? m.value : m;
-    };
-    return <TweakSelect label={label} value={value} options={options}
-                        onChange={(s) => onChange(resolve(s))} />;
-  }
-  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
-  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
-  const n = opts.length;
+// Segments wrap mid-word once per-segment width runs out. The track is
+// ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+// to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+// options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+// back to a dropdown rather than wrap.
+const labelLen = (o) => String(typeof o === ‘object’ ? o.label : o).length;
+const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+if (!fitsAsSegments) {
+// <select> emits strings — map back to the original option value so the
+// fallback stays type-preserving (numbers, booleans) like the segment path.
+const resolve = (s) => {
+const m = options.find((o) => String(typeof o === ‘object’ ? o.value : o) === s);
+return m === undefined ? s : typeof m === ‘object’ ? m.value : m;
+};
+return <TweakSelect label={label} value={value} options={options}
+onChange={(s) => onChange(resolve(s))} />;
+}
+const opts = options.map((o) => (typeof o === ‘object’ ? o : { value: o, label: o }));
+const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+const n = opts.length;
 
-  const segAt = (clientX) => {
-    const r = trackRef.current.getBoundingClientRect();
-    const inner = r.width - 4;
-    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
-    return opts[Math.max(0, Math.min(n - 1, i))].value;
-  };
+const segAt = (clientX) => {
+const r = trackRef.current.getBoundingClientRect();
+const inner = r.width - 4;
+const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+return opts[Math.max(0, Math.min(n - 1, i))].value;
+};
 
-  const onPointerDown = (e) => {
-    setDragging(true);
-    const v0 = segAt(e.clientX);
-    if (v0 !== valueRef.current) onChange(v0);
-    const move = (ev) => {
-      if (!trackRef.current) return;
-      const v = segAt(ev.clientX);
-      if (v !== valueRef.current) onChange(v);
-    };
-    const up = () => {
-      setDragging(false);
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
+const onPointerDown = (e) => {
+setDragging(true);
+const v0 = segAt(e.clientX);
+if (v0 !== valueRef.current) onChange(v0);
+const move = (ev) => {
+if (!trackRef.current) return;
+const v = segAt(ev.clientX);
+if (v !== valueRef.current) onChange(v);
+};
+const up = () => {
+setDragging(false);
+window.removeEventListener(‘pointermove’, move);
+window.removeEventListener(‘pointerup’, up);
+};
+window.addEventListener(‘pointermove’, move);
+window.addEventListener(‘pointerup’, up);
+};
 
-  return (
-    <TweakRow label={label}>
-      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
-           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
-        <div className="twk-seg-thumb"
-             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
-                      width: `calc((100% - 4px) / ${n})` }} />
-        {opts.map((o) => (
-          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-    </TweakRow>
-  );
+return (
+<TweakRow label={label}>
+<div ref={trackRef} role=“radiogroup” onPointerDown={onPointerDown}
+className={dragging ? ‘twk-seg dragging’ : ‘twk-seg’}>
+<div className=“twk-seg-thumb”
+style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+width: `calc((100% - 4px) / ${n})` }} />
+{opts.map((o) => (
+<button key={o.value} type=“button” role=“radio” aria-checked={o.value === value}>
+{o.label}
+</button>
+))}
+</div>
+</TweakRow>
+);
 }
 
 function TweakSelect({ label, value, options, onChange }) {
-  return (
-    <TweakRow label={label}>
-      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
-        {options.map((o) => {
-          const v = typeof o === 'object' ? o.value : o;
-          const l = typeof o === 'object' ? o.label : o;
-          return <option key={v} value={v}>{l}</option>;
-        })}
-      </select>
-    </TweakRow>
-  );
+return (
+<TweakRow label={label}>
+<select className=“twk-field” value={value} onChange={(e) => onChange(e.target.value)}>
+{options.map((o) => {
+const v = typeof o === ‘object’ ? o.value : o;
+const l = typeof o === ‘object’ ? o.label : o;
+return <option key={v} value={v}>{l}</option>;
+})}
+</select>
+</TweakRow>
+);
 }
 
 function TweakText({ label, value, placeholder, onChange }) {
-  return (
-    <TweakRow label={label}>
-      <input className="twk-field" type="text" value={value} placeholder={placeholder}
-             onChange={(e) => onChange(e.target.value)} />
-    </TweakRow>
-  );
+return (
+<TweakRow label={label}>
+<input className=“twk-field” type=“text” value={value} placeholder={placeholder}
+onChange={(e) => onChange(e.target.value)} />
+</TweakRow>
+);
 }
 
-function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
-  const clamp = (n) => {
-    if (min != null && n < min) return min;
-    if (max != null && n > max) return max;
-    return n;
-  };
-  const startRef = React.useRef({ x: 0, val: 0 });
-  const onScrubStart = (e) => {
-    e.preventDefault();
-    startRef.current = { x: e.clientX, val: value };
-    const decimals = (String(step).split('.')[1] || '').length;
-    const move = (ev) => {
-      const dx = ev.clientX - startRef.current.x;
-      const raw = startRef.current.val + dx * step;
-      const snapped = Math.round(raw / step) * step;
-      onChange(clamp(Number(snapped.toFixed(decimals))));
-    };
-    const up = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
-  return (
-    <div className="twk-num">
-      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
-      <input type="number" value={value} min={min} max={max} step={step}
-             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
-      {unit && <span className="twk-num-unit">{unit}</span>}
-    </div>
-  );
+function TweakNumber({ label, value, min, max, step = 1, unit = ‘’, onChange }) {
+const clamp = (n) => {
+if (min != null && n < min) return min;
+if (max != null && n > max) return max;
+return n;
+};
+const startRef = React.useRef({ x: 0, val: 0 });
+const onScrubStart = (e) => {
+e.preventDefault();
+startRef.current = { x: e.clientX, val: value };
+const decimals = (String(step).split(’.’)[1] || ‘’).length;
+const move = (ev) => {
+const dx = ev.clientX - startRef.current.x;
+const raw = startRef.current.val + dx * step;
+const snapped = Math.round(raw / step) * step;
+onChange(clamp(Number(snapped.toFixed(decimals))));
+};
+const up = () => {
+window.removeEventListener(‘pointermove’, move);
+window.removeEventListener(‘pointerup’, up);
+};
+window.addEventListener(‘pointermove’, move);
+window.addEventListener(‘pointerup’, up);
+};
+return (
+<div className="twk-num">
+<span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+<input type=“number” value={value} min={min} max={max} step={step}
+onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+{unit && <span className="twk-num-unit">{unit}</span>}
+</div>
+);
 }
 
 // Relative-luminance contrast pick — checkmarks drawn over a swatch need to
 // read on both #111 and #fafafa without per-option configuration. Hex input
-// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to “light”.
 function __twkIsLight(hex) {
-  const h = String(hex).replace('#', '');
-  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
-  const n = parseInt(x.slice(0, 6), 16);
-  if (Number.isNaN(n)) return true;
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  return r * 299 + g * 587 + b * 114 > 148000;
+const h = String(hex).replace(’#’, ‘’);
+const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, ‘0’);
+const n = parseInt(x.slice(0, 6), 16);
+if (Number.isNaN(n)) return true;
+const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+return r * 299 + g * 587 + b * 114 > 148000;
 }
 
 const __TwkCheck = ({ light }) => (
-  <svg viewBox="0 0 14 14" aria-hidden="true">
-    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
-          strokeLinecap="round" strokeLinejoin="round"
-          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
-  </svg>
+<svg viewBox="0 0 14 14" aria-hidden="true">
+<path d=“M3 7.2 5.8 10 11 4.2” fill=“none” strokeWidth=“2.2”
+strokeLinecap=“round” strokeLinejoin=“round”
+stroke={light ? ‘rgba(0,0,0,.78)’ : ‘#fff’} />
+</svg>
 );
 
 // TweakColor — curated color/palette picker. Each option is either a single
@@ -612,61 +622,60 @@ const __TwkCheck = ({ light }) => (
 // option in the shape it was passed (string stays string, array stays array).
 // Without options it falls back to the native color input for back-compat.
 function TweakColor({ label, value, options, onChange }) {
-  if (!options || !options.length) {
-    return (
-      <div className="twk-row twk-row-h">
-        <div className="twk-lbl"><span>{label}</span></div>
-        <input type="color" className="twk-swatch" value={value}
-               onChange={(e) => onChange(e.target.value)} />
-      </div>
-    );
-  }
-  // Native <input type=color> emits lowercase hex per the HTML spec, so
-  // compare case-insensitively. String() guards JSON.stringify(undefined),
-  // which returns the primitive undefined (no .toLowerCase).
-  const key = (o) => String(JSON.stringify(o)).toLowerCase();
-  const cur = key(value);
-  return (
-    <TweakRow label={label}>
-      <div className="twk-chips" role="radiogroup">
-        {options.map((o, i) => {
-          const colors = Array.isArray(o) ? o : [o];
-          const [hero, ...rest] = colors;
-          const sup = rest.slice(0, 4);
-          const on = key(o) === cur;
-          return (
-            <button key={i} type="button" className="twk-chip" role="radio"
-                    aria-checked={on} data-on={on ? '1' : '0'}
-                    aria-label={colors.join(', ')} title={colors.join(' · ')}
-                    style={{ background: hero }}
-                    onClick={() => onChange(o)}>
-              {sup.length > 0 && (
-                <span>
-                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
-                </span>
-              )}
-              {on && <__TwkCheck light={__twkIsLight(hero)} />}
-            </button>
-          );
-        })}
-      </div>
-    </TweakRow>
-  );
+if (!options || !options.length) {
+return (
+<div className="twk-row twk-row-h">
+<div className="twk-lbl"><span>{label}</span></div>
+<input type=“color” className=“twk-swatch” value={value}
+onChange={(e) => onChange(e.target.value)} />
+</div>
+);
+}
+// Native <input type=color> emits lowercase hex per the HTML spec, so
+// compare case-insensitively. String() guards JSON.stringify(undefined),
+// which returns the primitive undefined (no .toLowerCase).
+const key = (o) => String(JSON.stringify(o)).toLowerCase();
+const cur = key(value);
+return (
+<TweakRow label={label}>
+<div className="twk-chips" role="radiogroup">
+{options.map((o, i) => {
+const colors = Array.isArray(o) ? o : [o];
+const [hero, …rest] = colors;
+const sup = rest.slice(0, 4);
+const on = key(o) === cur;
+return (
+<button key={i} type=“button” className=“twk-chip” role=“radio”
+aria-checked={on} data-on={on ? ‘1’ : ‘0’}
+aria-label={colors.join(’, ‘)} title={colors.join(’ · ’)}
+style={{ background: hero }}
+onClick={() => onChange(o)}>
+{sup.length > 0 && (
+<span>
+{sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+</span>
+)}
+{on && <__TwkCheck light={__twkIsLight(hero)} />}
+</button>
+);
+})}
+</div>
+</TweakRow>
+);
 }
 
 function TweakButton({ label, onClick, secondary = false }) {
-  return (
-    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
-            onClick={onClick}>{label}</button>
-  );
+return (
+<button type=“button” className={secondary ? ‘twk-btn secondary’ : ‘twk-btn’}
+onClick={onClick}>{label}</button>
+);
 }
 
 Object.assign(window, {
-  useTweaks, TweaksPanel, TweakSection, TweakRow,
-  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
-  TweakText, TweakNumber, TweakColor, TweakButton,
+useTweaks, TweaksPanel, TweakSection, TweakRow,
+TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+TweakText, TweakNumber, TweakColor, TweakButton,
 });
-
 
 // ─── REFERENCE DATA (ISO, sedes, confs, etc.) ───────────────
 // Mock data + reference tables for the Mapa section.
@@ -676,85 +685,85 @@ Object.assign(window, {
 // Matches (from App.js M[])
 // ────────────────────────────────────────────────────────────────────────────
 const M = [
-  {n:1,d:"11/06",t:"16:00",g:"A",h:"México",a:"Sudáfrica"},{n:2,d:"11/06",t:"23:00",g:"A",h:"Corea del Sur",a:"Chequia"},
-  {n:3,d:"12/06",t:"16:00",g:"B",h:"Canadá",a:"Bosnia"},{n:4,d:"12/06",t:"22:00",g:"D",h:"Estados Unidos",a:"Paraguay"},
-  {n:5,d:"13/06",t:"19:00",g:"C",h:"Brasil",a:"Marruecos"},{n:6,d:"13/06",t:"01:00",g:"D",h:"Australia",a:"Turquía"},
-  {n:7,d:"13/06",t:"22:00",g:"C",h:"Haití",a:"Escocia"},{n:8,d:"13/06",t:"16:00",g:"B",h:"Qatar",a:"Suiza"},
-  {n:9,d:"14/06",t:"14:00",g:"E",h:"Alemania",a:"Curazao"},{n:10,d:"14/06",t:"20:00",g:"E",h:"Costa de Marfil",a:"Ecuador"},
-  {n:11,d:"14/06",t:"17:00",g:"F",h:"Países Bajos",a:"Japón"},{n:12,d:"14/06",t:"23:00",g:"F",h:"Suecia",a:"Túnez"},
-  {n:13,d:"15/06",t:"13:00",g:"H",h:"España",a:"Cabo Verde"},{n:14,d:"15/06",t:"19:00",g:"H",h:"Arabia Saudita",a:"Uruguay"},
-  {n:15,d:"15/06",t:"16:00",g:"G",h:"Bélgica",a:"Egipto"},{n:16,d:"15/06",t:"22:00",g:"G",h:"Irán",a:"Nueva Zelanda"},
-  {n:17,d:"16/06",t:"16:00",g:"I",h:"Francia",a:"Senegal"},{n:18,d:"16/06",t:"19:00",g:"I",h:"Irak",a:"Noruega"},
-  {n:19,d:"16/06",t:"22:00",g:"J",h:"Argentina",a:"Argelia"},{n:20,d:"16/06",t:"01:00",g:"J",h:"Austria",a:"Jordania"},
-  {n:21,d:"17/06",t:"17:00",g:"L",h:"Inglaterra",a:"Croacia"},{n:22,d:"17/06",t:"20:00",g:"L",h:"Ghana",a:"Panamá"},
-  {n:23,d:"17/06",t:"14:00",g:"K",h:"Portugal",a:"RD Congo"},{n:24,d:"17/06",t:"23:00",g:"K",h:"Uzbekistán",a:"Colombia"},
-  {n:25,d:"18/06",t:"13:00",g:"A",h:"Chequia",a:"Sudáfrica"},{n:26,d:"18/06",t:"16:00",g:"B",h:"Suiza",a:"Bosnia"},
-  {n:27,d:"18/06",t:"19:00",g:"B",h:"Canadá",a:"Qatar"},{n:28,d:"18/06",t:"22:00",g:"A",h:"México",a:"Corea del Sur"},
-  {n:29,d:"19/06",t:"22:00",g:"C",h:"Brasil",a:"Haití"},{n:30,d:"19/06",t:"19:00",g:"C",h:"Escocia",a:"Marruecos"},
-  {n:31,d:"19/06",t:"01:00",g:"D",h:"Turquía",a:"Paraguay"},{n:32,d:"19/06",t:"16:00",g:"D",h:"Estados Unidos",a:"Australia"},
-  {n:33,d:"20/06",t:"17:00",g:"E",h:"Alemania",a:"Costa de Marfil"},{n:34,d:"20/06",t:"21:00",g:"E",h:"Ecuador",a:"Curazao"},
-  {n:35,d:"20/06",t:"14:00",g:"F",h:"Países Bajos",a:"Suecia"},{n:36,d:"20/06",t:"01:00",g:"F",h:"Túnez",a:"Japón"},
-  {n:37,d:"21/06",t:"13:00",g:"H",h:"España",a:"Arabia Saudita"},{n:38,d:"21/06",t:"19:00",g:"H",h:"Uruguay",a:"Cabo Verde"},
-  {n:39,d:"21/06",t:"16:00",g:"G",h:"Bélgica",a:"Irán"},{n:40,d:"21/06",t:"22:00",g:"G",h:"Nueva Zelanda",a:"Egipto"},
-  {n:41,d:"22/06",t:"18:00",g:"I",h:"Francia",a:"Irak"},{n:42,d:"22/06",t:"21:00",g:"I",h:"Noruega",a:"Senegal"},
-  {n:43,d:"22/06",t:"14:00",g:"J",h:"Argentina",a:"Austria"},{n:44,d:"22/06",t:"00:00",g:"J",h:"Jordania",a:"Argelia"},
-  {n:45,d:"23/06",t:"17:00",g:"L",h:"Inglaterra",a:"Ghana"},{n:46,d:"23/06",t:"20:00",g:"L",h:"Panamá",a:"Croacia"},
-  {n:47,d:"23/06",t:"14:00",g:"K",h:"Portugal",a:"Uzbekistán"},{n:48,d:"23/06",t:"23:00",g:"K",h:"Colombia",a:"RD Congo"},
-  {n:49,d:"24/06",t:"19:00",g:"C",h:"Escocia",a:"Brasil"},{n:50,d:"24/06",t:"19:00",g:"C",h:"Marruecos",a:"Haití"},
-  {n:51,d:"24/06",t:"16:00",g:"B",h:"Suiza",a:"Canadá"},{n:52,d:"24/06",t:"16:00",g:"B",h:"Bosnia",a:"Qatar"},
-  {n:53,d:"24/06",t:"22:00",g:"A",h:"Chequia",a:"México"},{n:54,d:"24/06",t:"22:00",g:"A",h:"Sudáfrica",a:"Corea del Sur"},
-  {n:55,d:"25/06",t:"17:00",g:"E",h:"Ecuador",a:"Alemania"},{n:56,d:"25/06",t:"17:00",g:"E",h:"Curazao",a:"Costa de Marfil"},
-  {n:57,d:"25/06",t:"20:00",g:"F",h:"Túnez",a:"Países Bajos"},{n:58,d:"25/06",t:"20:00",g:"F",h:"Japón",a:"Suecia"},
-  {n:59,d:"25/06",t:"23:00",g:"D",h:"Turquía",a:"Estados Unidos"},{n:60,d:"25/06",t:"23:00",g:"D",h:"Paraguay",a:"Australia"},
-  {n:61,d:"26/06",t:"16:00",g:"I",h:"Noruega",a:"Francia"},{n:62,d:"26/06",t:"16:00",g:"I",h:"Senegal",a:"Irak"},
-  {n:63,d:"26/06",t:"00:00",g:"G",h:"Nueva Zelanda",a:"Bélgica"},{n:64,d:"26/06",t:"00:00",g:"G",h:"Egipto",a:"Irán"},
-  {n:65,d:"26/06",t:"21:00",g:"H",h:"Uruguay",a:"España"},{n:66,d:"26/06",t:"21:00",g:"H",h:"Cabo Verde",a:"Arabia Saudita"},
-  {n:67,d:"27/06",t:"18:00",g:"L",h:"Panamá",a:"Inglaterra"},{n:68,d:"27/06",t:"18:00",g:"L",h:"Croacia",a:"Ghana"},
-  {n:69,d:"27/06",t:"23:00",g:"J",h:"Jordania",a:"Argentina"},{n:70,d:"27/06",t:"23:00",g:"J",h:"Argelia",a:"Austria"},
-  {n:71,d:"27/06",t:"20:30",g:"K",h:"Colombia",a:"Portugal"},{n:72,d:"27/06",t:"20:30",g:"K",h:"RD Congo",a:"Uzbekistán"},
+{n:1,d:“11/06”,t:“16:00”,g:“A”,h:“México”,a:“Sudáfrica”},{n:2,d:“11/06”,t:“23:00”,g:“A”,h:“Corea del Sur”,a:“Chequia”},
+{n:3,d:“12/06”,t:“16:00”,g:“B”,h:“Canadá”,a:“Bosnia”},{n:4,d:“12/06”,t:“22:00”,g:“D”,h:“Estados Unidos”,a:“Paraguay”},
+{n:5,d:“13/06”,t:“19:00”,g:“C”,h:“Brasil”,a:“Marruecos”},{n:6,d:“13/06”,t:“01:00”,g:“D”,h:“Australia”,a:“Turquía”},
+{n:7,d:“13/06”,t:“22:00”,g:“C”,h:“Haití”,a:“Escocia”},{n:8,d:“13/06”,t:“16:00”,g:“B”,h:“Qatar”,a:“Suiza”},
+{n:9,d:“14/06”,t:“14:00”,g:“E”,h:“Alemania”,a:“Curazao”},{n:10,d:“14/06”,t:“20:00”,g:“E”,h:“Costa de Marfil”,a:“Ecuador”},
+{n:11,d:“14/06”,t:“17:00”,g:“F”,h:“Países Bajos”,a:“Japón”},{n:12,d:“14/06”,t:“23:00”,g:“F”,h:“Suecia”,a:“Túnez”},
+{n:13,d:“15/06”,t:“13:00”,g:“H”,h:“España”,a:“Cabo Verde”},{n:14,d:“15/06”,t:“19:00”,g:“H”,h:“Arabia Saudita”,a:“Uruguay”},
+{n:15,d:“15/06”,t:“16:00”,g:“G”,h:“Bélgica”,a:“Egipto”},{n:16,d:“15/06”,t:“22:00”,g:“G”,h:“Irán”,a:“Nueva Zelanda”},
+{n:17,d:“16/06”,t:“16:00”,g:“I”,h:“Francia”,a:“Senegal”},{n:18,d:“16/06”,t:“19:00”,g:“I”,h:“Irak”,a:“Noruega”},
+{n:19,d:“16/06”,t:“22:00”,g:“J”,h:“Argentina”,a:“Argelia”},{n:20,d:“16/06”,t:“01:00”,g:“J”,h:“Austria”,a:“Jordania”},
+{n:21,d:“17/06”,t:“17:00”,g:“L”,h:“Inglaterra”,a:“Croacia”},{n:22,d:“17/06”,t:“20:00”,g:“L”,h:“Ghana”,a:“Panamá”},
+{n:23,d:“17/06”,t:“14:00”,g:“K”,h:“Portugal”,a:“RD Congo”},{n:24,d:“17/06”,t:“23:00”,g:“K”,h:“Uzbekistán”,a:“Colombia”},
+{n:25,d:“18/06”,t:“13:00”,g:“A”,h:“Chequia”,a:“Sudáfrica”},{n:26,d:“18/06”,t:“16:00”,g:“B”,h:“Suiza”,a:“Bosnia”},
+{n:27,d:“18/06”,t:“19:00”,g:“B”,h:“Canadá”,a:“Qatar”},{n:28,d:“18/06”,t:“22:00”,g:“A”,h:“México”,a:“Corea del Sur”},
+{n:29,d:“19/06”,t:“22:00”,g:“C”,h:“Brasil”,a:“Haití”},{n:30,d:“19/06”,t:“19:00”,g:“C”,h:“Escocia”,a:“Marruecos”},
+{n:31,d:“19/06”,t:“01:00”,g:“D”,h:“Turquía”,a:“Paraguay”},{n:32,d:“19/06”,t:“16:00”,g:“D”,h:“Estados Unidos”,a:“Australia”},
+{n:33,d:“20/06”,t:“17:00”,g:“E”,h:“Alemania”,a:“Costa de Marfil”},{n:34,d:“20/06”,t:“21:00”,g:“E”,h:“Ecuador”,a:“Curazao”},
+{n:35,d:“20/06”,t:“14:00”,g:“F”,h:“Países Bajos”,a:“Suecia”},{n:36,d:“20/06”,t:“01:00”,g:“F”,h:“Túnez”,a:“Japón”},
+{n:37,d:“21/06”,t:“13:00”,g:“H”,h:“España”,a:“Arabia Saudita”},{n:38,d:“21/06”,t:“19:00”,g:“H”,h:“Uruguay”,a:“Cabo Verde”},
+{n:39,d:“21/06”,t:“16:00”,g:“G”,h:“Bélgica”,a:“Irán”},{n:40,d:“21/06”,t:“22:00”,g:“G”,h:“Nueva Zelanda”,a:“Egipto”},
+{n:41,d:“22/06”,t:“18:00”,g:“I”,h:“Francia”,a:“Irak”},{n:42,d:“22/06”,t:“21:00”,g:“I”,h:“Noruega”,a:“Senegal”},
+{n:43,d:“22/06”,t:“14:00”,g:“J”,h:“Argentina”,a:“Austria”},{n:44,d:“22/06”,t:“00:00”,g:“J”,h:“Jordania”,a:“Argelia”},
+{n:45,d:“23/06”,t:“17:00”,g:“L”,h:“Inglaterra”,a:“Ghana”},{n:46,d:“23/06”,t:“20:00”,g:“L”,h:“Panamá”,a:“Croacia”},
+{n:47,d:“23/06”,t:“14:00”,g:“K”,h:“Portugal”,a:“Uzbekistán”},{n:48,d:“23/06”,t:“23:00”,g:“K”,h:“Colombia”,a:“RD Congo”},
+{n:49,d:“24/06”,t:“19:00”,g:“C”,h:“Escocia”,a:“Brasil”},{n:50,d:“24/06”,t:“19:00”,g:“C”,h:“Marruecos”,a:“Haití”},
+{n:51,d:“24/06”,t:“16:00”,g:“B”,h:“Suiza”,a:“Canadá”},{n:52,d:“24/06”,t:“16:00”,g:“B”,h:“Bosnia”,a:“Qatar”},
+{n:53,d:“24/06”,t:“22:00”,g:“A”,h:“Chequia”,a:“México”},{n:54,d:“24/06”,t:“22:00”,g:“A”,h:“Sudáfrica”,a:“Corea del Sur”},
+{n:55,d:“25/06”,t:“17:00”,g:“E”,h:“Ecuador”,a:“Alemania”},{n:56,d:“25/06”,t:“17:00”,g:“E”,h:“Curazao”,a:“Costa de Marfil”},
+{n:57,d:“25/06”,t:“20:00”,g:“F”,h:“Túnez”,a:“Países Bajos”},{n:58,d:“25/06”,t:“20:00”,g:“F”,h:“Japón”,a:“Suecia”},
+{n:59,d:“25/06”,t:“23:00”,g:“D”,h:“Turquía”,a:“Estados Unidos”},{n:60,d:“25/06”,t:“23:00”,g:“D”,h:“Paraguay”,a:“Australia”},
+{n:61,d:“26/06”,t:“16:00”,g:“I”,h:“Noruega”,a:“Francia”},{n:62,d:“26/06”,t:“16:00”,g:“I”,h:“Senegal”,a:“Irak”},
+{n:63,d:“26/06”,t:“00:00”,g:“G”,h:“Nueva Zelanda”,a:“Bélgica”},{n:64,d:“26/06”,t:“00:00”,g:“G”,h:“Egipto”,a:“Irán”},
+{n:65,d:“26/06”,t:“21:00”,g:“H”,h:“Uruguay”,a:“España”},{n:66,d:“26/06”,t:“21:00”,g:“H”,h:“Cabo Verde”,a:“Arabia Saudita”},
+{n:67,d:“27/06”,t:“18:00”,g:“L”,h:“Panamá”,a:“Inglaterra”},{n:68,d:“27/06”,t:“18:00”,g:“L”,h:“Croacia”,a:“Ghana”},
+{n:69,d:“27/06”,t:“23:00”,g:“J”,h:“Jordania”,a:“Argentina”},{n:70,d:“27/06”,t:“23:00”,g:“J”,h:“Argelia”,a:“Austria”},
+{n:71,d:“27/06”,t:“20:30”,g:“K”,h:“Colombia”,a:“Portugal”},{n:72,d:“27/06”,t:“20:30”,g:“K”,h:“RD Congo”,a:“Uzbekistán”},
 ];
 
-const FL = {"México":"🇲🇽","Sudáfrica":"🇿🇦","Corea del Sur":"🇰🇷","Chequia":"🇨🇿","Canadá":"🇨🇦","Bosnia":"🇧🇦","Qatar":"🇶🇦","Suiza":"🇨🇭","Brasil":"🇧🇷","Marruecos":"🇲🇦","Haití":"🇭🇹","Escocia":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Estados Unidos":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Turquía":"🇹🇷","Alemania":"🇩🇪","Curazao":"🇨🇼","Costa de Marfil":"🇨🇮","Ecuador":"🇪🇨","Países Bajos":"🇳🇱","Japón":"🇯🇵","Suecia":"🇸🇪","Túnez":"🇹🇳","España":"🇪🇸","Cabo Verde":"🇨🇻","Arabia Saudita":"🇸🇦","Uruguay":"🇺🇾","Bélgica":"🇧🇪","Egipto":"🇪🇬","Irán":"🇮🇷","Nueva Zelanda":"🇳🇿","Francia":"🇫🇷","Senegal":"🇸🇳","Irak":"🇮🇶","Noruega":"🇳🇴","Argentina":"🇦🇷","Argelia":"🇩🇿","Austria":"🇦🇹","Jordania":"🇯🇴","Inglaterra":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croacia":"🇭🇷","Ghana":"🇬🇭","Panamá":"🇵🇦","Portugal":"🇵🇹","RD Congo":"🇨🇩","Uzbekistán":"🇺🇿","Colombia":"🇨🇴"};
+const FL = {“México”:“🇲🇽”,“Sudáfrica”:“🇿🇦”,“Corea del Sur”:“🇰🇷”,“Chequia”:“🇨🇿”,“Canadá”:“🇨🇦”,“Bosnia”:“🇧🇦”,“Qatar”:“🇶🇦”,“Suiza”:“🇨🇭”,“Brasil”:“🇧🇷”,“Marruecos”:“🇲🇦”,“Haití”:“🇭🇹”,“Escocia”:“🏴󠁧󠁢󠁳󠁣󠁴󠁿”,“Estados Unidos”:“🇺🇸”,“Paraguay”:“🇵🇾”,“Australia”:“🇦🇺”,“Turquía”:“🇹🇷”,“Alemania”:“🇩🇪”,“Curazao”:“🇨🇼”,“Costa de Marfil”:“🇨🇮”,“Ecuador”:“🇪🇨”,“Países Bajos”:“🇳🇱”,“Japón”:“🇯🇵”,“Suecia”:“🇸🇪”,“Túnez”:“🇹🇳”,“España”:“🇪🇸”,“Cabo Verde”:“🇨🇻”,“Arabia Saudita”:“🇸🇦”,“Uruguay”:“🇺🇾”,“Bélgica”:“🇧🇪”,“Egipto”:“🇪🇬”,“Irán”:“🇮🇷”,“Nueva Zelanda”:“🇳🇿”,“Francia”:“🇫🇷”,“Senegal”:“🇸🇳”,“Irak”:“🇮🇶”,“Noruega”:“🇳🇴”,“Argentina”:“🇦🇷”,“Argelia”:“🇩🇿”,“Austria”:“🇦🇹”,“Jordania”:“🇯🇴”,“Inglaterra”:“🏴󠁧󠁢󠁥󠁮󠁧󠁿”,“Croacia”:“🇭🇷”,“Ghana”:“🇬🇭”,“Panamá”:“🇵🇦”,“Portugal”:“🇵🇹”,“RD Congo”:“🇨🇩”,“Uzbekistán”:“🇺🇿”,“Colombia”:“🇨🇴”};
 
 // ────────────────────────────────────────────────────────────────────────────
 // ISO 3166-1 numeric → team name (matches the names used in M[])
 // world-atlas 110m uses these as country.id
 // ────────────────────────────────────────────────────────────────────────────
 const ISO_TO_TEAM = {
-  "032":"Argentina","012":"Argelia","036":"Australia","040":"Austria","056":"Bélgica",
-  "070":"Bosnia","076":"Brasil","124":"Canadá","132":"Cabo Verde","170":"Colombia",
-  "180":"RD Congo","191":"Croacia","203":"Chequia","218":"Ecuador","248":"Curazao",
-  "250":"Francia","276":"Alemania","288":"Ghana","332":"Haití","364":"Irán",
-  "368":"Irak","384":"Costa de Marfil","392":"Japón","400":"Jordania","410":"Corea del Sur",
-  "484":"México","504":"Marruecos","528":"Países Bajos","554":"Nueva Zelanda","578":"Noruega",
-  "591":"Panamá","600":"Paraguay","620":"Portugal","634":"Qatar","682":"Arabia Saudita",
-  "686":"Senegal","710":"Sudáfrica","724":"España","752":"Suecia","756":"Suiza",
-  "788":"Túnez","792":"Turquía","818":"Egipto","826":"Inglaterra","840":"Estados Unidos",
-  "858":"Uruguay","860":"Uzbekistán"
+“032”:“Argentina”,“012”:“Argelia”,“036”:“Australia”,“040”:“Austria”,“056”:“Bélgica”,
+“070”:“Bosnia”,“076”:“Brasil”,“124”:“Canadá”,“132”:“Cabo Verde”,“170”:“Colombia”,
+“180”:“RD Congo”,“191”:“Croacia”,“203”:“Chequia”,“218”:“Ecuador”,“248”:“Curazao”,
+“250”:“Francia”,“276”:“Alemania”,“288”:“Ghana”,“332”:“Haití”,“364”:“Irán”,
+“368”:“Irak”,“384”:“Costa de Marfil”,“392”:“Japón”,“400”:“Jordania”,“410”:“Corea del Sur”,
+“484”:“México”,“504”:“Marruecos”,“528”:“Países Bajos”,“554”:“Nueva Zelanda”,“578”:“Noruega”,
+“591”:“Panamá”,“600”:“Paraguay”,“620”:“Portugal”,“634”:“Qatar”,“682”:“Arabia Saudita”,
+“686”:“Senegal”,“710”:“Sudáfrica”,“724”:“España”,“752”:“Suecia”,“756”:“Suiza”,
+“788”:“Túnez”,“792”:“Turquía”,“818”:“Egipto”,“826”:“Inglaterra”,“840”:“Estados Unidos”,
+“858”:“Uruguay”,“860”:“Uzbekistán”
 };
 // Note: world-atlas 110m merges UK as 826 — we use it for Inglaterra (Escocia handled via dot overlay)
-// Curazao (531) doesn't exist as a separate polygon in 110m — handled via dot overlay
-const DOT_ONLY_TEAMS = ["Escocia","Curazao"]; // need point markers, not country fill
+// Curazao (531) doesn’t exist as a separate polygon in 110m — handled via dot overlay
+const DOT_ONLY_TEAMS = [“Escocia”,“Curazao”]; // need point markers, not country fill
 const TEAM_DOT_COORDS = {
-  // [lon, lat]
-  "Escocia":[-4.2,56.5],
-  "Curazao":[-69.0,12.2]
+// [lon, lat]
+“Escocia”:[-4.2,56.5],
+“Curazao”:[-69.0,12.2]
 };
 
 // ────────────────────────────────────────────────────────────────────────────
 // Confederation accents
 // ────────────────────────────────────────────────────────────────────────────
 const CONF = {
-  CONMEBOL: {color:"#facc15", name:"CONMEBOL", teams:["Argentina","Brasil","Uruguay","Paraguay","Colombia","Ecuador"]},
-  UEFA:     {color:"#3b82f6", name:"UEFA",     teams:["Chequia","Escocia","Alemania","Países Bajos","Suecia","España","Bélgica","Francia","Noruega","Austria","Inglaterra","Croacia","Portugal","Suiza","Bosnia"]},
-  CONCACAF: {color:"#ef4444", name:"CONCACAF", teams:["México","Estados Unidos","Canadá","Haití","Panamá","Curazao"]},
-  AFC:      {color:"#06b6d4", name:"AFC",      teams:["Corea del Sur","Qatar","Australia","Japón","Arabia Saudita","Irán","Irak","Jordania","Uzbekistán"]},
-  CAF:      {color:"#22c55e", name:"CAF",      teams:["Sudáfrica","Marruecos","Costa de Marfil","Egipto","Senegal","Argelia","Túnez","Cabo Verde","Ghana","RD Congo"]},
-  OFC:      {color:"#a855f7", name:"OFC",      teams:["Nueva Zelanda"]},
-  // Turkey straddles UEFA/AFC but plays in UEFA in this prode
-  // We tag Turkey to UEFA
+CONMEBOL: {color:”#facc15”, name:“CONMEBOL”, teams:[“Argentina”,“Brasil”,“Uruguay”,“Paraguay”,“Colombia”,“Ecuador”]},
+UEFA:     {color:”#3b82f6”, name:“UEFA”,     teams:[“Chequia”,“Escocia”,“Alemania”,“Países Bajos”,“Suecia”,“España”,“Bélgica”,“Francia”,“Noruega”,“Austria”,“Inglaterra”,“Croacia”,“Portugal”,“Suiza”,“Bosnia”]},
+CONCACAF: {color:”#ef4444”, name:“CONCACAF”, teams:[“México”,“Estados Unidos”,“Canadá”,“Haití”,“Panamá”,“Curazao”]},
+AFC:      {color:”#06b6d4”, name:“AFC”,      teams:[“Corea del Sur”,“Qatar”,“Australia”,“Japón”,“Arabia Saudita”,“Irán”,“Irak”,“Jordania”,“Uzbekistán”]},
+CAF:      {color:”#22c55e”, name:“CAF”,      teams:[“Sudáfrica”,“Marruecos”,“Costa de Marfil”,“Egipto”,“Senegal”,“Argelia”,“Túnez”,“Cabo Verde”,“Ghana”,“RD Congo”]},
+OFC:      {color:”#a855f7”, name:“OFC”,      teams:[“Nueva Zelanda”]},
+// Turkey straddles UEFA/AFC but plays in UEFA in this prode
+// We tag Turkey to UEFA
 };
-CONF.UEFA.teams.push("Turquía");
+CONF.UEFA.teams.push(“Turquía”);
 
 const TEAM_CONF = {};
 Object.entries(CONF).forEach(([k,v])=>v.teams.forEach(t=>TEAM_CONF[t]=k));
@@ -763,102 +772,101 @@ Object.entries(CONF).forEach(([k,v])=>v.teams.forEach(t=>TEAM_CONF[t]=k));
 // 16 sedes Mundial 2026 (host stadiums)
 // ────────────────────────────────────────────────────────────────────────────
 const SEDES = [
-  // USA (11)
-  {city:"Atlanta",        stadium:"Mercedes-Benz Stadium", lon:-84.40, lat:33.755, country:"USA", games:8, type:"semi"},
-  {city:"Boston",          stadium:"Gillette Stadium",       lon:-71.26, lat:42.09,  country:"USA", games:7, type:"cuartos"},
-  {city:"Dallas",          stadium:"AT&T Stadium",           lon:-97.09, lat:32.747, country:"USA", games:9, type:"semi"},
-  {city:"Houston",         stadium:"NRG Stadium",            lon:-95.41, lat:29.685, country:"USA", games:7, type:"octavos"},
-  {city:"Kansas City",     stadium:"Arrowhead Stadium",      lon:-94.48, lat:39.049, country:"USA", games:6, type:"cuartos"},
-  {city:"Los Angeles",     stadium:"SoFi Stadium",           lon:-118.34,lat:33.953, country:"USA", games:8, type:"cuartos"},
-  {city:"Miami",           stadium:"Hard Rock Stadium",      lon:-80.24, lat:25.957, country:"USA", games:7, type:"cuartos"},
-  {city:"Nueva York/NJ",   stadium:"MetLife Stadium",        lon:-74.07, lat:40.813, country:"USA", games:8, type:"final"},
-  {city:"Philadelphia",    stadium:"Lincoln Financial Field",lon:-75.17, lat:39.901, country:"USA", games:6, type:"octavos"},
-  {city:"San Francisco",   stadium:"Levi's Stadium",         lon:-121.97,lat:37.403, country:"USA", games:6, type:"octavos"},
-  {city:"Seattle",         stadium:"Lumen Field",            lon:-122.33,lat:47.595, country:"USA", games:6, type:"octavos"},
-  // MEX (3)
-  {city:"Ciudad de México",stadium:"Estadio Azteca",         lon:-99.15, lat:19.302, country:"MEX", games:5, type:"inaugural"},
-  {city:"Guadalajara",     stadium:"Estadio Akron",          lon:-103.46,lat:20.681, country:"MEX", games:4, type:"grupos"},
-  {city:"Monterrey",       stadium:"Estadio BBVA",           lon:-100.24,lat:25.668, country:"MEX", games:4, type:"grupos"},
-  // CAN (2)
-  {city:"Toronto",         stadium:"BMO Field",              lon:-79.42, lat:43.633, country:"CAN", games:6, type:"grupos"},
-  {city:"Vancouver",       stadium:"BC Place",               lon:-123.11,lat:49.276, country:"CAN", games:7, type:"octavos"},
+// USA (11)
+{city:“Atlanta”,        stadium:“Mercedes-Benz Stadium”, lon:-84.40, lat:33.755, country:“USA”, games:8, type:“semi”},
+{city:“Boston”,          stadium:“Gillette Stadium”,       lon:-71.26, lat:42.09,  country:“USA”, games:7, type:“cuartos”},
+{city:“Dallas”,          stadium:“AT&T Stadium”,           lon:-97.09, lat:32.747, country:“USA”, games:9, type:“semi”},
+{city:“Houston”,         stadium:“NRG Stadium”,            lon:-95.41, lat:29.685, country:“USA”, games:7, type:“octavos”},
+{city:“Kansas City”,     stadium:“Arrowhead Stadium”,      lon:-94.48, lat:39.049, country:“USA”, games:6, type:“cuartos”},
+{city:“Los Angeles”,     stadium:“SoFi Stadium”,           lon:-118.34,lat:33.953, country:“USA”, games:8, type:“cuartos”},
+{city:“Miami”,           stadium:“Hard Rock Stadium”,      lon:-80.24, lat:25.957, country:“USA”, games:7, type:“cuartos”},
+{city:“Nueva York/NJ”,   stadium:“MetLife Stadium”,        lon:-74.07, lat:40.813, country:“USA”, games:8, type:“final”},
+{city:“Philadelphia”,    stadium:“Lincoln Financial Field”,lon:-75.17, lat:39.901, country:“USA”, games:6, type:“octavos”},
+{city:“San Francisco”,   stadium:“Levi’s Stadium”,         lon:-121.97,lat:37.403, country:“USA”, games:6, type:“octavos”},
+{city:“Seattle”,         stadium:“Lumen Field”,            lon:-122.33,lat:47.595, country:“USA”, games:6, type:“octavos”},
+// MEX (3)
+{city:“Ciudad de México”,stadium:“Estadio Azteca”,         lon:-99.15, lat:19.302, country:“MEX”, games:5, type:“inaugural”},
+{city:“Guadalajara”,     stadium:“Estadio Akron”,          lon:-103.46,lat:20.681, country:“MEX”, games:4, type:“grupos”},
+{city:“Monterrey”,       stadium:“Estadio BBVA”,           lon:-100.24,lat:25.668, country:“MEX”, games:4, type:“grupos”},
+// CAN (2)
+{city:“Toronto”,         stadium:“BMO Field”,              lon:-79.42, lat:43.633, country:“CAN”, games:6, type:“grupos”},
+{city:“Vancouver”,       stadium:“BC Place”,               lon:-123.11,lat:49.276, country:“CAN”, games:7, type:“octavos”},
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
 // Mock participants + predictions (so the page demos without firebase)
 // ────────────────────────────────────────────────────────────────────────────
 const MOCK_USERS = {
-  "u_franco":   {name:"Franco",   approved:true, paid:true},
-  "u_julieta":  {name:"Julieta",  approved:true, paid:true},
-  "u_martin":   {name:"Martín",   approved:true, paid:true},
-  "u_sofia":    {name:"Sofía",    approved:true, paid:true},
-  "u_nicolas":  {name:"Nicolás",  approved:true, paid:true},
-  "u_camila":   {name:"Camila",   approved:true, paid:true},
-  "u_diego":    {name:"Diego",    approved:true, paid:true},
-  "u_valentina":{name:"Valentina",approved:true, paid:true},
-  "u_lucas":    {name:"Lucas",    approved:true, paid:true},
-  "u_agustina": {name:"Agustina", approved:true, paid:true},
-  "u_thiago":   {name:"Thiago",   approved:true, paid:true},
-  "u_emilia":   {name:"Emilia",   approved:true, paid:true},
-  "u_santiago": {name:"Santiago", approved:true, paid:true},
-  "u_micaela":  {name:"Micaela",  approved:true, paid:true},
+“u_franco”:   {name:“Franco”,   approved:true, paid:true},
+“u_julieta”:  {name:“Julieta”,  approved:true, paid:true},
+“u_martin”:   {name:“Martín”,   approved:true, paid:true},
+“u_sofia”:    {name:“Sofía”,    approved:true, paid:true},
+“u_nicolas”:  {name:“Nicolás”,  approved:true, paid:true},
+“u_camila”:   {name:“Camila”,   approved:true, paid:true},
+“u_diego”:    {name:“Diego”,    approved:true, paid:true},
+“u_valentina”:{name:“Valentina”,approved:true, paid:true},
+“u_lucas”:    {name:“Lucas”,    approved:true, paid:true},
+“u_agustina”: {name:“Agustina”, approved:true, paid:true},
+“u_thiago”:   {name:“Thiago”,   approved:true, paid:true},
+“u_emilia”:   {name:“Emilia”,   approved:true, paid:true},
+“u_santiago”: {name:“Santiago”, approved:true, paid:true},
+“u_micaela”:  {name:“Micaela”,  approved:true, paid:true},
 };
 
-// Deterministic pseudo-random so it looks "real" every reload
+// Deterministic pseudo-random so it looks “real” every reload
 function seed(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return ()=>{h+=0x6D2B79F5; let t=h; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296;}; }
 
 // Per-team strength bias (favorites get higher win probability)
-const STRENGTH = {"Argentina":0.85,"Brasil":0.82,"Francia":0.83,"España":0.80,"Inglaterra":0.78,"Alemania":0.76,"Portugal":0.75,"Países Bajos":0.72,"Bélgica":0.68,"Uruguay":0.66,"Croacia":0.65,"Italia":0,"Marruecos":0.62,"Estados Unidos":0.60,"México":0.58,"Suiza":0.58,"Colombia":0.60,"Japón":0.55,"Corea del Sur":0.52,"Australia":0.50,"Senegal":0.55,"Costa de Marfil":0.50,"Ecuador":0.52,"Suecia":0.55,"Austria":0.50,"Noruega":0.55,"Egipto":0.52,"Ghana":0.48,"Irán":0.48,"Argelia":0.48,"Turquía":0.55,"Paraguay":0.45,"Chequia":0.45,"Panamá":0.40,"Túnez":0.45,"Qatar":0.40,"Escocia":0.45,"Canadá":0.55,"Bosnia":0.45,"Cabo Verde":0.38,"Jordania":0.35,"Irak":0.35,"Uzbekistán":0.35,"RD Congo":0.40,"Sudáfrica":0.40,"Haití":0.30,"Nueva Zelanda":0.30,"Arabia Saudita":0.35,"Curazao":0.25};
+const STRENGTH = {“Argentina”:0.85,“Brasil”:0.82,“Francia”:0.83,“España”:0.80,“Inglaterra”:0.78,“Alemania”:0.76,“Portugal”:0.75,“Países Bajos”:0.72,“Bélgica”:0.68,“Uruguay”:0.66,“Croacia”:0.65,“Italia”:0,“Marruecos”:0.62,“Estados Unidos”:0.60,“México”:0.58,“Suiza”:0.58,“Colombia”:0.60,“Japón”:0.55,“Corea del Sur”:0.52,“Australia”:0.50,“Senegal”:0.55,“Costa de Marfil”:0.50,“Ecuador”:0.52,“Suecia”:0.55,“Austria”:0.50,“Noruega”:0.55,“Egipto”:0.52,“Ghana”:0.48,“Irán”:0.48,“Argelia”:0.48,“Turquía”:0.55,“Paraguay”:0.45,“Chequia”:0.45,“Panamá”:0.40,“Túnez”:0.45,“Qatar”:0.40,“Escocia”:0.45,“Canadá”:0.55,“Bosnia”:0.45,“Cabo Verde”:0.38,“Jordania”:0.35,“Irak”:0.35,“Uzbekistán”:0.35,“RD Congo”:0.40,“Sudáfrica”:0.40,“Haití”:0.30,“Nueva Zelanda”:0.30,“Arabia Saudita”:0.35,“Curazao”:0.25};
 
 const MOCK_PREDS = (()=>{
-  const out = {};
-  Object.keys(MOCK_USERS).forEach(uid=>{
-    const rng = seed(uid);
-    const u = {};
-    M.forEach(m=>{
-      const sh = STRENGTH[m.h]||0.45;
-      const sa = STRENGTH[m.a]||0.45;
-      const r = rng();
-      // Predict winner biased by strength, with noise
-      const diff = sh - sa + (rng()-0.5)*0.4;
-      let h,a;
-      if (Math.abs(diff)<0.1){ h=1; a=1; }
-      else if (diff>0){ h = 1+Math.floor(rng()*3); a = Math.floor(rng()*Math.max(1,h)); }
-      else { a = 1+Math.floor(rng()*3); h = Math.floor(rng()*Math.max(1,a)); }
-      u[m.n] = {h:String(h), a:String(a)};
-    });
-    out[uid] = u;
-  });
-  return out;
+const out = {};
+Object.keys(MOCK_USERS).forEach(uid=>{
+const rng = seed(uid);
+const u = {};
+M.forEach(m=>{
+const sh = STRENGTH[m.h]||0.45;
+const sa = STRENGTH[m.a]||0.45;
+const r = rng();
+// Predict winner biased by strength, with noise
+const diff = sh - sa + (rng()-0.5)*0.4;
+let h,a;
+if (Math.abs(diff)<0.1){ h=1; a=1; }
+else if (diff>0){ h = 1+Math.floor(rng()*3); a = Math.floor(rng()*Math.max(1,h)); }
+else { a = 1+Math.floor(rng()*3); h = Math.floor(rng()*Math.max(1,a)); }
+u[m.n] = {h:String(h), a:String(a)};
+});
+out[uid] = u;
+});
+return out;
 })();
 
-// Some matches "already played" for demo: first 16 (group days 1-4)
+// Some matches “already played” for demo: first 16 (group days 1-4)
 const MOCK_RESULTS = (()=>{
-  const out = {};
-  const rng = seed("results");
-  M.slice(0, 16).forEach(m=>{
-    const sh = STRENGTH[m.h]||0.45;
-    const sa = STRENGTH[m.a]||0.45;
-    const diff = sh - sa + (rng()-0.5)*0.5;
-    let h,a;
-    if (Math.abs(diff)<0.08){ h=Math.floor(rng()*3); a=h; }
-    else if (diff>0){ h = 1+Math.floor(rng()*3); a = Math.floor(rng()*Math.max(1,h)); }
-    else { a = 1+Math.floor(rng()*3); h = Math.floor(rng()*Math.max(1,a)); }
-    out[m.n] = {h:String(h), a:String(a)};
-  });
-  return out;
+const out = {};
+const rng = seed(“results”);
+M.slice(0, 16).forEach(m=>{
+const sh = STRENGTH[m.h]||0.45;
+const sa = STRENGTH[m.a]||0.45;
+const diff = sh - sa + (rng()-0.5)*0.5;
+let h,a;
+if (Math.abs(diff)<0.08){ h=Math.floor(rng()*3); a=h; }
+else if (diff>0){ h = 1+Math.floor(rng()*3); a = Math.floor(rng()*Math.max(1,h)); }
+else { a = 1+Math.floor(rng()*3); h = Math.floor(rng()*Math.max(1,a)); }
+out[m.n] = {h:String(h), a:String(a)};
+});
+return out;
 })();
 
-// Champion picks (mock) — for the "Campeón" data mode
+// Champion picks (mock) — for the “Campeón” data mode
 const MOCK_CHAMPIONS = {
-  "u_franco":"Argentina","u_julieta":"Argentina","u_martin":"Brasil","u_sofia":"Francia",
-  "u_nicolas":"Argentina","u_camila":"España","u_diego":"Argentina","u_valentina":"Inglaterra",
-  "u_lucas":"Brasil","u_agustina":"Argentina","u_thiago":"Francia","u_emilia":"Portugal",
-  "u_santiago":"Argentina","u_micaela":"Alemania"
+“u_franco”:“Argentina”,“u_julieta”:“Argentina”,“u_martin”:“Brasil”,“u_sofia”:“Francia”,
+“u_nicolas”:“Argentina”,“u_camila”:“España”,“u_diego”:“Argentina”,“u_valentina”:“Inglaterra”,
+“u_lucas”:“Brasil”,“u_agustina”:“Argentina”,“u_thiago”:“Francia”,“u_emilia”:“Portugal”,
+“u_santiago”:“Argentina”,“u_micaela”:“Alemania”
 };
 
 Object.assign(window, { M, FL, ISO_TO_TEAM, DOT_ONLY_TEAMS, TEAM_DOT_COORDS, CONF, TEAM_CONF, SEDES });
-
 
 // ─── MAP RENDERING (WorldMap, HostMap, computeTeamStats, etc.) ─
 // ─────────────────────────────────────────────────────────────────────────────
@@ -870,927 +878,943 @@ const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
 // Heat palettes
 const HEAT_PALETTES = {
-  gold:  { name:"Verde → Dorado", stops:["#14233d","#1e3a5c","#2d6a5d","#73a153","#d4a843","#f0d060"] },
-  fire:  { name:"Azul → Rojo",    stops:["#14233d","#1e3a8a","#7c2d12","#dc2626","#f97316","#fde047"] },
-  mono:  { name:"Monocromo",      stops:["#14233d","#2a3f5f","#5a7090","#90a8c4","#cbd9eb","#ffffff"] },
+gold:  { name:“Verde → Dorado”, stops:[”#14233d”,”#1e3a5c”,”#2d6a5d”,”#73a153”,”#d4a843”,”#f0d060”] },
+fire:  { name:“Azul → Rojo”,    stops:[”#14233d”,”#1e3a8a”,”#7c2d12”,”#dc2626”,”#f97316”,”#fde047”] },
+mono:  { name:“Monocromo”,      stops:[”#14233d”,”#2a3f5f”,”#5a7090”,”#90a8c4”,”#cbd9eb”,”#ffffff”] },
 };
 
-const EMPTY_FILL = "#0d1a30";
-const LAND_FILL  = "#152744";   // unparticipating countries
-const LAND_STROKE = "#0a1628";
+const EMPTY_FILL = “#0d1a30”;
+const LAND_FILL  = “#152744”;   // unparticipating countries
+const LAND_STROKE = “#0a1628”;
 
-function hexToRgb(h){ const x=h.replace("#",""); return [parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)]; }
-function rgbToHex(r,g,b){ const c=v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,"0"); return "#"+c(r)+c(g)+c(b); }
+function hexToRgb(h){ const x=h.replace(”#”,””); return [parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)]; }
+function rgbToHex(r,g,b){ const c=v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,“0”); return “#”+c(r)+c(g)+c(b); }
 function heat(t, palette){
-  if (t<=0) return palette.stops[0];
-  if (t>=1) return palette.stops[palette.stops.length-1];
-  const n = palette.stops.length-1;
-  const i = Math.floor(t*n);
-  const f = (t*n) - i;
-  const [r1,g1,b1] = hexToRgb(palette.stops[i]);
-  const [r2,g2,b2] = hexToRgb(palette.stops[i+1]);
-  return rgbToHex(r1+(r2-r1)*f, g1+(g2-g1)*f, b1+(b2-b1)*f);
+if (t<=0) return palette.stops[0];
+if (t>=1) return palette.stops[palette.stops.length-1];
+const n = palette.stops.length-1;
+const i = Math.floor(t*n);
+const f = (t*n) - i;
+const [r1,g1,b1] = hexToRgb(palette.stops[i]);
+const [r2,g2,b2] = hexToRgb(palette.stops[i+1]);
+return rgbToHex(r1+(r2-r1)*f, g1+(g2-g1)*f, b1+(b2-b1)*f);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Stats computation
 // ─────────────────────────────────────────────────────────────────────────────
 function computeTeamStats({allPreds, users, groupFilter, participantFilter, dataMode, currentUser, champions}){
-  const stats = {};
-  // init all teams
-  M.forEach(m=>{
-    [m.h,m.a].forEach(t=>{ if(!stats[t]) stats[t]={wins:0,draws:0,losses:0,voters:[],champVotes:0,perMatch:{}}; });
-  });
+const stats = {};
+// init all teams
+M.forEach(m=>{
+[m.h,m.a].forEach(t=>{ if(!stats[t]) stats[t]={wins:0,draws:0,losses:0,voters:[],champVotes:0,perMatch:{}}; });
+});
 
-  if (dataMode === "campeon"){
-    // each user picks ONE champion
-    const userIds = participantFilter==="all"
-      ? Object.keys(users).filter(id=>users[id].approved)
-      : [participantFilter].filter(id=>users[id]);
-    userIds.forEach(uid=>{
-      const t = champions[uid];
-      if (t && stats[t]) { stats[t].champVotes++; stats[t].voters.push({name:users[uid].name, kind:"campeón"}); }
-    });
-    return stats;
-  }
+if (dataMode === “campeon”){
+// each user picks ONE champion
+const userIds = participantFilter===“all”
+? Object.keys(users).filter(id=>users[id].approved)
+: [participantFilter].filter(id=>users[id]);
+userIds.forEach(uid=>{
+const t = champions[uid];
+if (t && stats[t]) { stats[t].champVotes++; stats[t].voters.push({name:users[uid].name, kind:“campeón”}); }
+});
+return stats;
+}
 
-  // consensus / single user → count predicted winners per match
-  const matches = groupFilter==="all" ? M : M.filter(m=>m.g===groupFilter);
-  const userIds = participantFilter==="all"
-    ? Object.keys(users).filter(id=>users[id].approved)
-    : [participantFilter].filter(id=>users[id]);
+// consensus / single user → count predicted winners per match
+const matches = groupFilter===“all” ? M : M.filter(m=>m.g===groupFilter);
+const userIds = participantFilter===“all”
+? Object.keys(users).filter(id=>users[id].approved)
+: [participantFilter].filter(id=>users[id]);
 
-  matches.forEach(m=>{
-    userIds.forEach(uid=>{
-      const p = (allPreds[uid]||{})[m.n] || {h:"",a:""};
-      if (p.h==="" || p.a==="") return;
-      const ph=+p.h, pa=+p.a;
-      const u = users[uid];
-      if (ph>pa){
-        stats[m.h].wins++;
-        stats[m.h].voters.push({name:u.name, match:`${m.h} ${ph}-${pa} ${m.a}`, group:m.g});
-        stats[m.a].losses++;
-      } else if (ph<pa){
-        stats[m.a].wins++;
-        stats[m.a].voters.push({name:u.name, match:`${m.h} ${ph}-${pa} ${m.a}`, group:m.g});
-        stats[m.h].losses++;
-      } else {
-        stats[m.h].draws++; stats[m.a].draws++;
-      }
-    });
-  });
-  return stats;
+matches.forEach(m=>{
+userIds.forEach(uid=>{
+const p = (allPreds[uid]||{})[m.n] || {h:””,a:””};
+if (p.h===”” || p.a===””) return;
+const ph=+p.h, pa=+p.a;
+const u = users[uid];
+if (ph>pa){
+stats[m.h].wins++;
+stats[m.h].voters.push({name:u.name, match:`${m.h} ${ph}-${pa} ${m.a}`, group:m.g});
+stats[m.a].losses++;
+} else if (ph<pa){
+stats[m.a].wins++;
+stats[m.a].voters.push({name:u.name, match:`${m.h} ${ph}-${pa} ${m.a}`, group:m.g});
+stats[m.h].losses++;
+} else {
+stats[m.h].draws++; stats[m.a].draws++;
+}
+});
+});
+return stats;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Mock bracket "alive after phase" — per participant, who do they still have alive
+// Mock bracket “alive after phase” — per participant, who do they still have alive
 // Phases: 0 grupos, 1 octavos, 2 cuartos, 3 semis, 4 final, 5 campeón
-// We compute "% of participants who have team alive at this phase" from their predicted bracket
+// We compute “% of participants who have team alive at this phase” from their predicted bracket
 // ─────────────────────────────────────────────────────────────────────────────
 function computeBracketAlive({allPreds, users, champions, phase}){
-  const userIds = Object.keys(users).filter(id=>users[id].approved);
-  // Predicted standings per group: for each user, sort teams in each group by predicted points
-  const aliveByUser = {};
-  userIds.forEach(uid=>{
-    const preds = allPreds[uid]||{};
-    // Build group standings
-    const groups = {};
-    M.forEach(m=>{
-      if(!groups[m.g]) groups[m.g] = {};
-      [m.h,m.a].forEach(t=>{ if(!groups[m.g][t]) groups[m.g][t]={pts:0,gf:0,ga:0}; });
-      const p = preds[m.n] || {h:"",a:""};
-      if (p.h==="" || p.a==="") return;
-      const ph=+p.h, pa=+p.a;
-      groups[m.g][m.h].gf += ph; groups[m.g][m.h].ga += pa;
-      groups[m.g][m.a].gf += pa; groups[m.g][m.a].ga += ph;
-      if (ph>pa){ groups[m.g][m.h].pts+=3; }
-      else if (ph<pa){ groups[m.g][m.a].pts+=3; }
-      else { groups[m.g][m.h].pts+=1; groups[m.g][m.a].pts+=1; }
-    });
-    // Take top 2 per group + 8 best thirds → simplified: top 2 per group = 24, plus 8 thirds
-    const advanced = new Set();
-    const thirds = [];
-    Object.entries(groups).forEach(([g, std])=>{
-      const arr = Object.entries(std).map(([t,s])=>({t,...s,gd:s.gf-s.ga})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
-      if (arr[0]) advanced.add(arr[0].t);
-      if (arr[1]) advanced.add(arr[1].t);
-      if (arr[2]) thirds.push(arr[2]);
-    });
-    thirds.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf).slice(0,8).forEach(x=>advanced.add(x.t));
+const userIds = Object.keys(users).filter(id=>users[id].approved);
+// Predicted standings per group: for each user, sort teams in each group by predicted points
+const aliveByUser = {};
+userIds.forEach(uid=>{
+const preds = allPreds[uid]||{};
+// Build group standings
+const groups = {};
+M.forEach(m=>{
+if(!groups[m.g]) groups[m.g] = {};
+[m.h,m.a].forEach(t=>{ if(!groups[m.g][t]) groups[m.g][t]={pts:0,gf:0,ga:0}; });
+const p = preds[m.n] || {h:””,a:””};
+if (p.h===”” || p.a===””) return;
+const ph=+p.h, pa=+p.a;
+groups[m.g][m.h].gf += ph; groups[m.g][m.h].ga += pa;
+groups[m.g][m.a].gf += pa; groups[m.g][m.a].ga += ph;
+if (ph>pa){ groups[m.g][m.h].pts+=3; }
+else if (ph<pa){ groups[m.g][m.a].pts+=3; }
+else { groups[m.g][m.h].pts+=1; groups[m.g][m.a].pts+=1; }
+});
+// Take top 2 per group + 8 best thirds → simplified: top 2 per group = 24, plus 8 thirds
+const advanced = new Set();
+const thirds = [];
+Object.entries(groups).forEach(([g, std])=>{
+const arr = Object.entries(std).map(([t,s])=>({t,…s,gd:s.gf-s.ga})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
+if (arr[0]) advanced.add(arr[0].t);
+if (arr[1]) advanced.add(arr[1].t);
+if (arr[2]) thirds.push(arr[2]);
+});
+thirds.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf).slice(0,8).forEach(x=>advanced.add(x.t));
 
-    // For phases beyond octavos, use champion pick + nearest-neighbor random elimination based on strength
-    // Simplified: pick champion + finalist + semis from user's champion and strong teams
-    const champ = champions[uid];
-    const advArr = [...advanced];
-    // Per-user stable noise so users diverge in deeper rounds
-    const teamScore = (t)=>{
-      const seed = (uid+"|"+t).split("").reduce((a,c)=>((a*131+c.charCodeAt(0))|0), 7);
-      return (((seed&0x7fffffff)/0x7fffffff) - 0.5) * 0.32; // ±0.16
-    };
-    const sortByStrength = (arr)=>arr.slice().sort((a,b)=>{
-      const sa = (a===champ?1.2:0) + (STRENGTH[a]||0.4) + teamScore(a);
-      const sb = (b===champ?1.2:0) + (STRENGTH[b]||0.4) + teamScore(b);
-      return sb - sa;
-    });
+```
+// For phases beyond octavos, use champion pick + nearest-neighbor random elimination based on strength
+// Simplified: pick champion + finalist + semis from user's champion and strong teams
+const champ = champions[uid];
+const advArr = [...advanced];
+// Per-user stable noise so users diverge in deeper rounds
+const teamScore = (t)=>{
+  const seed = (uid+"|"+t).split("").reduce((a,c)=>((a*131+c.charCodeAt(0))|0), 7);
+  return (((seed&0x7fffffff)/0x7fffffff) - 0.5) * 0.32; // ±0.16
+};
+const sortByStrength = (arr)=>arr.slice().sort((a,b)=>{
+  const sa = (a===champ?1.2:0) + (STRENGTH[a]||0.4) + teamScore(a);
+  const sb = (b===champ?1.2:0) + (STRENGTH[b]||0.4) + teamScore(b);
+  return sb - sa;
+});
 
-    const sorted = sortByStrength(advArr);
-    const oct  = new Set(sorted.slice(0,16));
-    const cua  = new Set(sortByStrength([...oct]).slice(0,8));
-    const sem  = new Set(sortByStrength([...cua]).slice(0,4));
-    const fin  = new Set(sortByStrength([...sem]).slice(0,2));
-    const champion = new Set(champ ? [champ] : [sortByStrength([...fin])[0]].filter(Boolean));
+const sorted = sortByStrength(advArr);
+const oct  = new Set(sorted.slice(0,16));
+const cua  = new Set(sortByStrength([...oct]).slice(0,8));
+const sem  = new Set(sortByStrength([...cua]).slice(0,4));
+const fin  = new Set(sortByStrength([...sem]).slice(0,2));
+const champion = new Set(champ ? [champ] : [sortByStrength([...fin])[0]].filter(Boolean));
 
-    aliveByUser[uid] = [new Set([...new Set(M.flatMap(m=>[m.h,m.a]))]), oct, cua, sem, fin, champion];
-  });
-  // Tally
-  const stats = {};
-  const allTeams = new Set(M.flatMap(m=>[m.h,m.a]));
-  allTeams.forEach(t=>{ stats[t] = {alive:0, votersAlive:[]}; });
-  Object.entries(aliveByUser).forEach(([uid, phases])=>{
-    const set = phases[Math.min(phase, phases.length-1)];
-    set.forEach(t=>{ if(stats[t]) { stats[t].alive++; stats[t].votersAlive.push(users[uid].name); }});
-  });
-  return stats;
+aliveByUser[uid] = [new Set([...new Set(M.flatMap(m=>[m.h,m.a]))]), oct, cua, sem, fin, champion];
+```
+
+});
+// Tally
+const stats = {};
+const allTeams = new Set(M.flatMap(m=>[m.h,m.a]));
+allTeams.forEach(t=>{ stats[t] = {alive:0, votersAlive:[]}; });
+Object.entries(aliveByUser).forEach(([uid, phases])=>{
+const set = phases[Math.min(phase, phases.length-1)];
+set.forEach(t=>{ if(stats[t]) { stats[t].alive++; stats[t].votersAlive.push(users[uid].name); }});
+});
+return stats;
 }
 
 // Strength table (mirror from data file, used by bracket)
-const STRENGTH = {"Argentina":0.85,"Brasil":0.82,"Francia":0.83,"España":0.80,"Inglaterra":0.78,"Alemania":0.76,"Portugal":0.75,"Países Bajos":0.72,"Bélgica":0.68,"Uruguay":0.66,"Croacia":0.65,"Marruecos":0.62,"Estados Unidos":0.60,"México":0.58,"Suiza":0.58,"Colombia":0.60,"Japón":0.55,"Corea del Sur":0.52,"Australia":0.50,"Senegal":0.55,"Costa de Marfil":0.50,"Ecuador":0.52,"Suecia":0.55,"Austria":0.50,"Noruega":0.55,"Egipto":0.52,"Ghana":0.48,"Irán":0.48,"Argelia":0.48,"Turquía":0.55,"Paraguay":0.45,"Chequia":0.45,"Panamá":0.40,"Túnez":0.45,"Qatar":0.40,"Escocia":0.45,"Canadá":0.55,"Bosnia":0.45,"Cabo Verde":0.38,"Jordania":0.35,"Irak":0.35,"Uzbekistán":0.35,"RD Congo":0.40,"Sudáfrica":0.40,"Haití":0.30,"Nueva Zelanda":0.30,"Arabia Saudita":0.35,"Curazao":0.25};
+const STRENGTH = {“Argentina”:0.85,“Brasil”:0.82,“Francia”:0.83,“España”:0.80,“Inglaterra”:0.78,“Alemania”:0.76,“Portugal”:0.75,“Países Bajos”:0.72,“Bélgica”:0.68,“Uruguay”:0.66,“Croacia”:0.65,“Marruecos”:0.62,“Estados Unidos”:0.60,“México”:0.58,“Suiza”:0.58,“Colombia”:0.60,“Japón”:0.55,“Corea del Sur”:0.52,“Australia”:0.50,“Senegal”:0.55,“Costa de Marfil”:0.50,“Ecuador”:0.52,“Suecia”:0.55,“Austria”:0.50,“Noruega”:0.55,“Egipto”:0.52,“Ghana”:0.48,“Irán”:0.48,“Argelia”:0.48,“Turquía”:0.55,“Paraguay”:0.45,“Chequia”:0.45,“Panamá”:0.40,“Túnez”:0.45,“Qatar”:0.40,“Escocia”:0.45,“Canadá”:0.55,“Bosnia”:0.45,“Cabo Verde”:0.38,“Jordania”:0.35,“Irak”:0.35,“Uzbekistán”:0.35,“RD Congo”:0.40,“Sudáfrica”:0.40,“Haití”:0.30,“Nueva Zelanda”:0.30,“Arabia Saudita”:0.35,“Curazao”:0.25};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Hooks for loading + projecting topojson world
 // ─────────────────────────────────────────────────────────────────────────────
 function useWorldAtlas(){
-  const [data, setData] = useState(null);
-  useEffect(()=>{
-    let dead = false;
-    fetch("https://unpkg.com/world-atlas@2/countries-110m.json")
-      .then(r=>r.json())
-      .then(j=>{
-        if (dead) return;
-        const features = topojson.feature(j, j.objects.countries).features;
-        setData({features, mesh: topojson.mesh(j, j.objects.countries, (a,b)=>a!==b)});
-      });
-    return ()=>{ dead = true; };
-  },[]);
-  return data;
+const [data, setData] = useState(null);
+useEffect(()=>{
+let dead = false;
+fetch(“https://unpkg.com/world-atlas@2/countries-110m.json”)
+.then(r=>r.json())
+.then(j=>{
+if (dead) return;
+const features = topojson.feature(j, j.objects.countries).features;
+setData({features, mesh: topojson.mesh(j, j.objects.countries, (a,b)=>a!==b)});
+});
+return ()=>{ dead = true; };
+},[]);
+return data;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WORLD MAP
 // ─────────────────────────────────────────────────────────────────────────────
-function WorldMap({stats, palette, onHover, onSelect, hovered, selected, showLabels, valueKey="wins"}){
-  const world = useWorldAtlas();
-  const width = 1000, height = 520;
-  const projection = useMemo(()=>{
-    if (!d3) return null;
-    return d3.geoNaturalEarth1().scale(195).translate([width/2, height/2+10]);
-  },[]);
-  const pathGen = useMemo(()=> projection ? d3.geoPath(projection) : null, [projection]);
+function WorldMap({stats, palette, onHover, onSelect, hovered, selected, showLabels, valueKey=“wins”}){
+const world = useWorldAtlas();
+const width = 1000, height = 520;
+const projection = useMemo(()=>{
+if (!d3) return null;
+return d3.geoNaturalEarth1().scale(195).translate([width/2, height/2+10]);
+},[]);
+const pathGen = useMemo(()=> projection ? d3.geoPath(projection) : null, [projection]);
 
-  // Compute max for normalization
-  const maxV = Math.max(1, ...Object.values(stats).map(s=>s[valueKey]||0));
+// Compute max for normalization
+const maxV = Math.max(1, …Object.values(stats).map(s=>s[valueKey]||0));
 
-  if (!world || !pathGen) {
+if (!world || !pathGen) {
+return (
+<div style={{width:“100%”,aspectRatio:“1000/520”,display:“flex”,alignItems:“center”,justifyContent:“center”,color:“var(–txt3)”,fontSize:12,letterSpacing:2,fontFamily:”‘Bebas Neue’,sans-serif”}}>
+CARGANDO MAPA…
+</div>
+);
+}
+
+return (
+<svg viewBox={`0 0 ${width} ${height}`} style={{width:“100%”,display:“block”,background:“radial-gradient(ellipse at 50% 40%, #0a1d3a 0%, #050c18 80%)”}}>
+<defs>
+<filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+<path d="M40 0L0 0 0 40" fill="none" stroke="#0f1f3a" strokeWidth="0.4"/>
+</pattern>
+</defs>
+<rect width={width} height={height} fill="url(#grid)" opacity="0.6"/>
+
+```
+  {/* All countries */}
+  {world.features.map((f,idx)=>{
+    const iso = String(f.id||"").padStart(3,"0");
+    const team = ISO_TO_TEAM[iso];
+    const s = team ? stats[team] : null;
+    const v = s ? (s[valueKey]||0) : 0;
+    const t = team ? Math.min(1, v/maxV) : 0;
+    const isParticipant = !!team;
+    const fill = isParticipant && v>0 ? heat(0.25 + t*0.75, palette) : (isParticipant ? "#1a3055" : LAND_FILL);
+    const isHover = hovered === team;
+    const isSelected = selected === team;
     return (
-      <div style={{width:"100%",aspectRatio:"1000/520",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--txt3)",fontSize:12,letterSpacing:2,fontFamily:"'Bebas Neue',sans-serif"}}>
-        CARGANDO MAPA…
-      </div>
+      <path key={f.id||("f-"+idx)}
+        d={pathGen(f)}
+        fill={fill}
+        stroke={isHover||isSelected?"#fff":LAND_STROKE}
+        strokeWidth={isHover||isSelected?1.5:0.5}
+        style={{cursor: team?"pointer":"default", transition:"fill .2s"}}
+        filter={isHover||isSelected?"url(#glow)":undefined}
+        onMouseEnter={()=>team && onHover(team)}
+        onMouseLeave={()=>onHover(null)}
+        onClick={()=>team && onSelect(team===selected?null:team)}
+      />
     );
-  }
+  })}
 
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 40%, #0a1d3a 0%, #050c18 80%)"}}>
-      <defs>
-        <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M40 0L0 0 0 40" fill="none" stroke="#0f1f3a" strokeWidth="0.4"/>
-        </pattern>
-      </defs>
-      <rect width={width} height={height} fill="url(#grid)" opacity="0.6"/>
+  {/* Country mesh borders */}
+  <path d={pathGen(world.mesh)} fill="none" stroke="#1e3a6a" strokeWidth="0.4" opacity="0.6"/>
 
-      {/* All countries */}
-      {world.features.map((f,idx)=>{
-        const iso = String(f.id||"").padStart(3,"0");
-        const team = ISO_TO_TEAM[iso];
-        const s = team ? stats[team] : null;
-        const v = s ? (s[valueKey]||0) : 0;
-        const t = team ? Math.min(1, v/maxV) : 0;
-        const isParticipant = !!team;
-        const fill = isParticipant && v>0 ? heat(0.25 + t*0.75, palette) : (isParticipant ? "#1a3055" : LAND_FILL);
-        const isHover = hovered === team;
-        const isSelected = selected === team;
-        return (
-          <path key={f.id||("f-"+idx)}
-            d={pathGen(f)}
-            fill={fill}
-            stroke={isHover||isSelected?"#fff":LAND_STROKE}
-            strokeWidth={isHover||isSelected?1.5:0.5}
-            style={{cursor: team?"pointer":"default", transition:"fill .2s"}}
-            filter={isHover||isSelected?"url(#glow)":undefined}
-            onMouseEnter={()=>team && onHover(team)}
-            onMouseLeave={()=>onHover(null)}
-            onClick={()=>team && onSelect(team===selected?null:team)}
-          />
-        );
-      })}
+  {/* Dot-only teams (Escocia, Curazao) */}
+  {DOT_ONLY_TEAMS.map(team=>{
+    const s = stats[team];
+    const v = s ? (s[valueKey]||0) : 0;
+    const [lon,lat] = TEAM_DOT_COORDS[team];
+    const [x,y] = projection([lon,lat]);
+    const t = Math.min(1, v/maxV);
+    const r = 3 + Math.sqrt(t)*7;
+    return (
+      <g key={team} style={{cursor:"pointer"}} onMouseEnter={()=>onHover(team)} onMouseLeave={()=>onHover(null)} onClick={()=>onSelect(team===selected?null:team)}>
+        <circle cx={x} cy={y} r={r+3} fill={heat(0.5+t*0.5,palette)} opacity={0.25}/>
+        <circle cx={x} cy={y} r={r} fill={heat(0.5+t*0.5,palette)} stroke={hovered===team||selected===team?"#fff":"#0a1628"} strokeWidth={1.2}/>
+      </g>
+    );
+  })}
 
-      {/* Country mesh borders */}
-      <path d={pathGen(world.mesh)} fill="none" stroke="#1e3a6a" strokeWidth="0.4" opacity="0.6"/>
+  {/* Labels */}
+  {showLabels && world.features.map((f,idx)=>{
+    const iso = String(f.id||"").padStart(3,"0");
+    const team = ISO_TO_TEAM[iso];
+    if (!team) return null;
+    const s = stats[team];
+    const v = s ? (s[valueKey]||0) : 0;
+    if (v === 0 && hovered !== team && selected !== team) return null;
+    const c = pathGen.centroid(f);
+    if (isNaN(c[0])) return null;
+    return (
+      <g key={"l-"+(f.id||idx)} pointerEvents="none">
+        <text x={c[0]} y={c[1]-4} textAnchor="middle" fontSize="9" fontFamily="'Bebas Neue', sans-serif" fill="#fff" stroke="#000" strokeWidth="2.5" paintOrder="stroke" letterSpacing="0.8">{team.toUpperCase()}</text>
+        <text x={c[0]} y={c[1]+7} textAnchor="middle" fontSize="11" fontFamily="'Bebas Neue', sans-serif" fill="#f0d060" stroke="#000" strokeWidth="2.5" paintOrder="stroke">{v}</text>
+      </g>
+    );
+  })}
 
-      {/* Dot-only teams (Escocia, Curazao) */}
-      {DOT_ONLY_TEAMS.map(team=>{
-        const s = stats[team];
-        const v = s ? (s[valueKey]||0) : 0;
-        const [lon,lat] = TEAM_DOT_COORDS[team];
-        const [x,y] = projection([lon,lat]);
-        const t = Math.min(1, v/maxV);
-        const r = 3 + Math.sqrt(t)*7;
-        return (
-          <g key={team} style={{cursor:"pointer"}} onMouseEnter={()=>onHover(team)} onMouseLeave={()=>onHover(null)} onClick={()=>onSelect(team===selected?null:team)}>
-            <circle cx={x} cy={y} r={r+3} fill={heat(0.5+t*0.5,palette)} opacity={0.25}/>
-            <circle cx={x} cy={y} r={r} fill={heat(0.5+t*0.5,palette)} stroke={hovered===team||selected===team?"#fff":"#0a1628"} strokeWidth={1.2}/>
-          </g>
-        );
-      })}
+  {/* Confederation legend ring around small inset (top-right corner) */}
+  <ConfLegendInset x={width-150} y={20}/>
+</svg>
+```
 
-      {/* Labels */}
-      {showLabels && world.features.map((f,idx)=>{
-        const iso = String(f.id||"").padStart(3,"0");
-        const team = ISO_TO_TEAM[iso];
-        if (!team) return null;
-        const s = stats[team];
-        const v = s ? (s[valueKey]||0) : 0;
-        if (v === 0 && hovered !== team && selected !== team) return null;
-        const c = pathGen.centroid(f);
-        if (isNaN(c[0])) return null;
-        return (
-          <g key={"l-"+(f.id||idx)} pointerEvents="none">
-            <text x={c[0]} y={c[1]-4} textAnchor="middle" fontSize="9" fontFamily="'Bebas Neue', sans-serif" fill="#fff" stroke="#000" strokeWidth="2.5" paintOrder="stroke" letterSpacing="0.8">{team.toUpperCase()}</text>
-            <text x={c[0]} y={c[1]+7} textAnchor="middle" fontSize="11" fontFamily="'Bebas Neue', sans-serif" fill="#f0d060" stroke="#000" strokeWidth="2.5" paintOrder="stroke">{v}</text>
-          </g>
-        );
-      })}
-
-      {/* Confederation legend ring around small inset (top-right corner) */}
-      <ConfLegendInset x={width-150} y={20}/>
-    </svg>
-  );
+);
 }
 
 function ConfLegendInset({x,y}){
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <rect width={130} height={92} rx={8} fill="rgba(10,22,40,0.85)" stroke="#162845"/>
-      <text x={10} y={16} fontFamily="'Bebas Neue', sans-serif" fontSize="9" fill="#6b8299" letterSpacing="1.5">CONFEDERACIÓN</text>
-      {Object.values(CONF).map((c,i)=>(
-        <g key={c.name} transform={`translate(10, ${28+i*10})`}>
-          <rect width={8} height={8} rx={2} fill={c.color}/>
-          <text x={14} y={7} fontSize="9" fill="#c8d6e5" fontFamily="DM Sans, sans-serif">{c.name}</text>
-        </g>
-      ))}
-    </g>
-  );
+return (
+<g transform={`translate(${x},${y})`}>
+<rect width={130} height={92} rx={8} fill="rgba(10,22,40,0.85)" stroke="#162845"/>
+<text x={10} y={16} fontFamily="'Bebas Neue', sans-serif" fontSize="9" fill="#6b8299" letterSpacing="1.5">CONFEDERACIÓN</text>
+{Object.values(CONF).map((c,i)=>(
+<g key={c.name} transform={`translate(10, ${28+i*10})`}>
+<rect width={8} height={8} rx={2} fill={c.color}/>
+<text x={14} y={7} fontSize="9" fill="#c8d6e5" fontFamily="DM Sans, sans-serif">{c.name}</text>
+</g>
+))}
+</g>
+);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOST MAP (USA + MEX + CAN with 16 stadiums)
 // ─────────────────────────────────────────────────────────────────────────────
 const SEDE_TYPE_COLOR = {
-  inaugural: "#f0d060",
-  final:     "#f0d060",
-  semi:      "#d4a843",
-  cuartos:   "#3b82f6",
-  octavos:   "#22c55e",
-  grupos:    "#6b8299",
+inaugural: “#f0d060”,
+final:     “#f0d060”,
+semi:      “#d4a843”,
+cuartos:   “#3b82f6”,
+octavos:   “#22c55e”,
+grupos:    “#6b8299”,
 };
 const SEDE_TYPE_LABEL = {
-  inaugural: "INAUGURAL",
-  final:     "FINAL",
-  semi:      "SEMIFINAL",
-  cuartos:   "CUARTOS",
-  octavos:   "OCTAVOS",
-  grupos:    "GRUPOS",
+inaugural: “INAUGURAL”,
+final:     “FINAL”,
+semi:      “SEMIFINAL”,
+cuartos:   “CUARTOS”,
+octavos:   “OCTAVOS”,
+grupos:    “GRUPOS”,
 };
 
 function HostMap({hovered, onHover, selected, onSelect}){
-  const world = useWorldAtlas();
-  const width = 1000, height = 520;
-  const fullProj = useMemo(()=>{
-    if (!d3) return null;
-    // Manual Mercator centered on continental US, sized to fit Vancouver→Boston, MEX→Edmonton.
-    return d3.geoMercator()
-      .center([-97, 38])
-      .scale(640)
-      .translate([width/2, height/2]);
-  },[]);
-  const pathGen = useMemo(()=> fullProj ? d3.geoPath(fullProj) : null, [fullProj]);
+const world = useWorldAtlas();
+const width = 1000, height = 520;
+const fullProj = useMemo(()=>{
+if (!d3) return null;
+// Manual Mercator centered on continental US, sized to fit Vancouver→Boston, MEX→Edmonton.
+return d3.geoMercator()
+.center([-97, 38])
+.scale(640)
+.translate([width/2, height/2]);
+},[]);
+const pathGen = useMemo(()=> fullProj ? d3.geoPath(fullProj) : null, [fullProj]);
 
-  if (!world || !pathGen){
-    return <div style={{width:"100%",aspectRatio:"1000/520",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--txt3)",fontFamily:"'Bebas Neue', sans-serif",letterSpacing:2}}>CARGANDO MAPA…</div>;
-  }
+if (!world || !pathGen){
+return <div style={{width:“100%”,aspectRatio:“1000/520”,display:“flex”,alignItems:“center”,justifyContent:“center”,color:“var(–txt3)”,fontFamily:”‘Bebas Neue’, sans-serif”,letterSpacing:2}}>CARGANDO MAPA…</div>;
+}
 
-  const HOST_ISO = new Set(["840","484","124"]);
+const HOST_ISO = new Set([“840”,“484”,“124”]);
 
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 50%, #0a1d3a 0%, #050c18 75%)"}}>
-      <defs>
-        <radialGradient id="stadiumGlow">
-          <stop offset="0%" stopColor="#f0d060" stopOpacity="0.5"/>
-          <stop offset="100%" stopColor="#f0d060" stopOpacity="0"/>
-        </radialGradient>
-        <pattern id="grid2" width="32" height="32" patternUnits="userSpaceOnUse">
-          <path d="M32 0L0 0 0 32" fill="none" stroke="#0f1f3a" strokeWidth="0.4"/>
-        </pattern>
-      </defs>
-      <rect width={width} height={height} fill="url(#grid2)" opacity="0.5"/>
+return (
+<svg viewBox={`0 0 ${width} ${height}`} style={{width:“100%”,display:“block”,background:“radial-gradient(ellipse at 50% 50%, #0a1d3a 0%, #050c18 75%)”}}>
+<defs>
+<radialGradient id="stadiumGlow">
+<stop offset="0%" stopColor="#f0d060" stopOpacity="0.5"/>
+<stop offset="100%" stopColor="#f0d060" stopOpacity="0"/>
+</radialGradient>
+<pattern id="grid2" width="32" height="32" patternUnits="userSpaceOnUse">
+<path d="M32 0L0 0 0 32" fill="none" stroke="#0f1f3a" strokeWidth="0.4"/>
+</pattern>
+</defs>
+<rect width={width} height={height} fill="url(#grid2)" opacity="0.5"/>
 
-      {/* All landmasses (dimmed) — only host countries shown */}
-      {world.features.filter(f=>HOST_ISO.has(String(f.id||"").padStart(3,"0"))).map((f,idx)=>{
-        return (
-          <path key={f.id||("h-"+idx)} d={pathGen(f)}
-            fill="#1d3658"
-            stroke="#2a4878"
-            strokeWidth={0.7}
-          />
-        );
-      })}
+```
+  {/* All landmasses (dimmed) — only host countries shown */}
+  {world.features.filter(f=>HOST_ISO.has(String(f.id||"").padStart(3,"0"))).map((f,idx)=>{
+    return (
+      <path key={f.id||("h-"+idx)} d={pathGen(f)}
+        fill="#1d3658"
+        stroke="#2a4878"
+        strokeWidth={0.7}
+      />
+    );
+  })}
 
-      {/* Stadium dots */}
-      {SEDES.map((s,i)=>{
-        const p = fullProj([s.lon, s.lat]);
-        if (!p) return null;
-        const [x,y] = p;
-        const color = SEDE_TYPE_COLOR[s.type];
-        const isHover = hovered===s.city;
-        const isSel = selected===s.city;
-        const r = 5 + s.games*0.6;
-        return (
-          <g key={s.city} style={{cursor:"pointer"}} onMouseEnter={()=>onHover(s.city)} onMouseLeave={()=>onHover(null)} onClick={()=>onSelect(isSel?null:s.city)}>
-            {(isHover||isSel) && <circle cx={x} cy={y} r={r+10} fill="url(#stadiumGlow)"/>}
-            <circle cx={x} cy={y} r={r+3} fill={color} opacity={0.25}/>
-            <circle cx={x} cy={y} r={r} fill={color} stroke={isHover||isSel?"#fff":"rgba(0,0,0,0.4)"} strokeWidth={isHover||isSel?2:1}/>
-            <text x={x} y={y-r-5} textAnchor="middle" fontSize={isHover||isSel?11:9} fontFamily="'Bebas Neue',sans-serif" fill="#fff" stroke="#050c18" strokeWidth="2.5" paintOrder="stroke" letterSpacing="0.8">
-              {s.city.toUpperCase()}
-            </text>
-            {(isHover||isSel) && (
-              <text x={x} y={y+r+12} textAnchor="middle" fontSize="8" fontFamily="DM Sans, sans-serif" fill={color} stroke="#050c18" strokeWidth="2" paintOrder="stroke">
-                {s.stadium}
-              </text>
-            )}
-          </g>
-        );
-      })}
-
-      {/* Host country labels */}
-      <HostCountryLabel proj={fullProj} lon={-100} lat={47} text="CANADÁ" subtext="2 SEDES"/>
-      <HostCountryLabel proj={fullProj} lon={-100} lat={40} text="ESTADOS UNIDOS" subtext="11 SEDES"/>
-      <HostCountryLabel proj={fullProj} lon={-102} lat={23} text="MÉXICO" subtext="3 SEDES"/>
-
-      {/* Type legend */}
-      <g transform={`translate(20, ${height-110})`}>
-        <rect width={170} height={96} rx={8} fill="rgba(10,22,40,0.85)" stroke="#162845"/>
-        <text x={10} y={16} fontFamily="'Bebas Neue', sans-serif" fontSize="10" fill="#6b8299" letterSpacing="1.5">TIPO DE PARTIDO</text>
-        {Object.entries(SEDE_TYPE_LABEL).map(([k,v],i)=>(
-          <g key={k} transform={`translate(10, ${28+i*11})`}>
-            <circle cx={4} cy={4} r={4} fill={SEDE_TYPE_COLOR[k]}/>
-            <text x={14} y={7} fontSize="9" fill="#c8d6e5" fontFamily="DM Sans, sans-serif">{v}</text>
-          </g>
-        ))}
+  {/* Stadium dots */}
+  {SEDES.map((s,i)=>{
+    const p = fullProj([s.lon, s.lat]);
+    if (!p) return null;
+    const [x,y] = p;
+    const color = SEDE_TYPE_COLOR[s.type];
+    const isHover = hovered===s.city;
+    const isSel = selected===s.city;
+    const r = 5 + s.games*0.6;
+    return (
+      <g key={s.city} style={{cursor:"pointer"}} onMouseEnter={()=>onHover(s.city)} onMouseLeave={()=>onHover(null)} onClick={()=>onSelect(isSel?null:s.city)}>
+        {(isHover||isSel) && <circle cx={x} cy={y} r={r+10} fill="url(#stadiumGlow)"/>}
+        <circle cx={x} cy={y} r={r+3} fill={color} opacity={0.25}/>
+        <circle cx={x} cy={y} r={r} fill={color} stroke={isHover||isSel?"#fff":"rgba(0,0,0,0.4)"} strokeWidth={isHover||isSel?2:1}/>
+        <text x={x} y={y-r-5} textAnchor="middle" fontSize={isHover||isSel?11:9} fontFamily="'Bebas Neue',sans-serif" fill="#fff" stroke="#050c18" strokeWidth="2.5" paintOrder="stroke" letterSpacing="0.8">
+          {s.city.toUpperCase()}
+        </text>
+        {(isHover||isSel) && (
+          <text x={x} y={y+r+12} textAnchor="middle" fontSize="8" fontFamily="DM Sans, sans-serif" fill={color} stroke="#050c18" strokeWidth="2" paintOrder="stroke">
+            {s.stadium}
+          </text>
+        )}
       </g>
-    </svg>
-  );
+    );
+  })}
+
+  {/* Host country labels */}
+  <HostCountryLabel proj={fullProj} lon={-100} lat={47} text="CANADÁ" subtext="2 SEDES"/>
+  <HostCountryLabel proj={fullProj} lon={-100} lat={40} text="ESTADOS UNIDOS" subtext="11 SEDES"/>
+  <HostCountryLabel proj={fullProj} lon={-102} lat={23} text="MÉXICO" subtext="3 SEDES"/>
+
+  {/* Type legend */}
+  <g transform={`translate(20, ${height-110})`}>
+    <rect width={170} height={96} rx={8} fill="rgba(10,22,40,0.85)" stroke="#162845"/>
+    <text x={10} y={16} fontFamily="'Bebas Neue', sans-serif" fontSize="10" fill="#6b8299" letterSpacing="1.5">TIPO DE PARTIDO</text>
+    {Object.entries(SEDE_TYPE_LABEL).map(([k,v],i)=>(
+      <g key={k} transform={`translate(10, ${28+i*11})`}>
+        <circle cx={4} cy={4} r={4} fill={SEDE_TYPE_COLOR[k]}/>
+        <text x={14} y={7} fontSize="9" fill="#c8d6e5" fontFamily="DM Sans, sans-serif">{v}</text>
+      </g>
+    ))}
+  </g>
+</svg>
+```
+
+);
 }
 
 function HostCountryLabel({proj, lon, lat, text, subtext}){
-  const p = proj([lon, lat]); if (!p) return null;
-  return (
-    <g pointerEvents="none">
-      <text x={p[0]} y={p[1]} textAnchor="middle" fontFamily="'Bebas Neue', sans-serif" fontSize="22" fill="#1e3a6a" letterSpacing="6">{text}</text>
-      <text x={p[0]} y={p[1]+12} textAnchor="middle" fontFamily="DM Sans, sans-serif" fontSize="8" fill="#1e3a6a" letterSpacing="3">{subtext}</text>
-    </g>
-  );
+const p = proj([lon, lat]); if (!p) return null;
+return (
+<g pointerEvents="none">
+<text x={p[0]} y={p[1]} textAnchor="middle" fontFamily="'Bebas Neue', sans-serif" fontSize="22" fill="#1e3a6a" letterSpacing="6">{text}</text>
+<text x={p[0]} y={p[1]+12} textAnchor="middle" fontFamily="DM Sans, sans-serif" fontSize="8" fill="#1e3a6a" letterSpacing="3">{subtext}</text>
+</g>
+);
 }
 
 Object.assign(window, { WorldMap, HostMap, heat, HEAT_PALETTES, computeTeamStats, computeBracketAlive, SEDE_TYPE_COLOR, SEDE_TYPE_LABEL });
-
 
 // ─── MAPA SECTION (UI shell) ────────────────────────────────
 // Mapa section — main shell
 const { useState: useState2, useEffect: useEffect2, useMemo: useMemo2, useRef: useRef2, useCallback: useCallback2 } = React;
 
 const TABS = [
-  { id:"mundo",  l:"🌍 MUNDO" },
-  { id:"sedes",  l:"🏟️ SEDES 2026" },
-  { id:"avance", l:"📈 AVANCE" },
+{ id:“mundo”,  l:“🌍 MUNDO” },
+{ id:“sedes”,  l:“🏟️ SEDES 2026” },
+{ id:“avance”, l:“📈 AVANCE” },
 ];
 
 const DATA_MODES = [
-  { id:"consenso", l:"Consenso" },
-  { id:"mi",       l:"Mi pronóstico" },
-  { id:"campeon",  l:"Campeón" },
+{ id:“consenso”, l:“Consenso” },
+{ id:“mi”,       l:“Mi pronóstico” },
+{ id:“campeon”,  l:“Campeón” },
 ];
 
-const PHASE_LABELS = ["FASE DE GRUPOS","OCTAVOS","CUARTOS","SEMIS","FINAL","CAMPEÓN"];
+const PHASE_LABELS = [“FASE DE GRUPOS”,“OCTAVOS”,“CUARTOS”,“SEMIS”,“FINAL”,“CAMPEÓN”];
 
 function MapaSection({allPreds, users, results, currentUser, champions}){
-  const [t, setTweak] = useTweaks({
-    heatPalette: "gold",
-    showLabels: false,
-  });
+const [t, setTweak] = useTweaks({
+heatPalette: “gold”,
+showLabels: false,
+});
 
-  const [tab, setTab]             = useState2("mundo");
-  const [dataMode, setDataMode]   = useState2("consenso");
-  const [groupFilter, setGroupF]  = useState2("all");
-  const [partFilter, setPartF]    = useState2("all");
-  const [hover, setHover]         = useState2(null);
-  const [selected, setSelected]   = useState2(null);
-  const [hoverSede, setHoverSede] = useState2(null);
-  const [selSede, setSelSede]     = useState2(null);
-  const [phase, setPhase]         = useState2(0);
-  const [playing, setPlaying]     = useState2(false);
+const [tab, setTab]             = useState2(“mundo”);
+const [dataMode, setDataMode]   = useState2(“consenso”);
+const [groupFilter, setGroupF]  = useState2(“all”);
+const [partFilter, setPartF]    = useState2(“all”);
+const [hover, setHover]         = useState2(null);
+const [selected, setSelected]   = useState2(null);
+const [hoverSede, setHoverSede] = useState2(null);
+const [selSede, setSelSede]     = useState2(null);
+const [phase, setPhase]         = useState2(0);
+const [playing, setPlaying]     = useState2(false);
 
-  // auto-play avance
-  useEffect2(()=>{
-    if (!playing) return;
-    if (tab !== "avance") return;
-    const id = setInterval(()=>{
-      setPhase(p => p>=5 ? 0 : p+1);
-    }, 1400);
-    return ()=>clearInterval(id);
-  },[playing, tab]);
+// auto-play avance
+useEffect2(()=>{
+if (!playing) return;
+if (tab !== “avance”) return;
+const id = setInterval(()=>{
+setPhase(p => p>=5 ? 0 : p+1);
+}, 1400);
+return ()=>clearInterval(id);
+},[playing, tab]);
 
-  const palette = HEAT_PALETTES[t.heatPalette] || HEAT_PALETTES.gold;
+const palette = HEAT_PALETTES[t.heatPalette] || HEAT_PALETTES.gold;
 
-  // Sync 'mi pronóstico' with participant filter
-  useEffect2(()=>{
-    if (dataMode === "mi") setPartF(currentUser);
-    else if (dataMode === "consenso" && partFilter === currentUser) setPartF("all");
-  },[dataMode]);
+// Sync ‘mi pronóstico’ with participant filter
+useEffect2(()=>{
+if (dataMode === “mi”) setPartF(currentUser);
+else if (dataMode === “consenso” && partFilter === currentUser) setPartF(“all”);
+},[dataMode]);
 
-  // Compute stats
-  const stats = useMemo2(()=>{
-    if (tab === "avance"){
-      return computeBracketAlive({allPreds, users, champions, phase});
-    }
-    return computeTeamStats({
-      allPreds, users,
-      groupFilter,
-      participantFilter: dataMode === "mi" ? currentUser : partFilter,
-      dataMode,
-      currentUser,
-      champions
-    });
-  },[allPreds, users, champions, groupFilter, partFilter, dataMode, currentUser, phase, tab]);
+// Compute stats
+const stats = useMemo2(()=>{
+if (tab === “avance”){
+return computeBracketAlive({allPreds, users, champions, phase});
+}
+return computeTeamStats({
+allPreds, users,
+groupFilter,
+participantFilter: dataMode === “mi” ? currentUser : partFilter,
+dataMode,
+currentUser,
+champions
+});
+},[allPreds, users, champions, groupFilter, partFilter, dataMode, currentUser, phase, tab]);
 
-  const valueKey = tab === "avance" ? "alive" : (dataMode==="campeon" ? "champVotes" : "wins");
+const valueKey = tab === “avance” ? “alive” : (dataMode===“campeon” ? “champVotes” : “wins”);
 
-  // Top countries
-  const ranking = useMemo2(()=>{
-    return Object.entries(stats)
-      .map(([name,s])=>({name, value:s[valueKey]||0, ...s}))
-      .filter(x=>x.value>0)
-      .sort((a,b)=>b.value-a.value)
-      .slice(0, 12);
-  },[stats, valueKey]);
+// Top countries
+const ranking = useMemo2(()=>{
+return Object.entries(stats)
+.map(([name,s])=>({name, value:s[valueKey]||0, …s}))
+.filter(x=>x.value>0)
+.sort((a,b)=>b.value-a.value)
+.slice(0, 12);
+},[stats, valueKey]);
 
-  // Voters for selected/hovered
-  const focus = selected || hover;
-  const focusStats = focus ? stats[focus] : null;
+// Voters for selected/hovered
+const focus = selected || hover;
+const focusStats = focus ? stats[focus] : null;
 
-  const approvedUsers = Object.entries(users).filter(([id,u])=>u.approved);
+const approvedUsers = Object.entries(users).filter(([id,u])=>u.approved);
 
-  return (
-    <div className="fi" style={{maxWidth:1280, margin:"0 auto", padding:"18px 16px 60px"}}>
-      {/* Title bar */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:10}}>
+return (
+<div className=“fi” style={{maxWidth:1280, margin:“0 auto”, padding:“18px 16px 60px”}}>
+{/* Title bar */}
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,marginBottom:14,flexWrap:“wrap”,gap:10}}>
+<div>
+<h2 className=“hdr” style={{fontSize:28, lineHeight:1, margin:0}}>🌍 MAPA DEL PRODE</h2>
+<p style={{color:“var(–txt2)”,fontSize:11,margin:“3px 0 0”,letterSpacing:1}}>
+48 selecciones · 16 sedes · 72 partidos · pronósticos de {Object.keys(users).filter(id=>users[id].approved).length} participantes
+</p>
+</div>
+<div style={{display:“flex”,gap:5}}>
+{TABS.map(x=>(
+<button key={x.id}
+onClick={()=>{setTab(x.id); setSelected(null); setSelSede(null);}}
+className={“nb”+(tab===x.id?” act”:””)}
+style={{fontSize:12,padding:“7px 14px”}}>
+{x.l}
+</button>
+))}
+</div>
+</div>
+
+```
+  {/* Filter bar (only world/sedes-not-avance) */}
+  {tab !== "avance" && tab !== "sedes" && (
+    <div className="card" style={{padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+      <FilterGroup label="VER">
+        <SegBar value={dataMode} onChange={setDataMode} options={DATA_MODES}/>
+      </FilterGroup>
+
+      {dataMode !== "campeon" && (
+        <FilterGroup label="GRUPO">
+          <select className="inp" style={{width:88,padding:"6px 10px",fontSize:12}} value={groupFilter} onChange={e=>setGroupF(e.target.value)}>
+            <option value="all">Todos</option>
+            {[...new Set(M.map(m=>m.g))].sort().map(g=><option key={g} value={g}>Grupo {g}</option>)}
+          </select>
+        </FilterGroup>
+      )}
+
+      {dataMode !== "mi" && (
+        <FilterGroup label="PARTICIPANTE">
+          <select className="inp" style={{width:160,padding:"6px 10px",fontSize:12}} value={partFilter} onChange={e=>setPartF(e.target.value)}>
+            <option value="all">Consenso (todos)</option>
+            {approvedUsers.map(([id,u])=><option key={id} value={id}>{u.name}</option>)}
+          </select>
+        </FilterGroup>
+      )}
+
+      <div style={{flex:1}}/>
+
+      <div style={{color:"var(--txt3)",fontSize:10,letterSpacing:1}}>
+        {focus
+          ? <span><span style={{color:"var(--gold)"}}>{focus}</span> · {focusStats?.[valueKey]||0} {valueKey==="champVotes"?"votos":"victorias"}</span>
+          : <span>HOVER PAÍS PARA STATS</span>}
+      </div>
+    </div>
+  )}
+
+  {tab === "avance" && (
+    <div className="card" style={{padding:"12px 18px",marginBottom:10}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,gap:14,flexWrap:"wrap"}}>
         <div>
-          <h2 className="hdr" style={{fontSize:28, lineHeight:1, margin:0}}>🌍 MAPA DEL PRODE</h2>
-          <p style={{color:"var(--txt2)",fontSize:11,margin:"3px 0 0",letterSpacing:1}}>
-            48 selecciones · 16 sedes · 72 partidos · pronósticos de {Object.keys(users).filter(id=>users[id].approved).length} participantes
+          <div className="hdr" style={{fontSize:18,letterSpacing:3}}>FASE: {PHASE_LABELS[phase]}</div>
+          <p style={{color:"var(--txt3)",fontSize:11,margin:"3px 0 0"}}>
+            Mapa-calor: cuántos participantes todavía tienen viva a cada selección en su bracket
           </p>
         </div>
-        <div style={{display:"flex",gap:5}}>
-          {TABS.map(x=>(
-            <button key={x.id}
-              onClick={()=>{setTab(x.id); setSelected(null); setSelSede(null);}}
-              className={"nb"+(tab===x.id?" act":"")}
-              style={{fontSize:12,padding:"7px 14px"}}>
-              {x.l}
-            </button>
-          ))}
-        </div>
+        <button className="bg" onClick={()=>setPlaying(p=>!p)} style={{padding:"7px 18px"}}>
+          {playing ? "⏸ PAUSAR" : "▶ AUTO-AVANCE"}
+        </button>
       </div>
-
-      {/* Filter bar (only world/sedes-not-avance) */}
-      {tab !== "avance" && tab !== "sedes" && (
-        <div className="card" style={{padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-          <FilterGroup label="VER">
-            <SegBar value={dataMode} onChange={setDataMode} options={DATA_MODES}/>
-          </FilterGroup>
-
-          {dataMode !== "campeon" && (
-            <FilterGroup label="GRUPO">
-              <select className="inp" style={{width:88,padding:"6px 10px",fontSize:12}} value={groupFilter} onChange={e=>setGroupF(e.target.value)}>
-                <option value="all">Todos</option>
-                {[...new Set(M.map(m=>m.g))].sort().map(g=><option key={g} value={g}>Grupo {g}</option>)}
-              </select>
-            </FilterGroup>
-          )}
-
-          {dataMode !== "mi" && (
-            <FilterGroup label="PARTICIPANTE">
-              <select className="inp" style={{width:160,padding:"6px 10px",fontSize:12}} value={partFilter} onChange={e=>setPartF(e.target.value)}>
-                <option value="all">Consenso (todos)</option>
-                {approvedUsers.map(([id,u])=><option key={id} value={id}>{u.name}</option>)}
-              </select>
-            </FilterGroup>
-          )}
-
-          <div style={{flex:1}}/>
-
-          <div style={{color:"var(--txt3)",fontSize:10,letterSpacing:1}}>
-            {focus
-              ? <span><span style={{color:"var(--gold)"}}>{focus}</span> · {focusStats?.[valueKey]||0} {valueKey==="champVotes"?"votos":"victorias"}</span>
-              : <span>HOVER PAÍS PARA STATS</span>}
-          </div>
-        </div>
-      )}
-
-      {tab === "avance" && (
-        <div className="card" style={{padding:"12px 18px",marginBottom:10}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,gap:14,flexWrap:"wrap"}}>
-            <div>
-              <div className="hdr" style={{fontSize:18,letterSpacing:3}}>FASE: {PHASE_LABELS[phase]}</div>
-              <p style={{color:"var(--txt3)",fontSize:11,margin:"3px 0 0"}}>
-                Mapa-calor: cuántos participantes todavía tienen viva a cada selección en su bracket
-              </p>
-            </div>
-            <button className="bg" onClick={()=>setPlaying(p=>!p)} style={{padding:"7px 18px"}}>
-              {playing ? "⏸ PAUSAR" : "▶ AUTO-AVANCE"}
-            </button>
-          </div>
-          <PhaseSlider phase={phase} setPhase={setPhase}/>
-        </div>
-      )}
-
-      {/* Layout: map + side panel */}
-      <div className="grid-main" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 320px",gap:12,alignItems:"start"}}>
-        <div className="card" style={{padding:0,overflow:"hidden",position:"relative"}}>
-          {tab === "mundo"  && <WorldMap stats={stats} palette={palette} hovered={hover} selected={selected} onHover={setHover} onSelect={setSelected} showLabels={t.showLabels} valueKey={valueKey}/>}
-          {tab === "avance" && <WorldMap stats={stats} palette={palette} hovered={hover} selected={selected} onHover={setHover} onSelect={setSelected} showLabels={t.showLabels} valueKey="alive"/>}
-          {tab === "sedes"  && <HostMap hovered={hoverSede} onHover={setHoverSede} selected={selSede} onSelect={setSelSede}/>}
-
-          {/* Heat scale strip */}
-          {tab !== "sedes" && <HeatStrip palette={palette} valueKey={valueKey} maxV={Math.max(1,...ranking.map(r=>r.value))}/>}
-        </div>
-
-        {/* Side panel */}
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {tab !== "sedes"
-            ? <CountriesPanel ranking={ranking} stats={stats} palette={palette} valueKey={valueKey} focus={focus} setSelected={setSelected} users={users}/>
-            : <SedesPanel hovered={hoverSede} selected={selSede} setSelected={setSelSede}/>
-          }
-        </div>
-      </div>
-
-      {tab === "avance" && <BracketProgressionStrip stats={stats} phase={phase} users={users}/>}
-
-      <TweaksPanel title="Mapa · Tweaks" noDeckControls={true}>
-        <TweakSection label="Heat map">
-          <TweakSelect label="Paleta" value={t.heatPalette}
-            options={Object.entries(HEAT_PALETTES).map(([id,v])=>({value:id, label:v.name}))}
-            onChange={v=>setTweak("heatPalette", v)}/>
-          <TweakToggle label="Mostrar nombres" value={t.showLabels}
-            onChange={v=>setTweak("showLabels", v)}/>
-        </TweakSection>
-      </TweaksPanel>
+      <PhaseSlider phase={phase} setPhase={setPhase}/>
     </div>
-  );
+  )}
+
+  {/* Layout: map + side panel */}
+  <div className="grid-main" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 320px",gap:12,alignItems:"start"}}>
+    <div className="card" style={{padding:0,overflow:"hidden",position:"relative"}}>
+      {tab === "mundo"  && <WorldMap stats={stats} palette={palette} hovered={hover} selected={selected} onHover={setHover} onSelect={setSelected} showLabels={t.showLabels} valueKey={valueKey}/>}
+      {tab === "avance" && <WorldMap stats={stats} palette={palette} hovered={hover} selected={selected} onHover={setHover} onSelect={setSelected} showLabels={t.showLabels} valueKey="alive"/>}
+      {tab === "sedes"  && <HostMap hovered={hoverSede} onHover={setHoverSede} selected={selSede} onSelect={setSelSede}/>}
+
+      {/* Heat scale strip */}
+      {tab !== "sedes" && <HeatStrip palette={palette} valueKey={valueKey} maxV={Math.max(1,...ranking.map(r=>r.value))}/>}
+    </div>
+
+    {/* Side panel */}
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {tab !== "sedes"
+        ? <CountriesPanel ranking={ranking} stats={stats} palette={palette} valueKey={valueKey} focus={focus} setSelected={setSelected} users={users}/>
+        : <SedesPanel hovered={hoverSede} selected={selSede} setSelected={setSelSede}/>
+      }
+    </div>
+  </div>
+
+  {tab === "avance" && <BracketProgressionStrip stats={stats} phase={phase} users={users}/>}
+
+  <TweaksPanel title="Mapa · Tweaks" noDeckControls={true}>
+    <TweakSection label="Heat map">
+      <TweakSelect label="Paleta" value={t.heatPalette}
+        options={Object.entries(HEAT_PALETTES).map(([id,v])=>({value:id, label:v.name}))}
+        onChange={v=>setTweak("heatPalette", v)}/>
+      <TweakToggle label="Mostrar nombres" value={t.showLabels}
+        onChange={v=>setTweak("showLabels", v)}/>
+    </TweakSection>
+  </TweaksPanel>
+</div>
+```
+
+);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers / subcomponents
 // ─────────────────────────────────────────────────────────────────────────────
 function FilterGroup({label, children}){
-  return (
-    <div style={{display:"flex",alignItems:"center",gap:6}}>
-      <span style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.5,fontFamily:"'Bebas Neue', sans-serif"}}>{label}</span>
-      {children}
-    </div>
-  );
+return (
+<div style={{display:“flex”,alignItems:“center”,gap:6}}>
+<span style={{color:“var(–txt3)”,fontSize:9,letterSpacing:1.5,fontFamily:”‘Bebas Neue’, sans-serif”}}>{label}</span>
+{children}
+</div>
+);
 }
 
 function SegBar({value, onChange, options}){
-  return (
-    <div style={{display:"flex",background:"var(--bg)",border:"1px solid var(--bd)",borderRadius:7,padding:2}}>
-      {options.map(o=>(
-        <button key={o.id} onClick={()=>onChange(o.id)}
-          style={{
-            background: value===o.id ? "var(--gold)" : "transparent",
-            color: value===o.id ? "var(--bg)" : "var(--txt2)",
-            border:"none", padding:"5px 12px", borderRadius:5,
-            fontFamily:"'Bebas Neue', sans-serif", fontSize:11, letterSpacing:1.2,
-            cursor:"pointer"
-          }}>{o.l}</button>
-      ))}
-    </div>
-  );
+return (
+<div style={{display:“flex”,background:“var(–bg)”,border:“1px solid var(–bd)”,borderRadius:7,padding:2}}>
+{options.map(o=>(
+<button key={o.id} onClick={()=>onChange(o.id)}
+style={{
+background: value===o.id ? “var(–gold)” : “transparent”,
+color: value===o.id ? “var(–bg)” : “var(–txt2)”,
+border:“none”, padding:“5px 12px”, borderRadius:5,
+fontFamily:”‘Bebas Neue’, sans-serif”, fontSize:11, letterSpacing:1.2,
+cursor:“pointer”
+}}>{o.l}</button>
+))}
+</div>
+);
 }
 
 function HeatStrip({palette, valueKey, maxV}){
-  const stops = palette.stops;
-  const gradient = `linear-gradient(to right, ${stops.join(", ")})`;
-  const label = valueKey==="champVotes" ? "VOTOS A CAMPEÓN" : valueKey==="alive" ? "PARTICIPANTES CON LA SELECCIÓN VIVA" : "VICTORIAS PRONOSTICADAS";
-  return (
-    <div style={{position:"absolute",bottom:14,right:14,background:"rgba(10,22,40,0.85)",border:"1px solid #162845",borderRadius:8,padding:"8px 10px",minWidth:180}}>
-      <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2,fontFamily:"'Bebas Neue', sans-serif",marginBottom:4}}>{label}</div>
-      <div style={{height:7,borderRadius:3,background:gradient,marginBottom:3}}/>
-      <div style={{display:"flex",justifyContent:"space-between",color:"var(--txt2)",fontSize:9}}>
-        <span>0</span><span>{Math.round(maxV/2)}</span><span>{maxV}</span>
-      </div>
-    </div>
-  );
+const stops = palette.stops;
+const gradient = `linear-gradient(to right, ${stops.join(", ")})`;
+const label = valueKey===“champVotes” ? “VOTOS A CAMPEÓN” : valueKey===“alive” ? “PARTICIPANTES CON LA SELECCIÓN VIVA” : “VICTORIAS PRONOSTICADAS”;
+return (
+<div style={{position:“absolute”,bottom:14,right:14,background:“rgba(10,22,40,0.85)”,border:“1px solid #162845”,borderRadius:8,padding:“8px 10px”,minWidth:180}}>
+<div style={{color:“var(–txt3)”,fontSize:8,letterSpacing:1.2,fontFamily:”‘Bebas Neue’, sans-serif”,marginBottom:4}}>{label}</div>
+<div style={{height:7,borderRadius:3,background:gradient,marginBottom:3}}/>
+<div style={{display:“flex”,justifyContent:“space-between”,color:“var(–txt2)”,fontSize:9}}>
+<span>0</span><span>{Math.round(maxV/2)}</span><span>{maxV}</span>
+</div>
+</div>
+);
 }
 
 function CountriesPanel({ranking, palette, valueKey, focus, setSelected, users, stats}){
-  const label = valueKey==="champVotes" ? "VOTOS" : valueKey==="alive" ? "VIVAS" : "VICT.";
-  const focusVoters = focus && stats[focus] ? (stats[focus].voters || []) : [];
-  const focusVotersAlive = focus && stats[focus] ? (stats[focus].votersAlive || []) : [];
-  const maxV = Math.max(1, ...ranking.map(r=>r.value));
+const label = valueKey===“champVotes” ? “VOTOS” : valueKey===“alive” ? “VIVAS” : “VICT.”;
+const focusVoters = focus && stats[focus] ? (stats[focus].voters || []) : [];
+const focusVotersAlive = focus && stats[focus] ? (stats[focus].votersAlive || []) : [];
+const maxV = Math.max(1, …ranking.map(r=>r.value));
 
-  return (
-    <>
-      <div className="card" style={{padding:14}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-          <span className="hdr" style={{fontSize:14,letterSpacing:2}}>TOP SELECCIONES</span>
-          <span style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.2}}>{label}</span>
+return (
+<>
+<div className="card" style={{padding:14}}>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,marginBottom:10}}>
+<span className="hdr" style={{fontSize:14,letterSpacing:2}}>TOP SELECCIONES</span>
+<span style={{color:“var(–txt3)”,fontSize:9,letterSpacing:1.2}}>{label}</span>
+</div>
+<div style={{display:“flex”,flexDirection:“column”,gap:5,maxHeight:340,overflowY:“auto”}}>
+{ranking.length === 0 && <p style={{color:“var(–txt3)”,fontSize:11}}>Sin datos con estos filtros.</p>}
+{ranking.map((r,i)=>{
+const t = r.value/maxV;
+const c = heat(0.3+t*0.7, palette);
+const isFocus = focus === r.name;
+return (
+<button key={r.name} onClick={()=>setSelected(isFocus?null:r.name)}
+style={{
+display:“flex”,alignItems:“center”,gap:8,padding:“7px 9px”,borderRadius:7,
+background: isFocus ? “rgba(212,168,67,0.12)” : “var(–bg)”,
+border:`1px solid ${isFocus?"var(--gold)":"var(--bd)"}`,
+cursor:“pointer”, textAlign:“left”, color:“var(–wht)”
+}}>
+<span style={{width:18,color:“var(–txt3)”,fontSize:10,fontFamily:”‘Bebas Neue’, sans-serif”}}>{i+1}</span>
+<span style={{fontSize:14}}>{FL[r.name]||“🏳️”}</span>
+<span style={{flex:1,fontSize:12,fontWeight:600,whiteSpace:“nowrap”,overflow:“hidden”,textOverflow:“ellipsis”}}>{r.name}</span>
+<div style={{flex:“0 0 60px”,height:5,borderRadius:3,background:”#0a1628”,overflow:“hidden”}}>
+<div style={{height:“100%”,width:`${t*100}%`,background:c}}/>
+</div>
+<span style={{width:24,textAlign:“right”,fontFamily:”‘Bebas Neue’, sans-serif”,fontSize:15,color:c}}>{r.value}</span>
+</button>
+);
+})}
+</div>
+</div>
+
+```
+  {focus && stats[focus] && (
+    <div className="card" style={{padding:14,borderColor:"rgba(212,168,67,0.35)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <span style={{fontSize:24}}>{FL[focus]||"🏳️"}</span>
+        <div style={{flex:1}}>
+          <div className="hdr" style={{fontSize:15,letterSpacing:1.5}}>{focus.toUpperCase()}</div>
+          <div style={{color:"var(--txt3)",fontSize:10}}>
+            {CONF[TEAM_CONF[focus]]?.name || "—"}
+          </div>
         </div>
-        <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:340,overflowY:"auto"}}>
-          {ranking.length === 0 && <p style={{color:"var(--txt3)",fontSize:11}}>Sin datos con estos filtros.</p>}
-          {ranking.map((r,i)=>{
-            const t = r.value/maxV;
-            const c = heat(0.3+t*0.7, palette);
-            const isFocus = focus === r.name;
-            return (
-              <button key={r.name} onClick={()=>setSelected(isFocus?null:r.name)}
-                style={{
-                  display:"flex",alignItems:"center",gap:8,padding:"7px 9px",borderRadius:7,
-                  background: isFocus ? "rgba(212,168,67,0.12)" : "var(--bg)",
-                  border:`1px solid ${isFocus?"var(--gold)":"var(--bd)"}`,
-                  cursor:"pointer", textAlign:"left", color:"var(--wht)"
-                }}>
-                <span style={{width:18,color:"var(--txt3)",fontSize:10,fontFamily:"'Bebas Neue', sans-serif"}}>{i+1}</span>
-                <span style={{fontSize:14}}>{FL[r.name]||"🏳️"}</span>
-                <span style={{flex:1,fontSize:12,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.name}</span>
-                <div style={{flex:"0 0 60px",height:5,borderRadius:3,background:"#0a1628",overflow:"hidden"}}>
-                  <div style={{height:"100%",width:`${t*100}%`,background:c}}/>
-                </div>
-                <span style={{width:24,textAlign:"right",fontFamily:"'Bebas Neue', sans-serif",fontSize:15,color:c}}>{r.value}</span>
-              </button>
-            );
-          })}
-        </div>
+        <button onClick={()=>setSelected(null)} style={{background:"transparent",border:"1px solid var(--bd)",color:"var(--txt3)",borderRadius:5,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✕</button>
       </div>
 
-      {focus && stats[focus] && (
-        <div className="card" style={{padding:14,borderColor:"rgba(212,168,67,0.35)"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-            <span style={{fontSize:24}}>{FL[focus]||"🏳️"}</span>
-            <div style={{flex:1}}>
-              <div className="hdr" style={{fontSize:15,letterSpacing:1.5}}>{focus.toUpperCase()}</div>
-              <div style={{color:"var(--txt3)",fontSize:10}}>
-                {CONF[TEAM_CONF[focus]]?.name || "—"}
-              </div>
-            </div>
-            <button onClick={()=>setSelected(null)} style={{background:"transparent",border:"1px solid var(--bd)",color:"var(--txt3)",borderRadius:5,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✕</button>
+      {valueKey === "wins" && (
+        <>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:5,marginBottom:10}}>
+            <Stat label="VICTORIAS" v={stats[focus].wins} c="#22c55e"/>
+            <Stat label="EMPATES"   v={stats[focus].draws} c="#f59e0b"/>
+            <Stat label="DERROTAS"  v={stats[focus].losses} c="#ef4444"/>
           </div>
-
-          {valueKey === "wins" && (
-            <>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:5,marginBottom:10}}>
-                <Stat label="VICTORIAS" v={stats[focus].wins} c="#22c55e"/>
-                <Stat label="EMPATES"   v={stats[focus].draws} c="#f59e0b"/>
-                <Stat label="DERROTAS"  v={stats[focus].losses} c="#ef4444"/>
+          <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.2,marginBottom:4}}>APOSTARON VICTORIA:</div>
+          <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:3}}>
+            {[...new Set(focusVoters.map(v=>v.name))].length===0 && <span style={{color:"var(--txt3)",fontSize:11}}>Nadie todavía.</span>}
+            {[...new Map(focusVoters.map(v=>[v.name+v.match, v])).values()].slice(0,40).map((v,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"2px 4px",borderRadius:4,background:"rgba(0,0,0,0.2)"}}>
+                <span style={{color:"var(--wht)",fontWeight:600,minWidth:80}}>{v.name}</span>
+                <span style={{color:"var(--txt2)",fontSize:10,flex:1}}>{v.match}</span>
               </div>
-              <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.2,marginBottom:4}}>APOSTARON VICTORIA:</div>
-              <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:3}}>
-                {[...new Set(focusVoters.map(v=>v.name))].length===0 && <span style={{color:"var(--txt3)",fontSize:11}}>Nadie todavía.</span>}
-                {[...new Map(focusVoters.map(v=>[v.name+v.match, v])).values()].slice(0,40).map((v,i)=>(
-                  <div key={i} style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"2px 4px",borderRadius:4,background:"rgba(0,0,0,0.2)"}}>
-                    <span style={{color:"var(--wht)",fontWeight:600,minWidth:80}}>{v.name}</span>
-                    <span style={{color:"var(--txt2)",fontSize:10,flex:1}}>{v.match}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-          {valueKey === "champVotes" && (
-            <>
-              <div style={{textAlign:"center",margin:"10px 0"}}>
-                <div className="hdr" style={{fontSize:42,color:"var(--gold)",lineHeight:1}}>{stats[focus].champVotes}</div>
-                <div style={{color:"var(--txt3)",fontSize:10,letterSpacing:1.5}}>VOTOS A CAMPEÓN</div>
-              </div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                {(stats[focus].voters||[]).map((v,i)=>(
-                  <span key={i} style={{fontSize:10,background:"var(--bg)",border:"1px solid var(--bd)",padding:"3px 7px",borderRadius:5,color:"var(--wht)"}}>{v.name}</span>
-                ))}
-              </div>
-            </>
-          )}
-          {valueKey === "alive" && (
-            <>
-              <div style={{textAlign:"center",margin:"10px 0"}}>
-                <div className="hdr" style={{fontSize:42,color:"var(--gold)",lineHeight:1}}>{stats[focus].alive}</div>
-                <div style={{color:"var(--txt3)",fontSize:10,letterSpacing:1.5}}>SIGUEN CON ELLA VIVA</div>
-              </div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:4,maxHeight:160,overflowY:"auto"}}>
-                {(stats[focus].votersAlive||[]).map((n,i)=>(
-                  <span key={i} style={{fontSize:10,background:"var(--bg)",border:"1px solid var(--bd)",padding:"3px 7px",borderRadius:5,color:"var(--wht)"}}>{n}</span>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+            ))}
+          </div>
+        </>
       )}
-    </>
-  );
+      {valueKey === "champVotes" && (
+        <>
+          <div style={{textAlign:"center",margin:"10px 0"}}>
+            <div className="hdr" style={{fontSize:42,color:"var(--gold)",lineHeight:1}}>{stats[focus].champVotes}</div>
+            <div style={{color:"var(--txt3)",fontSize:10,letterSpacing:1.5}}>VOTOS A CAMPEÓN</div>
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+            {(stats[focus].voters||[]).map((v,i)=>(
+              <span key={i} style={{fontSize:10,background:"var(--bg)",border:"1px solid var(--bd)",padding:"3px 7px",borderRadius:5,color:"var(--wht)"}}>{v.name}</span>
+            ))}
+          </div>
+        </>
+      )}
+      {valueKey === "alive" && (
+        <>
+          <div style={{textAlign:"center",margin:"10px 0"}}>
+            <div className="hdr" style={{fontSize:42,color:"var(--gold)",lineHeight:1}}>{stats[focus].alive}</div>
+            <div style={{color:"var(--txt3)",fontSize:10,letterSpacing:1.5}}>SIGUEN CON ELLA VIVA</div>
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:4,maxHeight:160,overflowY:"auto"}}>
+            {(stats[focus].votersAlive||[]).map((n,i)=>(
+              <span key={i} style={{fontSize:10,background:"var(--bg)",border:"1px solid var(--bd)",padding:"3px 7px",borderRadius:5,color:"var(--wht)"}}>{n}</span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )}
+</>
+```
+
+);
 }
 
 function Stat({label, v, c}){
-  return (
-    <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"7px 4px",textAlign:"center"}}>
-      <div className="hdr" style={{fontSize:20,color:c,lineHeight:1}}>{v}</div>
-      <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2}}>{label}</div>
-    </div>
-  );
+return (
+<div style={{background:“rgba(0,0,0,0.3)”,borderRadius:6,padding:“7px 4px”,textAlign:“center”}}>
+<div className="hdr" style={{fontSize:20,color:c,lineHeight:1}}>{v}</div>
+<div style={{color:“var(–txt3)”,fontSize:8,letterSpacing:1.2}}>{label}</div>
+</div>
+);
 }
 
 function SedesPanel({hovered, selected, setSelected}){
-  const focus = selected || hovered;
-  const sede = focus ? SEDES.find(s=>s.city===focus) : null;
-  const byCountry = SEDES.reduce((acc,s)=>{ (acc[s.country]=acc[s.country]||[]).push(s); return acc; },{});
-  const countryNames = { USA:"Estados Unidos · 11 sedes", MEX:"México · 3 sedes", CAN:"Canadá · 2 sedes" };
-  const countryFlag  = { USA:"🇺🇸", MEX:"🇲🇽", CAN:"🇨🇦" };
+const focus = selected || hovered;
+const sede = focus ? SEDES.find(s=>s.city===focus) : null;
+const byCountry = SEDES.reduce((acc,s)=>{ (acc[s.country]=acc[s.country]||[]).push(s); return acc; },{});
+const countryNames = { USA:“Estados Unidos · 11 sedes”, MEX:“México · 3 sedes”, CAN:“Canadá · 2 sedes” };
+const countryFlag  = { USA:“🇺🇸”, MEX:“🇲🇽”, CAN:“🇨🇦” };
 
-  return (
-    <>
-      <div className="card" style={{padding:14}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-          <span className="hdr" style={{fontSize:14,letterSpacing:2}}>16 SEDES MUNDIAL 2026</span>
+return (
+<>
+<div className="card" style={{padding:14}}>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,marginBottom:10}}>
+<span className="hdr" style={{fontSize:14,letterSpacing:2}}>16 SEDES MUNDIAL 2026</span>
+</div>
+<div style={{display:“flex”,flexDirection:“column”,gap:10,maxHeight:440,overflowY:“auto”}}>
+{[“USA”,“MEX”,“CAN”].map(c=>(
+<div key={c}>
+<div style={{display:“flex”,alignItems:“center”,gap:7,padding:“4px 0”,borderBottom:“1px solid var(–bd)”,marginBottom:5}}>
+<span style={{fontSize:14}}>{countryFlag[c]}</span>
+<span style={{fontFamily:”‘Bebas Neue’, sans-serif”,fontSize:11,color:“var(–gold)”,letterSpacing:1.5}}>{countryNames[c]}</span>
+</div>
+{byCountry[c].map(s=>{
+const color = SEDE_TYPE_COLOR[s.type];
+const isFocus = focus === s.city;
+return (
+<button key={s.city} onClick={()=>setSelected(isFocus?null:s.city)}
+style={{
+display:“flex”,alignItems:“center”,gap:8,padding:“6px 9px”,borderRadius:7,
+background: isFocus ? “rgba(212,168,67,0.12)” : “var(–bg)”,
+border:`1px solid ${isFocus?"var(--gold)":"var(--bd)"}`,
+cursor:“pointer”,textAlign:“left”,color:“var(–wht)”,width:“100%”,marginBottom:3
+}}>
+<span style={{width:8,height:8,borderRadius:“50%”,background:color,flex:“0 0 8px”}}/>
+<div style={{flex:1,minWidth:0}}>
+<div style={{fontSize:12,fontWeight:600}}>{s.city}</div>
+<div style={{color:“var(–txt3)”,fontSize:9,whiteSpace:“nowrap”,overflow:“hidden”,textOverflow:“ellipsis”}}>{s.stadium}</div>
+</div>
+<span style={{fontFamily:”‘Bebas Neue’,sans-serif”,fontSize:13,color}}>{s.games}</span>
+<span style={{color:“var(–txt3)”,fontSize:8,width:24,textAlign:“right”}}>PJ</span>
+</button>
+);
+})}
+</div>
+))}
+</div>
+</div>
+
+```
+  {sede && (
+    <div className="card" style={{padding:14,borderColor:"rgba(212,168,67,0.35)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",marginBottom:8}}>
+        <div>
+          <div className="hdr" style={{fontSize:17,letterSpacing:1.5}}>{sede.city.toUpperCase()}</div>
+          <div style={{color:"var(--gold)",fontSize:11,fontWeight:600}}>{sede.stadium}</div>
         </div>
-        <div style={{display:"flex",flexDirection:"column",gap:10,maxHeight:440,overflowY:"auto"}}>
-          {["USA","MEX","CAN"].map(c=>(
-            <div key={c}>
-              <div style={{display:"flex",alignItems:"center",gap:7,padding:"4px 0",borderBottom:"1px solid var(--bd)",marginBottom:5}}>
-                <span style={{fontSize:14}}>{countryFlag[c]}</span>
-                <span style={{fontFamily:"'Bebas Neue', sans-serif",fontSize:11,color:"var(--gold)",letterSpacing:1.5}}>{countryNames[c]}</span>
-              </div>
-              {byCountry[c].map(s=>{
-                const color = SEDE_TYPE_COLOR[s.type];
-                const isFocus = focus === s.city;
-                return (
-                  <button key={s.city} onClick={()=>setSelected(isFocus?null:s.city)}
-                    style={{
-                      display:"flex",alignItems:"center",gap:8,padding:"6px 9px",borderRadius:7,
-                      background: isFocus ? "rgba(212,168,67,0.12)" : "var(--bg)",
-                      border:`1px solid ${isFocus?"var(--gold)":"var(--bd)"}`,
-                      cursor:"pointer",textAlign:"left",color:"var(--wht)",width:"100%",marginBottom:3
-                    }}>
-                    <span style={{width:8,height:8,borderRadius:"50%",background:color,flex:"0 0 8px"}}/>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:12,fontWeight:600}}>{s.city}</div>
-                      <div style={{color:"var(--txt3)",fontSize:9,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.stadium}</div>
-                    </div>
-                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color}}>{s.games}</span>
-                    <span style={{color:"var(--txt3)",fontSize:8,width:24,textAlign:"right"}}>PJ</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+        <button onClick={()=>setSelected(null)} style={{background:"transparent",border:"1px solid var(--bd)",color:"var(--txt3)",borderRadius:5,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✕</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6,marginBottom:8}}>
+        <Stat label="PARTIDOS" v={sede.games} c="var(--gold)"/>
+        <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"7px 4px",textAlign:"center"}}>
+          <div className="hdr" style={{fontSize:13,color:SEDE_TYPE_COLOR[sede.type],lineHeight:1.2,marginTop:5}}>{SEDE_TYPE_LABEL[sede.type]}</div>
+          <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2}}>FASE MÁX.</div>
         </div>
       </div>
+      <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.2,marginBottom:4}}>UBICACIÓN:</div>
+      <div style={{fontSize:11,color:"var(--txt)"}}>{sede.lat.toFixed(2)}° N, {Math.abs(sede.lon).toFixed(2)}° O</div>
+    </div>
+  )}
+</>
+```
 
-      {sede && (
-        <div className="card" style={{padding:14,borderColor:"rgba(212,168,67,0.35)"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",marginBottom:8}}>
-            <div>
-              <div className="hdr" style={{fontSize:17,letterSpacing:1.5}}>{sede.city.toUpperCase()}</div>
-              <div style={{color:"var(--gold)",fontSize:11,fontWeight:600}}>{sede.stadium}</div>
-            </div>
-            <button onClick={()=>setSelected(null)} style={{background:"transparent",border:"1px solid var(--bd)",color:"var(--txt3)",borderRadius:5,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✕</button>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6,marginBottom:8}}>
-            <Stat label="PARTIDOS" v={sede.games} c="var(--gold)"/>
-            <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"7px 4px",textAlign:"center"}}>
-              <div className="hdr" style={{fontSize:13,color:SEDE_TYPE_COLOR[sede.type],lineHeight:1.2,marginTop:5}}>{SEDE_TYPE_LABEL[sede.type]}</div>
-              <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2}}>FASE MÁX.</div>
-            </div>
-          </div>
-          <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:1.2,marginBottom:4}}>UBICACIÓN:</div>
-          <div style={{fontSize:11,color:"var(--txt)"}}>{sede.lat.toFixed(2)}° N, {Math.abs(sede.lon).toFixed(2)}° O</div>
-        </div>
-      )}
-    </>
-  );
+);
 }
 
 function PhaseSlider({phase, setPhase}){
-  return (
-    <div style={{display:"flex",alignItems:"center",gap:6}}>
-      {PHASE_LABELS.map((l,i)=>(
-        <React.Fragment key={l}>
-          <button onClick={()=>setPhase(i)}
-            style={{
-              flex:1, padding:"8px 4px", borderRadius:6,
-              background: phase===i ? "linear-gradient(135deg,#d4a843,#f0d060)" : "var(--bg)",
-              color: phase===i ? "var(--bg)" : "var(--txt2)",
-              border:`1px solid ${phase===i?"#f0d060":"var(--bd)"}`,
-              fontFamily:"'Bebas Neue', sans-serif", fontSize:11, letterSpacing:1.2, cursor:"pointer",
-              transition:"all .2s"
-            }}>
-            {l}
-          </button>
-          {i<PHASE_LABELS.length-1 && <div style={{width:14,height:1,background: phase>i?"var(--gold)":"var(--bd)"}}/>}
-        </React.Fragment>
-      ))}
-    </div>
-  );
+return (
+<div style={{display:“flex”,alignItems:“center”,gap:6}}>
+{PHASE_LABELS.map((l,i)=>(
+<React.Fragment key={l}>
+<button onClick={()=>setPhase(i)}
+style={{
+flex:1, padding:“8px 4px”, borderRadius:6,
+background: phase===i ? “linear-gradient(135deg,#d4a843,#f0d060)” : “var(–bg)”,
+color: phase===i ? “var(–bg)” : “var(–txt2)”,
+border:`1px solid ${phase===i?"#f0d060":"var(--bd)"}`,
+fontFamily:”‘Bebas Neue’, sans-serif”, fontSize:11, letterSpacing:1.2, cursor:“pointer”,
+transition:“all .2s”
+}}>
+{l}
+</button>
+{i<PHASE_LABELS.length-1 && <div style={{width:14,height:1,background: phase>i?“var(–gold)”:“var(–bd)”}}/>}
+</React.Fragment>
+))}
+</div>
+);
 }
 
 function BracketProgressionStrip({stats, phase, users}){
-  const totalUsers = Object.keys(users).filter(id=>users[id].approved).length;
-  const alive = Object.entries(stats).filter(([,s])=>s.alive>0).sort((a,b)=>b[1].alive-a[1].alive);
-  const teamsExpected = [48,16,8,4,2,1][phase];
+const totalUsers = Object.keys(users).filter(id=>users[id].approved).length;
+const alive = Object.entries(stats).filter(([,s])=>s.alive>0).sort((a,b)=>b[1].alive-a[1].alive);
+const teamsExpected = [48,16,8,4,2,1][phase];
 
-  return (
-    <div className="card" style={{padding:14, marginTop:12}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
-        <div className="hdr" style={{fontSize:14,letterSpacing:2}}>SELECCIONES VIVAS · {PHASE_LABELS[phase]}</div>
-        <div style={{color:"var(--txt3)",fontSize:10}}>se esperan {teamsExpected} · pasaron {alive.length}</div>
-      </div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-        {alive.slice(0, 32).map(([name,s])=>{
-          const t = s.alive/totalUsers;
-          return (
-            <div key={name} title={`${s.alive}/${totalUsers} participantes`}
-              style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:5,
-                background:"rgba(0,0,0,0.3)",border:`1px solid ${t>0.7?"var(--gold)":t>0.4?"#3b82f6":"var(--bd)"}`
-              }}>
-              <span style={{fontSize:13}}>{FL[name]||"🏳️"}</span>
-              <span style={{fontSize:11,color:"var(--wht)"}}>{name}</span>
-              <span style={{fontSize:10,fontFamily:"'Bebas Neue',sans-serif",color:t>0.5?"var(--gold)":"var(--txt2)"}}>{Math.round(t*100)}%</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+return (
+<div className=“card” style={{padding:14, marginTop:12}}>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“baseline”,marginBottom:10}}>
+<div className="hdr" style={{fontSize:14,letterSpacing:2}}>SELECCIONES VIVAS · {PHASE_LABELS[phase]}</div>
+<div style={{color:“var(–txt3)”,fontSize:10}}>se esperan {teamsExpected} · pasaron {alive.length}</div>
+</div>
+<div style={{display:“flex”,flexWrap:“wrap”,gap:5}}>
+{alive.slice(0, 32).map(([name,s])=>{
+const t = s.alive/totalUsers;
+return (
+<div key={name} title={`${s.alive}/${totalUsers} participantes`}
+style={{display:“flex”,alignItems:“center”,gap:4,padding:“4px 9px”,borderRadius:5,
+background:“rgba(0,0,0,0.3)”,border:`1px solid ${t>0.7?"var(--gold)":t>0.4?"#3b82f6":"var(--bd)"}`
+}}>
+<span style={{fontSize:13}}>{FL[name]||“🏳️”}</span>
+<span style={{fontSize:11,color:“var(–wht)”}}>{name}</span>
+<span style={{fontSize:10,fontFamily:”‘Bebas Neue’,sans-serif”,color:t>0.5?“var(–gold)”:“var(–txt2)”}}>{Math.round(t*100)}%</span>
+</div>
+);
+})}
+</div>
+</div>
+);
 }
 
 window.MapaSection = MapaSection;
 
-
 // ─── MOUNT ──────────────────────────────────────────────────
 function App() {
-  const [data, setData] = React.useState(null);
+const [data, setData] = React.useState(null);
 
-  React.useEffect(() => {
-    const onReady = () => setData(window.__PRODE_DATA);
-    if (window.__DATA_LOADED) {
-      setData(window.__PRODE_DATA);
-    } else {
-      document.addEventListener("prode-data-ready", onReady);
-      return () => document.removeEventListener("prode-data-ready", onReady);
-    }
-  }, []);
+React.useEffect(() => {
+const onReady = () => setData(window.__PRODE_DATA);
+if (window.__DATA_LOADED) {
+setData(window.__PRODE_DATA);
+} else {
+document.addEventListener(“prode-data-ready”, onReady);
+return () => document.removeEventListener(“prode-data-ready”, onReady);
+}
+}, []);
 
-  if (!data) return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"80vh",flexDirection:"column",gap:12}}>
-      <div style={{fontSize:48}}>🌍</div>
-      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"var(--gold)",letterSpacing:3,animation:"fi 1s infinite"}}>
-        CARGANDO MAPA...
-      </div>
-      <div style={{color:"var(--txt3)",fontSize:12}}>Conectando con Firebase...</div>
-    </div>
-  );
+if (!data) return (
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“center”,height:“80vh”,flexDirection:“column”,gap:12}}>
+<div style={{fontSize:48}}>🌍</div>
+<div style={{fontFamily:”‘Bebas Neue’,sans-serif”,fontSize:20,color:“var(–gold)”,letterSpacing:3,animation:“fi 1s infinite”}}>
+CARGANDO MAPA…
+</div>
+<div style={{color:“var(–txt3)”,fontSize:12}}>Conectando con Firebase…</div>
+</div>
+);
 
-  const approvedUsers = Object.fromEntries(
-    Object.entries(data.users).filter(([id, u]) => u.approved && !["claude_ai","gemini_ai","chatgpt_ai"].includes(id))
-  );
+const approvedUsers = Object.fromEntries(
+Object.entries(data.users).filter(([id, u]) => u.approved && ![“claude_ai”,“gemini_ai”,“chatgpt_ai”].includes(id))
+);
 
-  return (
-    <MapaSection
-      allPreds={data.allPreds}
-      users={approvedUsers}
-      results={data.results}
-      currentUser={data.currentUser}
-      champions={data.champions}
-    />
-  );
+return (
+<MapaSection
+allPreds={data.allPreds}
+users={approvedUsers}
+results={data.results}
+currentUser={data.currentUser}
+champions={data.champions}
+/>
+);
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById(“root”));
 root.render(<App/>);
 </script>
 
@@ -1800,5 +1824,6 @@ window.__TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "showLabels": false
 }/*EDITMODE-END*/;
 </script>
+
 </body>
 </html>
