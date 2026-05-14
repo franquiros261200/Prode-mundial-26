@@ -1113,8 +1113,164 @@ function Chat({currentUser,users}){
   );
 }
 
+
 // ═══════════════════════════════════════════════════════
-// MAP VIEW (SVG world map - simplified)
+// HOST MAP - Sedes Mundial 2026 (pure React, no D3)
+// ═══════════════════════════════════════════════════════
+const SEDES_DATA = [
+  {city:"Atlanta",         stadium:"Mercedes-Benz Stadium",  lon:-84.40, lat:33.755, country:"USA", games:8, type:"semi"},
+  {city:"Boston",          stadium:"Gillette Stadium",       lon:-71.26, lat:42.090, country:"USA", games:7, type:"cuartos"},
+  {city:"Dallas",          stadium:"AT&T Stadium",           lon:-97.09, lat:32.747, country:"USA", games:9, type:"semi"},
+  {city:"Houston",         stadium:"NRG Stadium",            lon:-95.41, lat:29.685, country:"USA", games:7, type:"octavos"},
+  {city:"Kansas City",     stadium:"Arrowhead Stadium",      lon:-94.48, lat:39.049, country:"USA", games:6, type:"cuartos"},
+  {city:"Los Angeles",     stadium:"SoFi Stadium",           lon:-118.34,lat:33.953, country:"USA", games:8, type:"cuartos"},
+  {city:"Miami",           stadium:"Hard Rock Stadium",      lon:-80.24, lat:25.957, country:"USA", games:7, type:"cuartos"},
+  {city:"Nueva York/NJ",   stadium:"MetLife Stadium",        lon:-74.07, lat:40.813, country:"USA", games:8, type:"final"},
+  {city:"Philadelphia",    stadium:"Lincoln Financial Field",lon:-75.17, lat:39.901, country:"USA", games:6, type:"octavos"},
+  {city:"San Francisco",   stadium:"Levi's Stadium",         lon:-121.97,lat:37.403, country:"USA", games:6, type:"octavos"},
+  {city:"Seattle",         stadium:"Lumen Field",            lon:-122.33,lat:47.595, country:"USA", games:6, type:"octavos"},
+  {city:"Ciudad de México",stadium:"Estadio Azteca",         lon:-99.15, lat:19.302, country:"MEX", games:5, type:"inaugural"},
+  {city:"Guadalajara",     stadium:"Estadio Akron",          lon:-103.46,lat:20.681, country:"MEX", games:4, type:"grupos"},
+  {city:"Monterrey",       stadium:"Estadio BBVA",           lon:-100.24,lat:25.668, country:"MEX", games:4, type:"grupos"},
+  {city:"Toronto",         stadium:"BMO Field",              lon:-79.42, lat:43.633, country:"CAN", games:6, type:"grupos"},
+  {city:"Vancouver",       stadium:"BC Place",               lon:-123.11,lat:49.276, country:"CAN", games:7, type:"octavos"},
+];
+const SEDE_COLORS = {inaugural:"#f0d060",final:"#f0d060",semi:"#d4a843",cuartos:"#3b82f6",octavos:"#22c55e",grupos:"#6b8299"};
+const SEDE_LABELS = {inaugural:"INAUGURAL",final:"FINAL",semi:"SEMIFINAL",cuartos:"CUARTOS",octavos:"OCTAVOS",grupos:"GRUPOS"};
+
+function projectNA(lon,lat){
+  const W=1000,H=520,scale=640;
+  const x=(lon-(-97))*(Math.PI/180)*scale+W/2;
+  const latRad=lat*Math.PI/180;
+  const y=-Math.log(Math.tan(Math.PI/4+latRad/2))*scale+H/2+Math.log(Math.tan(Math.PI/4+38*Math.PI/360))*scale;
+  return[x,y];
+}
+
+const COUNTRY_OUTLINES={
+  USA:[[-67,44.8],[-69.7,43.7],[-70.8,42],[-71,41.3],[-73.9,40.5],[-74.5,39.4],[-75.5,38.8],[-77,38],[-76,37],[-75.9,36.5],[-76.8,34.8],[-78.5,33.9],[-79.6,32.7],[-80.9,32],[-81.5,30.7],[-80,26.7],[-80.1,25.2],[-81.7,24.5],[-82.8,27.6],[-83.5,29.7],[-85,29.7],[-87.5,30.3],[-89.2,30],[-90,29.1],[-91.5,29.5],[-93.8,29.7],[-95.6,28.8],[-97,27.9],[-97.4,26],[-99.1,26.4],[-100.7,29.1],[-102.4,29.8],[-103.3,28.9],[-104.5,29.6],[-106.5,31.8],[-108.2,31.8],[-111.1,31.3],[-114.8,32.5],[-117.1,32.5],[-118.4,33.7],[-120.6,34.5],[-121.9,36.6],[-122.5,37.8],[-123.7,38.9],[-124.5,40.4],[-124,42],[-124.7,46],[-124,48.4],[-123,48.2],[-95.2,49],[-92,48.5],[-89.5,48],[-88.5,47.4],[-85.5,46.7],[-84.5,46.5],[-83.5,46],[-82.5,45.5],[-82,43.2],[-83,42],[-82.5,41.7],[-81,42.3],[-79,42.9],[-78.9,43.3],[-77,43.6],[-75.5,44.7],[-74.5,45],[-71.5,45],[-69.5,46.5],[-67.8,47.1],[-67,44.8]],
+  MEX:[[-117.1,32.5],[-114.8,32.5],[-111.1,31.3],[-108.2,31.8],[-106.5,31.8],[-104.5,29.6],[-103.3,28.9],[-102.4,29.8],[-100.7,29.1],[-99.1,26.4],[-97.4,26],[-97,25.7],[-97.3,21.5],[-95,18.8],[-94.5,18.2],[-93.5,18.5],[-91.5,18.5],[-90.5,21],[-87,21.5],[-86.7,21],[-87.5,20.2],[-87.5,18.8],[-89,18],[-91,17],[-92.5,16.2],[-93.5,16],[-95.5,16],[-97,15.7],[-99,16.6],[-101.5,17.7],[-103.5,18.5],[-105.5,19.5],[-105.5,20.5],[-105.3,21.5],[-106.5,23],[-108.5,25.5],[-109.5,26.5],[-110.5,28],[-112,29.5],[-113,31],[-114.5,31.5],[-117.1,32.5]],
+  CAN:[[-123,49],[-114,49],[-95.2,49],[-95.2,49.4],[-94.6,48.9],[-94,48.7],[-92,48.5],[-89.5,48],[-88.5,47.4],[-85.5,46.7],[-84.5,46.5],[-83.5,46],[-82.5,45.5],[-78.9,43.3],[-77,43.6],[-75.5,44.7],[-74.5,45],[-71.5,45],[-69.5,46.5],[-67.8,47.1],[-67,47],[-64.5,46.5],[-61,45.6],[-60,46.5],[-59,47.5],[-55,47.5],[-53,48],[-52.5,49],[-53,50.5],[-55,52],[-57,53.5],[-61,55],[-64,57],[-66,58.5],[-68,60],[-70,60.5],[-74,62],[-78,62],[-82,63],[-84,63.5],[-87,63.5],[-92,63.5],[-95,63],[-100,63],[-105,63],[-110,63],[-115,63],[-120,63],[-125,63],[-130,62],[-133,61.5],[-138,62],[-139,60],[-138,59],[-135,58.5],[-132,57.5],[-130,56],[-128,54.5],[-127,53.5],[-126,52],[-125.5,50.5],[-124.5,50],[-123,49]]
+};
+
+function outlineToPath(coords){return coords.map((c,i)=>{const[x,y]=projectNA(c[0],c[1]);return(i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1);}).join(" ")+" Z";}
+
+function HostMapView(){
+  const[hovered,setHovered]=useState(null);
+  const[selected,setSelected]=useState(null);
+  const W=1000,H=520;
+  const focus=selected||hovered;
+  const focusSede=focus?SEDES_DATA.find(s=>s.city===focus):null;
+  const usaPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.USA),[]);
+  const mexPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.MEX),[]);
+  const canPath=useMemo(()=>outlineToPath(COUNTRY_OUTLINES.CAN),[]);
+  const labelUSA=projectNA(-98,39),labelMEX=projectNA(-102,23),labelCAN=projectNA(-100,55);
+  return(
+    <div style={{maxWidth:1100,margin:"0 auto",padding:"24px 16px"}} className="fi">
+      <h2 className="hdr" style={{fontSize:26,textAlign:"center",marginBottom:4}}>🏟️ SEDES MUNDIAL 2026</h2>
+      <p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",marginBottom:16}}>11 sedes en Estados Unidos · 3 en México · 2 en Canadá</p>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 280px",gap:12,alignItems:"start"}}>
+        <div className="card" style={{padding:0,overflow:"hidden"}}>
+          <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 50%,#0a1d3a 0%,#050c18 75%)"}}>
+            <defs>
+              <radialGradient id="hm-glow"><stop offset="0%" stopColor="#f0d060" stopOpacity="0.5"/><stop offset="100%" stopColor="#f0d060" stopOpacity="0"/></radialGradient>
+              <pattern id="hm-grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0L0 0 0 32" fill="none" stroke="#0f1f3a" strokeWidth="0.4"/></pattern>
+            </defs>
+            <rect width={W} height={H} fill="url(#hm-grid)" opacity="0.5"/>
+            <path d={canPath} fill="#152744" stroke="#2a4878" strokeWidth={0.8}/>
+            <path d={usaPath} fill="#1d3658" stroke="#2a4878" strokeWidth={0.8}/>
+            <path d={mexPath} fill="#152744" stroke="#2a4878" strokeWidth={0.8}/>
+            <text x={labelCAN[0]} y={labelCAN[1]} textAnchor="middle" fontFamily="'Bebas Neue',sans-serif" fontSize="22" fill="#1e3a6a" letterSpacing="6">CANADÁ</text>
+            <text x={labelUSA[0]} y={labelUSA[1]} textAnchor="middle" fontFamily="'Bebas Neue',sans-serif" fontSize="22" fill="#2a4d80" letterSpacing="6">ESTADOS UNIDOS</text>
+            <text x={labelMEX[0]} y={labelMEX[1]} textAnchor="middle" fontFamily="'Bebas Neue',sans-serif" fontSize="22" fill="#1e3a6a" letterSpacing="6">MÉXICO</text>
+            {SEDES_DATA.map(s=>{
+              const[x,y]=projectNA(s.lon,s.lat);
+              const color=SEDE_COLORS[s.type];
+              const active=hovered===s.city||selected===s.city;
+              const r=5+s.games*0.6;
+              return(
+                <g key={s.city} style={{cursor:"pointer"}} onMouseEnter={()=>setHovered(s.city)} onMouseLeave={()=>setHovered(null)} onClick={()=>setSelected(selected===s.city?null:s.city)}>
+                  {active&&<circle cx={x} cy={y} r={r+10} fill="url(#hm-glow)"/>}
+                  <circle cx={x} cy={y} r={r+3} fill={color} opacity={0.25}/>
+                  <circle cx={x} cy={y} r={r} fill={color} stroke={active?"#fff":"rgba(0,0,0,0.4)"} strokeWidth={active?2:1}/>
+                  <text x={x} y={y-r-5} textAnchor="middle" fontSize={active?11:9} fontFamily="'Bebas Neue',sans-serif" fill="#fff" stroke="#050c18" strokeWidth="2.5" paintOrder="stroke" letterSpacing="0.8">{s.city.toUpperCase()}</text>
+                  {active&&<text x={x} y={y+r+12} textAnchor="middle" fontSize="8" fontFamily="DM Sans,sans-serif" fill={color} stroke="#050c18" strokeWidth="2" paintOrder="stroke">{s.stadium}</text>}
+                </g>
+              );
+            })}
+            <g transform={`translate(20,${H-110})`}>
+              <rect width={170} height={96} rx={8} fill="rgba(10,22,40,0.85)" stroke="#162845"/>
+              <text x={10} y={16} fontFamily="'Bebas Neue',sans-serif" fontSize="10" fill="#6b8299" letterSpacing="1.5">TIPO DE PARTIDO</text>
+              {Object.entries(SEDE_LABELS).map(([k,v],i)=>(
+                <g key={k} transform={`translate(10,${28+i*11})`}>
+                  <circle cx={4} cy={4} r={4} fill={SEDE_COLORS[k]}/>
+                  <text x={14} y={7} fontSize="9" fill="#c8d6e5" fontFamily="DM Sans,sans-serif">{v}</text>
+                </g>
+              ))}
+            </g>
+          </svg>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          <div className="card" style={{padding:14}}>
+            <div className="hdr" style={{fontSize:14,letterSpacing:2,marginBottom:10}}>16 SEDES</div>
+            <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:440,overflowY:"auto"}}>
+              {["USA","MEX","CAN"].map(c=>{
+                const list=SEDES_DATA.filter(s=>s.country===c);
+                const flag={USA:"🇺🇸",MEX:"🇲🇽",CAN:"🇨🇦"}[c];
+                const name={USA:"Estados Unidos · 11",MEX:"México · 3",CAN:"Canadá · 2"}[c];
+                return(
+                  <div key={c}>
+                    <div style={{display:"flex",alignItems:"center",gap:7,padding:"4px 0",borderBottom:"1px solid var(--bd)",marginBottom:5}}>
+                      <span style={{fontSize:14}}>{flag}</span>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:"var(--gold)",letterSpacing:1.5}}>{name}</span>
+                    </div>
+                    {list.map(s=>{
+                      const color=SEDE_COLORS[s.type];
+                      const isFocus=focus===s.city;
+                      return(
+                        <button key={s.city} onClick={()=>setSelected(isFocus?null:s.city)} onMouseEnter={()=>setHovered(s.city)} onMouseLeave={()=>setHovered(null)}
+                          style={{display:"flex",alignItems:"center",gap:8,padding:"6px 9px",borderRadius:7,background:isFocus?"rgba(212,168,67,0.12)":"var(--bg)",border:`1px solid ${isFocus?"var(--gold)":"var(--bd)"}`,cursor:"pointer",textAlign:"left",color:"var(--wht)",width:"100%",marginBottom:3}}>
+                          <span style={{width:8,height:8,borderRadius:"50%",background:color,flex:"0 0 8px"}}/>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:12,fontWeight:600}}>{s.city}</div>
+                            <div style={{color:"var(--txt3)",fontSize:9,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.stadium}</div>
+                          </div>
+                          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color}}>{s.games}</span>
+                          <span style={{color:"var(--txt3)",fontSize:8,width:24,textAlign:"right"}}>PJ</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {focusSede&&(
+            <div className="card" style={{padding:14,borderColor:"rgba(212,168,67,0.35)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",marginBottom:8}}>
+                <div>
+                  <div className="hdr" style={{fontSize:17,letterSpacing:1.5}}>{focusSede.city.toUpperCase()}</div>
+                  <div style={{color:"var(--gold)",fontSize:11,fontWeight:600}}>{focusSede.stadium}</div>
+                </div>
+                <button onClick={()=>setSelected(null)} style={{background:"transparent",border:"1px solid var(--bd)",color:"var(--txt3)",borderRadius:5,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✕</button>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6}}>
+                <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"7px 4px",textAlign:"center"}}>
+                  <div className="hdr" style={{fontSize:20,color:"var(--gold)",lineHeight:1}}>{focusSede.games}</div>
+                  <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2}}>PARTIDOS</div>
+                </div>
+                <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"7px 4px",textAlign:"center"}}>
+                  <div className="hdr" style={{fontSize:13,color:SEDE_COLORS[focusSede.type],lineHeight:1.2,marginTop:5}}>{SEDE_LABELS[focusSede.type]}</div>
+                  <div style={{color:"var(--txt3)",fontSize:8,letterSpacing:1.2}}>FASE MÁX.</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════
 const TEAM_COORDS={
   "Argentina":[-65,-34],"Brasil":[-51,-10],"Uruguay":[-56,-33],"Colombia":[-74,4],"Ecuador":[-78,-2],"Paraguay":[-58,-23],
@@ -1536,9 +1692,7 @@ export default function App(){
           {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="chat"&&<Chat currentUser={user} users={users}/>}
           {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
-          {view==="map"&&<div style={{width:"100%",height:"calc(100vh - 60px)",position:"relative",overflow:"hidden"}}>
-            <iframe src="/mapa.html" style={{width:"100%",height:"100%",border:"none",display:"block"}} title="Mapa Mundial 2026" sandbox="allow-scripts allow-same-origin allow-popups"/>
-          </div>}
+          {view==="map"&&<HostMapView/>}
           {view==="thermo"&&<Thermometer allPreds={allPreds} users={users} currentUser={user} results={results}/>}
           {view==="perfil"&&<Profile userId={user} users={users} allPreds={allPreds} results={results}/>}
           {view==="stats"&&<div style={{maxWidth:850,margin:"0 auto",padding:"24px 16px"}} className="fi">
