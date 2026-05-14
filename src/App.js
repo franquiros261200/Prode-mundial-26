@@ -162,23 +162,46 @@ return(
 
 function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPreview}){
 const locked=new Date()>=LOCK;
-const nav=[{id:“home”,l:“Inicio”},{id:“hoy”,l:“📅 Hoy”},{id:“preds”,l:“Predicciones”},{id:“table”,l:“Tabla”},{id:“bracket”,l:“🏟️ Bracket”},{id:“compare”,l:“Comparar”},{id:“h2h”,l:“⚔️ H2H”},{id:“ia”,l:“🤖 IA”},{id:“chat”,l:“💬 Chat”},{id:“leagues”,l:“🏅 Ligas”},{id:“map”,l:“🌍 Mapa”},{id:“thermo”,l:“🌡️ Confianza”},{id:“perfil”,l:“👤 Perfil”},{id:“buscar”,l:“🔍 Buscar”},{id:“stats”,l:“📊 Stats”},{id:“podio”,l:“🏆 Podio”},{id:“rules”,l:“Reglas”},];
+const[menuOpen,setMenuOpen]=useState(false);
+const mainNav=[{id:“home”,l:“Inicio”},{id:“hoy”,l:“📅 Hoy”},{id:“preds”,l:“Predicciones”},{id:“table”,l:“Tabla”},{id:“bracket”,l:“🏟️ Bracket”}];
+const moreNav=[{id:“compare”,l:“Comparar”},{id:“h2h”,l:“⚔️ H2H”},{id:“ia”,l:“🤖 IA”},{id:“chat”,l:“💬 Chat”},{id:“leagues”,l:“🏅 Ligas”},{id:“map”,l:“🌍 Mapa”},{id:“thermo”,l:“🌡️ Confianza”},{id:“perfil”,l:“👤 Perfil”},{id:“buscar”,l:“🔍 Buscar”},{id:“stats”,l:“📊 Stats”},{id:“podio”,l:“🏆 Podio”},{id:“rules”,l:“Reglas”}];
+const activeInMore=moreNav.some(v=>v.id===view);
 return(
 <header style={{background:“linear-gradient(135deg,#070e1c,#0f2240,#091630)”,borderBottom:“2px solid var(–gold)”,position:“sticky”,top:0,zIndex:100}}>
-<div style={{maxWidth:1200,margin:“0 auto”,padding:“10px 14px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”,flexWrap:“wrap”,gap:6}}>
-<div style={{display:“flex”,alignItems:“center”,gap:8,cursor:“pointer”}} onClick={()=>setView(“home”)}>
+<div style={{maxWidth:1200,margin:“0 auto”,padding:“10px 14px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”,gap:6}}>
+<div style={{display:“flex”,alignItems:“center”,gap:8,cursor:“pointer”,flexShrink:0}} onClick={()=>setView(“home”)}>
 <span style={{fontSize:24}}>⚽</span>
 <div><div className="hdr" style={{fontSize:17}}>PRODE MUNDIAL 2026</div><div style={{fontSize:8,color:“var(–txt3)”,letterSpacing:3}}>USA • MÉXICO • CANADÁ</div></div>
 </div>
-<div style={{display:“flex”,alignItems:“center”,gap:4,flexWrap:“wrap”}}>
-{nav.map(v=><button key={v.id} className={`nb${view===v.id?" act":""}`} onClick={()=>setView(v.id)}>{v.l}</button>)}
-{isAdmin&&<button className={`nb${view==="admin"?" act":""}`} onClick={()=>setView(“admin”)} style={{color:view===“admin”?”#fff”:“var(–red)”,borderColor:“var(–red)”,background:view===“admin”?“var(–red)”:“transparent”}}>Admin</button>}
-{isAdmin&&<button onClick={()=>setShowPreview(true)} style={{padding:“4px 8px”,background:”#7c3aed”,color:”#fff”,border:“none”,borderRadius:5,fontSize:10,cursor:“pointer”,fontWeight:600}}>👁 Preview</button>}{isAdmin&&onPreview&&<button onClick={onPreview} style={{padding:“4px 8px”,background:”#7c3aed”,color:”#fff”,border:“none”,borderRadius:5,fontSize:10,cursor:“pointer”,fontWeight:600}}>👁 Preview</button>}{isAdmin&&<button onClick={()=>setAdminMode(!adminMode)} style={{padding:“4px 8px”,background:adminMode?”#7c3aed”:“transparent”,color:adminMode?”#fff”:”#a78bfa”,border:“1px solid #7c3aed44”,borderRadius:5,fontSize:10,cursor:“pointer”,fontWeight:600}}>{adminMode?“👑 Admin”:“👤 User”}</button>}
-<div style={{display:“flex”,alignItems:“center”,gap:5,marginLeft:4}}>
-<span style={{color:“var(–gold)”,fontSize:11,fontWeight:700}}>{user}</span>
-{locked&&<span className=“tg” style={{background:“var(–red)”,color:”#fff”,fontSize:7,animation:“pls 2s infinite”}}>LOCKED</span>}
-<button onClick={onLogout} style={{background:“transparent”,color:“var(–txt3)”,border:“1px solid var(–bd)”,borderRadius:4,padding:“3px 7px”,fontSize:10,cursor:“pointer”}}>Salir</button>
+<div style={{display:“flex”,alignItems:“center”,gap:4,flex:1,justifyContent:“center”,flexWrap:“wrap”}}>
+{mainNav.map(v=><button key={v.id} className={`nb${view===v.id?" act":""}`} onClick={()=>setView(v.id)}>{v.l}</button>)}
+<div style={{position:“relative”}}>
+<button onClick={()=>setMenuOpen(o=>!o)}
+style={{padding:“5px 11px”,background:menuOpen||activeInMore?“rgba(212,168,67,.2)”:“transparent”,color:activeInMore?“var(–gold)”:“var(–txt2)”,border:`1px solid ${activeInMore?"var(--gold)":"var(--bd)"}`,borderRadius:7,fontSize:15,cursor:“pointer”,lineHeight:1}}>
+☰
+</button>
+{menuOpen&&<>
+<div onClick={()=>setMenuOpen(false)} style={{position:“fixed”,inset:0,zIndex:199}}/>
+<div style={{position:“absolute”,top:“calc(100% + 8px)”,left:“50%”,transform:“translateX(-50%)”,background:”#0b1829”,border:“1px solid var(–bd)”,borderRadius:10,padding:8,minWidth:200,zIndex:200,boxShadow:“0 8px 30px rgba(0,0,0,.7)”}}>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:4}}>
+{moreNav.map(v=>(
+<button key={v.id} onClick={()=>{setView(v.id);setMenuOpen(false);}}
+style={{padding:“8px 10px”,background:view===v.id?“var(–gold)”:“var(–bg3)”,color:view===v.id?“var(–bg)”:“var(–txt)”,border:`1px solid ${view===v.id?"var(--gold)":"var(--bd)"}`,borderRadius:7,fontSize:11,cursor:“pointer”,textAlign:“left”}}>
+{v.l}
+</button>
+))}
+{isAdmin&&<button onClick={()=>{setView(“admin”);setMenuOpen(false);}} style={{padding:“8px 10px”,background:view===“admin”?“var(–red)”:“var(–bg3)”,color:view===“admin”?”#fff”:“var(–red)”,border:“1px solid var(–red)”,borderRadius:7,fontSize:11,cursor:“pointer”,gridColumn:“span 2”}}>⚙️ Admin</button>}
 </div>
+</div>
+</>}
+</div>
+{isAdmin&&onPreview&&<button onClick={onPreview} style={{padding:“4px 8px”,background:”#7c3aed”,color:”#fff”,border:“none”,borderRadius:5,fontSize:10,cursor:“pointer”,fontWeight:600}}>👁</button>}
+{isAdmin&&<button onClick={()=>setAdminMode(!adminMode)} style={{padding:“4px 8px”,background:adminMode?”#7c3aed”:“transparent”,color:adminMode?”#fff”:”#a78bfa”,border:“1px solid #7c3aed44”,borderRadius:5,fontSize:10,cursor:“pointer”,fontWeight:600}}>{adminMode?“👑”:“👤”}</button>}
+</div>
+<div style={{display:“flex”,alignItems:“center”,gap:5,flexShrink:0}}>
+<span style={{color:“var(–gold)”,fontSize:11,fontWeight:700}}>{user}</span>
+{locked&&<span className=“tg” style={{background:“var(–red)”,color:”#fff”,fontSize:7,animation:“pls 2s infinite”}}>🔒</span>}
+<button onClick={onLogout} style={{background:“transparent”,color:“var(–txt3)”,border:“1px solid var(–bd)”,borderRadius:4,padding:“3px 7px”,fontSize:10,cursor:“pointer”}}>Salir</button>
 </div>
 </div>
 </header>
@@ -1106,31 +1129,6 @@ return(
 <input className=“inp” value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>{if(e.key===“Enter”&&!e.shiftKey){e.preventDefault();send();}}} placeholder=“Escribí algo…” style={{flex:1,padding:“10px 14px”}}/>
 <button className=“bg” onClick={send} disabled={sending||!text.trim()} style={{padding:“10px 18px”,fontSize:13}}>Enviar</button>
 </div>
-</div>
-);
-}
-
-// ═══════════════════════════════════════════════════════
-// MAP SECTION - wrapper with tabs
-// ═══════════════════════════════════════════════════════
-function MapSection({results, isAdmin, allPreds, users}){
-const[tab,setTab]=useState(“mundo”);
-return(
-<div style={{width:“100%”}}>
-<div style={{display:“flex”,gap:6,padding:“12px 16px 0”,maxWidth:1100,margin:“0 auto”}}>
-<button className={`nb${tab==="mundo"?" act":""}`} onClick={()=>setTab(“mundo”)}>🌍 Mapa Mundial</button>
-<button className={`nb${tab==="sedes"?" act":""}`} onClick={()=>setTab(“sedes”)}>🏟️ Sedes 2026</button>
-</div>
-{tab===“mundo”&&(
-<div style={{width:“100%”,height:“calc(100vh - 110px)”,position:“relative”,overflow:“hidden”}}>
-<iframe
-src=”/mapa.html?nosedes=1”
-style={{width:“100%”,height:“100%”,border:“none”,display:“block”}}
-title=“Mapa Mundial 2026”
-/>
-</div>
-)}
-{tab===“sedes”&&<HostMapView results={results} isAdmin={isAdmin}/>}
 </div>
 );
 }
@@ -2254,7 +2252,7 @@ onPreview={()=>setShowPreview(true)}
 {view===“ia”&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
 {view===“chat”&&<Chat currentUser={user} users={users}/>}
 {view===“leagues”&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
-{view===“map”&&<MapSection results={results} isAdmin={isAdmin} allPreds={allPreds} users={users}/>}
+{view===“map”&&<HostMapView results={results} isAdmin={isAdmin}/>}
 {view===“thermo”&&<Thermometer allPreds={allPreds} users={users} currentUser={user} results={results}/>}
 {view===“perfil”&&<Profile userId={user} users={users} allPreds={allPreds} results={results}/>}
 {view===“stats”&&<div style={{maxWidth:850,margin:“0 auto”,padding:“24px 16px”}} className=“fi”>
@@ -2331,8 +2329,10 @@ return(
 // ═══════════════════════════════════════════════════════
 function MobileNav({view,setView,isAdmin}){
 const items=[
-{id:“home”,l:“Inicio”,i:“🏠”},{id:“hoy”,l:“Hoy”,i:“📅”},
-{id:“preds”,l:“Preds”,i:“✏️”},{id:“table”,l:“Tabla”,i:“🏆”},
+{id:“hoy”,l:“Hoy”,i:“📅”},
+{id:“preds”,l:“Preds”,i:“✏️”},
+{id:“table”,l:“Tabla”,i:“🏆”},
+{id:“chat”,l:“Chat”,i:“💬”},
 {id:“perfil”,l:“Perfil”,i:“👤”},
 ];
 return(
