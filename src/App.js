@@ -129,7 +129,8 @@ const CSS=`
 .bex{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;}
 .bsi{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);color:#f59e0b;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;}
 .bms{background:rgba(220,53,69,.2);border:1px solid rgba(220,53,69,.4);color:#dc3545;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;}
-@media(max-width:640px){.mr{flex-wrap:wrap;justify-content:center;}}
+.map-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;align-items:start;}
+@media(max-width:640px){.mr{flex-wrap:wrap;justify-content:center;}.map-grid{grid-template-columns:1fr;}}
 `;
 
 function Anim({type,onDone}){
@@ -198,9 +199,9 @@ function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPrevie
   const locked=new Date()>=LOCK;
   const[menuOpen,setMenuOpen]=useState(false);
   // Main nav - 5 items max, shown horizontally below logo on mobile
-  const mainNav=[{id:"home",l:"Inicio"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"}];
+  const mainNav=[{id:"home",l:"Inicio"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"map",l:"🌍 Mapa"}];
   // Hamburger - exclude items already in bottom nav (hoy, preds, table, chat, perfil)
-  const moreNav=[{id:"map",l:"🌍 Mapa"},{id:"h2h",l:"⚔️ H2H"},{id:"leagues",l:"🏅 Ligas"},{id:"thermo",l:"🌡️ Confianza"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
+  const moreNav=[{id:"h2h",l:"⚔️ H2H"},{id:"leagues",l:"🏅 Ligas"},{id:"thermo",l:"🌡️ Confianza"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
   const activeInMore=moreNav.some(v=>v.id===view);
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
@@ -1335,7 +1336,7 @@ function HostMapView({results, isAdmin}){
         </div>
       )}
 
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 300px",gap:12,alignItems:"start"}} className="map-grid">
+      <div className="map-grid">
         {/* MAP */}
         <div className="card" style={{padding:0,overflow:"hidden",width:"100%"}}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 50%,#0a1d3a 0%,#050c18 75%)"}}>
