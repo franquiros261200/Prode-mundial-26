@@ -198,28 +198,29 @@ function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPrevie
   const locked=new Date()>=LOCK;
   const[menuOpen,setMenuOpen]=useState(false);
   // Main nav - 5 items max, shown horizontally below logo on mobile
-  const mainNav=[{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"bracket",l:"🏟️ Bracket"},{id:"home",l:"Inicio"}];
+  const mainNav=[{id:"home",l:"Inicio"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"map",l:"🌍 Mapa"}];
   // Hamburger - exclude items already in bottom nav (hoy, preds, table, chat, perfil)
-  const moreNav=[{id:"compare",l:"Comparar"},{id:"h2h",l:"⚔️ H2H"},{id:"ia",l:"🤖 IA"},{id:"leagues",l:"🏅 Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
+  const moreNav=[{id:"h2h",l:"⚔️ H2H"},{id:"leagues",l:"🏅 Ligas"},{id:"thermo",l:"🌡️ Confianza"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
   const activeInMore=moreNav.some(v=>v.id===view);
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
-      {/* Row 1: Logo + hamburger + user */}
+      {/* Row 1: Logo LEFT, user+hamburger RIGHT */}
       <div style={{padding:"8px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}} onClick={()=>setView("home")}>
           <span style={{fontSize:22}}>⚽</span>
           <div><div className="hdr" style={{fontSize:16,lineHeight:1}}>PRODE MUNDIAL 2026</div><div style={{fontSize:8,color:"var(--txt3)",letterSpacing:3}}>USA • MÉXICO • CANADÁ</div></div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:6}}>
+        {/* Right side: user info + admin buttons + hamburger */}
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
           {isAdmin&&onPreview&&<button onClick={onPreview} style={{padding:"5px 8px",background:"#7c3aed",color:"#fff",border:"none",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>👁</button>}
           {isAdmin&&<button onClick={()=>setAdminMode(!adminMode)} style={{padding:"5px 8px",background:adminMode?"#7c3aed":"transparent",color:adminMode?"#fff":"#a78bfa",border:"1px solid #7c3aed44",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>{adminMode?"👑":"👤"}</button>}
           <span style={{color:"var(--gold)",fontSize:11,fontWeight:700}}>{user}</span>
           {locked&&<span className="tg" style={{background:"var(--red)",color:"#fff",fontSize:7,animation:"pls 2s infinite"}}>🔒</span>}
           <button onClick={onLogout} style={{background:"transparent",color:"var(--txt3)",border:"1px solid var(--bd)",borderRadius:4,padding:"3px 7px",fontSize:10,cursor:"pointer"}}>Salir</button>
-          {/* Hamburger */}
+          {/* Hamburger - always visible, top right */}
           <div style={{position:"relative"}}>
             <button onClick={()=>setMenuOpen(o=>!o)}
-              style={{padding:"5px 10px",background:menuOpen||activeInMore?"rgba(212,168,67,.2)":"transparent",color:activeInMore?"var(--gold)":"var(--txt2)",border:`1px solid ${activeInMore?"var(--gold)":"var(--bd)"}`,borderRadius:7,fontSize:16,cursor:"pointer",lineHeight:1}}>
+              style={{padding:"6px 12px",background:menuOpen||activeInMore?"rgba(212,168,67,.2)":"rgba(255,255,255,.08)",color:activeInMore?"var(--gold)":"var(--wht)",border:`1px solid ${activeInMore?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:7,fontSize:18,cursor:"pointer",lineHeight:1,fontWeight:300}}>
               ☰
             </button>
             {menuOpen&&<>
@@ -239,11 +240,11 @@ function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPrevie
           </div>
         </div>
       </div>
-      {/* Row 2: Main nav full width */}
-      <div style={{display:"flex",borderTop:"1px solid var(--bd)",overflowX:"auto",scrollbarWidth:"none"}}>
+      {/* Row 2: Nav full width */}
+      <div style={{display:"flex",borderTop:"1px solid var(--bd)",overflowX:"auto",WebkitOverflowScrolling:"touch"}} onMouseLeave={()=>{}}>
         {mainNav.map(v=>(
           <button key={v.id} onClick={()=>setView(v.id)}
-            style={{flex:1,padding:"7px 4px",background:view===v.id?"rgba(212,168,67,.15)":"transparent",color:view===v.id?"var(--gold)":"var(--txt2)",border:"none",borderBottom:view===v.id?"2px solid var(--gold)":"2px solid transparent",fontFamily:"'Bebas Neue',sans-serif",fontSize:11,letterSpacing:1,cursor:"pointer",whiteSpace:"nowrap",transition:"all .15s"}}>
+            style={{flex:1,minWidth:0,padding:"8px 4px",background:view===v.id?"rgba(212,168,67,.15)":"transparent",color:view===v.id?"var(--gold)":"var(--txt3)",border:"none",borderBottom:view===v.id?"2px solid var(--gold)":"2px solid transparent",fontFamily:"'Bebas Neue',sans-serif",fontSize:11,letterSpacing:.5,cursor:"pointer",whiteSpace:"nowrap",transition:"all .15s",textAlign:"center"}}>
             {v.l}
           </button>
         ))}
@@ -2380,7 +2381,7 @@ function MobileNav({view,setView,isAdmin}){
     {id:"perfil",l:"Perfil",i:"👤"},
   ];
   return(
-    <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(7,14,28,.97)",borderTop:"1px solid var(--bd)",display:"flex",zIndex:90,paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 10px)"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(7,14,28,.97)",borderTop:"1px solid var(--bd)",display:"flex",zIndex:90,paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 14px)",paddingTop:6}}>
       {items.map(it=>(
         <button key={it.id} onClick={()=>setView(it.id)} style={{flex:1,padding:"8px 4px 6px",background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all .15s"}}>
           <span style={{fontSize:18,lineHeight:1}}>{it.i}</span>
