@@ -1275,6 +1275,31 @@ function Chat({currentUser,users}){
 }
 
 
+// ═══════════════════════════════════════════════════════
+// HOST MAP - Sedes Mundial 2026 (pure React, no D3)
+// ═══════════════════════════════════════════════════════
+const SEDES_DATA=[
+  {city:"Atlanta",stadium:"Mercedes-Benz Stadium",lon:-84.40,lat:33.755,country:"USA",games:8,type:"semi"},
+  {city:"Boston",stadium:"Gillette Stadium",lon:-71.26,lat:42.090,country:"USA",games:7,type:"cuartos"},
+  {city:"Dallas",stadium:"AT&T Stadium",lon:-97.09,lat:32.747,country:"USA",games:9,type:"semi"},
+  {city:"Houston",stadium:"NRG Stadium",lon:-95.41,lat:29.685,country:"USA",games:7,type:"octavos"},
+  {city:"Kansas City",stadium:"Arrowhead Stadium",lon:-94.48,lat:39.049,country:"USA",games:6,type:"cuartos"},
+  {city:"Los Angeles",stadium:"SoFi Stadium",lon:-118.34,lat:33.953,country:"USA",games:8,type:"cuartos"},
+  {city:"Miami",stadium:"Hard Rock Stadium",lon:-80.24,lat:25.957,country:"USA",games:7,type:"cuartos"},
+  {city:"Nueva York/NJ",stadium:"MetLife Stadium",lon:-74.07,lat:40.813,country:"USA",games:8,type:"final"},
+  {city:"Philadelphia",stadium:"Lincoln Financial Field",lon:-75.17,lat:39.901,country:"USA",games:6,type:"octavos"},
+  {city:"San Francisco",stadium:"Levi\'s Stadium",lon:-121.97,lat:37.403,country:"USA",games:6,type:"octavos"},
+  {city:"Seattle",stadium:"Lumen Field",lon:-122.33,lat:47.595,country:"USA",games:6,type:"octavos"},
+  {city:"Ciudad de México",stadium:"Estadio Azteca",lon:-99.15,lat:19.302,country:"MEX",games:5,type:"inaugural"},
+  {city:"Guadalajara",stadium:"Estadio Akron",lon:-103.46,lat:20.681,country:"MEX",games:4,type:"grupos"},
+  {city:"Monterrey",stadium:"Estadio BBVA",lon:-100.24,lat:25.668,country:"MEX",games:4,type:"grupos"},
+  {city:"Toronto",stadium:"BMO Field",lon:-79.42,lat:43.633,country:"CAN",games:6,type:"grupos"},
+  {city:"Vancouver",stadium:"BC Place",lon:-123.11,lat:49.276,country:"CAN",games:7,type:"octavos"},
+];
+const SEDE_COLORS={inaugural:"#f0d060",final:"#f0d060",semi:"#d4a843",cuartos:"#3b82f6",octavos:"#22c55e",grupos:"#6b8299"};
+const SEDE_LABELS={inaugural:"INAUGURAL",final:"FINAL",semi:"SEMIFINAL",cuartos:"CUARTOS",octavos:"OCTAVOS",grupos:"GRUPOS"};
+
+
 function projectNA(lon,lat){
   const W=1000,H=520,scale=640;
   const x=(lon-(-97))*(Math.PI/180)*scale+W/2;
