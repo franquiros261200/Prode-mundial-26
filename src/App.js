@@ -197,26 +197,34 @@ function PayBanner(){
 function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPreview}){
   const locked=new Date()>=LOCK;
   const[menuOpen,setMenuOpen]=useState(false);
-  const mainNav=[{id:"home",l:"Inicio"},{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"bracket",l:"🏟️ Bracket"}];
-  const moreNav=[{id:"compare",l:"Comparar"},{id:"h2h",l:"⚔️ H2H"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"},{id:"leagues",l:"🏅 Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"perfil",l:"👤 Perfil"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
+  // Main nav - 5 items max, shown horizontally below logo on mobile
+  const mainNav=[{id:"hoy",l:"📅 Hoy"},{id:"preds",l:"Predicciones"},{id:"table",l:"Tabla"},{id:"bracket",l:"🏟️ Bracket"},{id:"home",l:"Inicio"}];
+  // Hamburger - exclude items already in bottom nav (hoy, preds, table, chat, perfil)
+  const moreNav=[{id:"compare",l:"Comparar"},{id:"h2h",l:"⚔️ H2H"},{id:"ia",l:"🤖 IA"},{id:"leagues",l:"🏅 Ligas"},{id:"map",l:"🌍 Mapa"},{id:"thermo",l:"🌡️ Confianza"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
   const activeInMore=moreNav.some(v=>v.id===view);
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
-      <div style={{maxWidth:1200,margin:"0 auto",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",flexShrink:0}} onClick={()=>setView("home")}>
-          <span style={{fontSize:24}}>⚽</span>
-          <div><div className="hdr" style={{fontSize:17}}>PRODE MUNDIAL 2026</div><div style={{fontSize:8,color:"var(--txt3)",letterSpacing:3}}>USA • MÉXICO • CANADÁ</div></div>
+      {/* Row 1: Logo + hamburger + user */}
+      <div style={{padding:"8px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}} onClick={()=>setView("home")}>
+          <span style={{fontSize:22}}>⚽</span>
+          <div><div className="hdr" style={{fontSize:16,lineHeight:1}}>PRODE MUNDIAL 2026</div><div style={{fontSize:8,color:"var(--txt3)",letterSpacing:3}}>USA • MÉXICO • CANADÁ</div></div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:4,flex:1,justifyContent:"center",flexWrap:"wrap"}}>
-          {mainNav.map(v=><button key={v.id} className={`nb${view===v.id?" act":""}`} onClick={()=>setView(v.id)}>{v.l}</button>)}
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          {isAdmin&&onPreview&&<button onClick={onPreview} style={{padding:"5px 8px",background:"#7c3aed",color:"#fff",border:"none",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>👁</button>}
+          {isAdmin&&<button onClick={()=>setAdminMode(!adminMode)} style={{padding:"5px 8px",background:adminMode?"#7c3aed":"transparent",color:adminMode?"#fff":"#a78bfa",border:"1px solid #7c3aed44",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>{adminMode?"👑":"👤"}</button>}
+          <span style={{color:"var(--gold)",fontSize:11,fontWeight:700}}>{user}</span>
+          {locked&&<span className="tg" style={{background:"var(--red)",color:"#fff",fontSize:7,animation:"pls 2s infinite"}}>🔒</span>}
+          <button onClick={onLogout} style={{background:"transparent",color:"var(--txt3)",border:"1px solid var(--bd)",borderRadius:4,padding:"3px 7px",fontSize:10,cursor:"pointer"}}>Salir</button>
+          {/* Hamburger */}
           <div style={{position:"relative"}}>
             <button onClick={()=>setMenuOpen(o=>!o)}
-              style={{padding:"5px 11px",background:menuOpen||activeInMore?"rgba(212,168,67,.2)":"transparent",color:activeInMore?"var(--gold)":"var(--txt2)",border:`1px solid ${activeInMore?"var(--gold)":"var(--bd)"}`,borderRadius:7,fontSize:15,cursor:"pointer",lineHeight:1}}>
+              style={{padding:"5px 10px",background:menuOpen||activeInMore?"rgba(212,168,67,.2)":"transparent",color:activeInMore?"var(--gold)":"var(--txt2)",border:`1px solid ${activeInMore?"var(--gold)":"var(--bd)"}`,borderRadius:7,fontSize:16,cursor:"pointer",lineHeight:1}}>
               ☰
             </button>
             {menuOpen&&<>
               <div onClick={()=>setMenuOpen(false)} style={{position:"fixed",inset:0,zIndex:199}}/>
-              <div style={{position:"absolute",top:"calc(100% + 8px)",left:"50%",transform:"translateX(-50%)",background:"#0b1829",border:"1px solid var(--bd)",borderRadius:10,padding:8,minWidth:200,zIndex:200,boxShadow:"0 8px 30px rgba(0,0,0,.7)"}}>
+              <div style={{position:"absolute",top:"calc(100% + 8px)",right:0,background:"#0b1829",border:"1px solid var(--bd)",borderRadius:10,padding:8,minWidth:200,zIndex:200,boxShadow:"0 8px 30px rgba(0,0,0,.7)"}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>
                   {moreNav.map(v=>(
                     <button key={v.id} onClick={()=>{setView(v.id);setMenuOpen(false);}}
@@ -229,14 +237,16 @@ function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPrevie
               </div>
             </>}
           </div>
-          {isAdmin&&onPreview&&<button onClick={onPreview} style={{padding:"4px 8px",background:"#7c3aed",color:"#fff",border:"none",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>👁</button>}
-          {isAdmin&&<button onClick={()=>setAdminMode(!adminMode)} style={{padding:"4px 8px",background:adminMode?"#7c3aed":"transparent",color:adminMode?"#fff":"#a78bfa",border:"1px solid #7c3aed44",borderRadius:5,fontSize:10,cursor:"pointer",fontWeight:600}}>{adminMode?"👑":"👤"}</button>}
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
-          <span style={{color:"var(--gold)",fontSize:11,fontWeight:700}}>{user}</span>
-          {locked&&<span className="tg" style={{background:"var(--red)",color:"#fff",fontSize:7,animation:"pls 2s infinite"}}>🔒</span>}
-          <button onClick={onLogout} style={{background:"transparent",color:"var(--txt3)",border:"1px solid var(--bd)",borderRadius:4,padding:"3px 7px",fontSize:10,cursor:"pointer"}}>Salir</button>
-        </div>
+      </div>
+      {/* Row 2: Main nav full width */}
+      <div style={{display:"flex",borderTop:"1px solid var(--bd)",overflowX:"auto",scrollbarWidth:"none"}}>
+        {mainNav.map(v=>(
+          <button key={v.id} onClick={()=>setView(v.id)}
+            style={{flex:1,padding:"7px 4px",background:view===v.id?"rgba(212,168,67,.15)":"transparent",color:view===v.id?"var(--gold)":"var(--txt2)",border:"none",borderBottom:view===v.id?"2px solid var(--gold)":"2px solid transparent",fontFamily:"'Bebas Neue',sans-serif",fontSize:11,letterSpacing:1,cursor:"pointer",whiteSpace:"nowrap",transition:"all .15s"}}>
+            {v.l}
+          </button>
+        ))}
       </div>
     </header>
   );
@@ -1324,7 +1334,7 @@ function HostMapView({results, isAdmin}){
         </div>
       )}
 
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 300px",gap:12,alignItems:"start"}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 300px",gap:12,alignItems:"start"}} className="map-grid">
         {/* MAP */}
         <div className="card" style={{padding:0,overflow:"hidden"}}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 50%,#0a1d3a 0%,#050c18 75%)"}}>
@@ -2370,7 +2380,7 @@ function MobileNav({view,setView,isAdmin}){
     {id:"perfil",l:"Perfil",i:"👤"},
   ];
   return(
-    <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(7,14,28,.97)",borderTop:"1px solid var(--bd)",display:"flex",zIndex:90,paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(7,14,28,.97)",borderTop:"1px solid var(--bd)",display:"flex",zIndex:90,paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 10px)"}}>
       {items.map(it=>(
         <button key={it.id} onClick={()=>setView(it.id)} style={{flex:1,padding:"8px 4px 6px",background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all .15s"}}>
           <span style={{fontSize:18,lineHeight:1}}>{it.i}</span>
