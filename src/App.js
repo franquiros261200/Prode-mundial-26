@@ -1129,8 +1129,14 @@ function Leagues({users,allPreds,results,currentUser}){
 // CHAT
 // ═══════════════════════════════════════════════════════
 function Chat({currentUser,users}){
-  const[msgs,setMsgs]=useState([]);const[text,setText]=useState("");const[sending,setSending]=useState(false);
+  const[msgs,setMsgs]=useState([]);
+  const[text,setText]=useState("");
+  const[sending,setSending]=useState(false);
+  const[replyTo,setReplyTo]=useState(null);
+  const[mentionQ,setMentionQ]=useState("");
+  const[showMentions,setShowMentions]=useState(false);
   const bottomRef=useRef(null);
+  const inputRef=useRef(null);
 
   useEffect(()=>{
     (async()=>{const d=await dbGet("chat");if(d)setMsgs(d);})();
@@ -1140,88 +1146,134 @@ function Chat({currentUser,users}){
 
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 
+  const onTextChange=(e)=>{
+    const val=e.target.value;
+    setText(val);
+    // Detect @ mention
+    const atIdx=val.lastIndexOf("@");
+    if(atIdx>=0 && atIdx===val.length-1-val.slice(atIdx+1).replace(/\S+/,"")){
+      setMentionQ(val.slice(atIdx+1));
+      setShowMentions(true);
+    } else if(atIdx>=0 && !val.slice(atIdx).includes(" ")){
+      setMentionQ(val.slice(atIdx+1));
+      setShowMentions(true);
+    } else {
+      setShowMentions(false);
+    }
+  };
+
+  const insertMention=(name)=>{
+    const atIdx=text.lastIndexOf("@");
+    const newText=text.slice(0,atIdx)+"@"+name+" ";
+    setText(newText);
+    setShowMentions(false);
+    inputRef.current?.focus();
+  };
+
   const send=async()=>{
     if(!text.trim()||sending)return;
     setSending(true);
     const name=users[currentUser]?.name||currentUser;
-    const newMsg={user:currentUser,name,text:text.trim(),ts:Date.now()};
-    const updated=[...msgs.slice(-99),newMsg];
-    setMsgs(updated);await dbSet("chat",updated);setText("");setSending(false);
+    const newMsg={
+      user:currentUser,name,text:text.trim(),ts:Date.now(),
+      ...(replyTo?{replyTo:{user:replyTo.user,name:replyTo.name,text:replyTo.text.slice(0,60)}}:{})
+    };
+    const updated=[...msgs.slice(-199),newMsg];
+    setMsgs(updated);await dbSet("chat",updated);
+    setText("");setReplyTo(null);setSending(false);
   };
 
   const formatTime=(ts)=>{const d=new Date(ts);return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;};
 
+  const renderText=(txt)=>{
+    const parts=txt.split(/(@\S+)/g);
+    return parts.map((p,i)=>{
+      if(p.startsWith("@")){
+        const mentioned=Object.values(users).find(u=>u.name===p.slice(1));
+        return<span key={i} style={{color:"var(--gold)",fontWeight:700,background:"rgba(212,168,67,.15)",borderRadius:3,padding:"0 3px"}}>{p}</span>;
+      }
+      return<span key={i}>{p}</span>;
+    });
+  };
+
+  const approvedUsers=Object.values(users).filter(u=>u.approved&&u.name);
+  const mentionList=approvedUsers.filter(u=>u.name.toLowerCase().includes(mentionQ.toLowerCase())&&u.name!==users[currentUser]?.name);
+
   return(
-    <div style={{maxWidth:700,margin:"0 auto",padding:"24px 16px",height:"calc(100vh - 120px)",display:"flex",flexDirection:"column"}} className="fi">
+    <div style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",height:"calc(100vh - 120px)",display:"flex",flexDirection:"column"}} className="fi">
       <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:12}}>💬 CHAT</h2>
-      <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:6,padding:"0 4px",marginBottom:12}}>
+      {/* Messages */}
+      <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:6,padding:"0 2px",marginBottom:8}}>
         {msgs.length===0&&<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>Nadie escribió todavía. ¡Sé el primero!</p>}
         {msgs.map((m,i)=>{
           const isMe=m.user===currentUser;
+          const isMentioned=m.text.includes("@"+(users[currentUser]?.name||""));
           return(
-            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start"}}>
-              {!isMe&&<span style={{color:"var(--txt3)",fontSize:10,marginBottom:2,marginLeft:6}}>{m.name}</span>}
-              <div style={{maxWidth:"75%",padding:"8px 12px",borderRadius:isMe?"14px 14px 4px 14px":"14px 14px 14px 4px",background:isMe?"var(--gold)":"var(--bg3)",border:isMe?"none":"1px solid var(--bd)",color:isMe?"var(--bg)":"var(--wht)",fontSize:13,lineHeight:1.4}}>
-                {m.text}
+            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start",gap:2}}>
+              {/* Reply preview */}
+              {m.replyTo&&(
+                <div style={{fontSize:10,color:"var(--txt3)",background:"var(--bg2)",borderLeft:"2px solid var(--gold)",padding:"2px 8px",borderRadius:4,maxWidth:"80%",opacity:.8}}>
+                  <span style={{color:"var(--gold)",fontWeight:600}}>{m.replyTo.name}: </span>{m.replyTo.text}
+                </div>
+              )}
+              <div style={{
+                maxWidth:"80%",padding:"7px 11px",borderRadius:isMe?"12px 12px 3px 12px":"12px 12px 12px 3px",
+                background:isMe?"linear-gradient(135deg,rgba(212,168,67,.25),rgba(212,168,67,.15))":isMentioned?"rgba(212,168,67,.1)":"var(--bg3)",
+                border:isMentioned?"1px solid rgba(212,168,67,.4)":isMe?"1px solid rgba(212,168,67,.2)":"1px solid var(--bd)",
+                position:"relative",cursor:"pointer"
+              }}
+                onClick={()=>setReplyTo(m)}
+                title="Toca para responder"
+              >
+                {!isMe&&<div style={{fontSize:10,fontWeight:700,color:"var(--gold)",marginBottom:3}}>{m.name}</div>}
+                <div style={{fontSize:13,color:"var(--wht)",lineHeight:1.4}}>{renderText(m.text)}</div>
+                <div style={{fontSize:9,color:"var(--txt3)",textAlign:"right",marginTop:3}}>{formatTime(m.ts)}</div>
               </div>
-              <span style={{color:"var(--txt3)",fontSize:9,marginTop:2,marginLeft:isMe?0:6,marginRight:isMe?6:0}}>{formatTime(m.ts)}</span>
             </div>
           );
         })}
         <div ref={bottomRef}/>
       </div>
-      <div style={{display:"flex",gap:8}}>
-        <input className="inp" value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Escribí algo..." style={{flex:1,padding:"10px 14px"}}/>
-        <button className="bg" onClick={send} disabled={sending||!text.trim()} style={{padding:"10px 18px",fontSize:13}}>Enviar</button>
+
+      {/* Reply banner */}
+      {replyTo&&(
+        <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"var(--bg2)",borderLeft:"3px solid var(--gold)",borderRadius:6,marginBottom:6,fontSize:11}}>
+          <div style={{flex:1,minWidth:0}}>
+            <span style={{color:"var(--gold)",fontWeight:700}}>↩ {replyTo.name}: </span>
+            <span style={{color:"var(--txt2)"}}>{replyTo.text.slice(0,50)}{replyTo.text.length>50?"...":""}</span>
+          </div>
+          <button onClick={()=>setReplyTo(null)} style={{background:"transparent",border:"none",color:"var(--txt3)",cursor:"pointer",fontSize:14}}>✕</button>
+        </div>
+      )}
+
+      {/* Mention suggestions */}
+      {showMentions&&mentionList.length>0&&(
+        <div style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:8,marginBottom:6,overflow:"hidden",maxHeight:160,overflowY:"auto"}}>
+          {mentionList.map(u=>(
+            <button key={u.name} onClick={()=>insertMention(u.name)}
+              style={{display:"block",width:"100%",padding:"8px 12px",background:"transparent",border:"none",borderBottom:"1px solid var(--bd)",color:"var(--wht)",fontSize:12,cursor:"pointer",textAlign:"left"}}>
+              <span style={{color:"var(--gold)",fontWeight:700}}>@{u.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
+      <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+        <input ref={inputRef} className="inp" value={text} onChange={onTextChange}
+          onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}if(e.key==="Escape"){setShowMentions(false);setReplyTo(null);}}}
+          placeholder="Escribí un mensaje... (@nombre para mencionar)"
+          style={{flex:1,fontSize:14}}
+        />
+        <button onClick={send} disabled={sending||!text.trim()}
+          style={{padding:"8px 16px",background:text.trim()?"var(--gold)":"var(--bg3)",color:text.trim()?"var(--bg)":"var(--txt3)",border:"none",borderRadius:8,fontFamily:"'Bebas Neue',sans-serif",fontSize:13,cursor:text.trim()?"pointer":"default",flexShrink:0,transition:"all .2s"}}>
+          {sending?"...":"ENVIAR"}
+        </button>
       </div>
     </div>
   );
 }
 
-
-
-
-// ═══════════════════════════════════════════════════════
-// HOST MAP - Sedes Mundial 2026 (pure React, no D3)
-// ═══════════════════════════════════════════════════════
-const SEDES_DATA = [
-  {city:"Atlanta",         stadium:"Mercedes-Benz Stadium",  lon:-84.40, lat:33.755, country:"USA", games:8, type:"semi"},
-  {city:"Boston",          stadium:"Gillette Stadium",       lon:-71.26, lat:42.090, country:"USA", games:7, type:"cuartos"},
-  {city:"Dallas",          stadium:"AT&T Stadium",           lon:-97.09, lat:32.747, country:"USA", games:9, type:"semi"},
-  {city:"Houston",         stadium:"NRG Stadium",            lon:-95.41, lat:29.685, country:"USA", games:7, type:"octavos"},
-  {city:"Kansas City",     stadium:"Arrowhead Stadium",      lon:-94.48, lat:39.049, country:"USA", games:6, type:"cuartos"},
-  {city:"Los Angeles",     stadium:"SoFi Stadium",           lon:-118.34,lat:33.953, country:"USA", games:8, type:"cuartos"},
-  {city:"Miami",           stadium:"Hard Rock Stadium",      lon:-80.24, lat:25.957, country:"USA", games:7, type:"cuartos"},
-  {city:"Nueva York/NJ",   stadium:"MetLife Stadium",        lon:-74.07, lat:40.813, country:"USA", games:8, type:"final"},
-  {city:"Philadelphia",    stadium:"Lincoln Financial Field",lon:-75.17, lat:39.901, country:"USA", games:6, type:"octavos"},
-  {city:"San Francisco",   stadium:"Levi's Stadium",         lon:-121.97,lat:37.403, country:"USA", games:6, type:"octavos"},
-  {city:"Seattle",         stadium:"Lumen Field",            lon:-122.33,lat:47.595, country:"USA", games:6, type:"octavos"},
-  {city:"Ciudad de México",stadium:"Estadio Azteca",         lon:-99.15, lat:19.302, country:"MEX", games:5, type:"inaugural"},
-  {city:"Guadalajara",     stadium:"Estadio Akron",          lon:-103.46,lat:20.681, country:"MEX", games:4, type:"grupos"},
-  {city:"Monterrey",       stadium:"Estadio BBVA",           lon:-100.24,lat:25.668, country:"MEX", games:4, type:"grupos"},
-  {city:"Toronto",         stadium:"BMO Field",              lon:-79.42, lat:43.633, country:"CAN", games:6, type:"grupos"},
-  {city:"Vancouver",       stadium:"BC Place",               lon:-123.11,lat:49.276, country:"CAN", games:7, type:"octavos"},
-];
-
-// Match → sede mapping from fixture
-const MATCH_SEDE = {
-  1:"Ciudad de México",2:"Ciudad de México",3:"Toronto",4:"Dallas",5:"San Francisco",
-  6:"Los Angeles",7:"Seattle",8:"Vancouver",9:"Miami",10:"Houston",11:"Philadelphia",
-  12:"Boston",13:"Atlanta",14:"Kansas City",15:"Dallas",16:"Seattle",17:"Los Angeles",
-  18:"New York/NJ",19:"Miami",20:"Houston",21:"Philadelphia",22:"Boston",23:"Atlanta",
-  24:"Kansas City",25:"Dallas",26:"Vancouver",27:"Toronto",28:"Ciudad de México",
-  29:"San Francisco",30:"Guadalajara",31:"Los Angeles",32:"Seattle",33:"Philadelphia",
-  34:"Boston",35:"Miami",36:"Houston",37:"Atlanta",38:"Kansas City",39:"Dallas",
-  40:"Vancouver",41:"Toronto",42:"Ciudad de México",43:"Monterrey",44:"Guadalajara",
-  45:"Los Angeles",46:"Seattle",47:"San Francisco",48:"Miami",49:"Philadelphia",
-  50:"Boston",51:"Houston",52:"Atlanta",53:"Kansas City",54:"Dallas",55:"Vancouver",
-  56:"Toronto",57:"Ciudad de México",58:"Monterrey",59:"Guadalajara",60:"San Francisco",
-  61:"Los Angeles",62:"Seattle",63:"Philadelphia",64:"Boston",65:"Miami",66:"Houston",
-  67:"Atlanta",68:"Kansas City",69:"Dallas",70:"Vancouver",71:"Toronto",72:"Ciudad de México",
-};
-
-const SEDE_COLORS = {inaugural:"#f0d060",final:"#f0d060",semi:"#d4a843",cuartos:"#3b82f6",octavos:"#22c55e",grupos:"#6b8299"};
-const SEDE_LABELS = {inaugural:"INAUGURAL",final:"FINAL",semi:"SEMIFINAL",cuartos:"CUARTOS",octavos:"OCTAVOS",grupos:"GRUPOS"};
 
 function projectNA(lon,lat){
   const W=1000,H=520,scale=640;
