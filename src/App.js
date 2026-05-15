@@ -198,9 +198,9 @@ function Hdr({user,isAdmin,onLogout,view,setView,adminMode,setAdminMode,onPrevie
   const locked=new Date()>=LOCK;
   const[menuOpen,setMenuOpen]=useState(false);
   // Main nav - 5 items max, shown horizontally below logo on mobile
-  const mainNav=[{id:"home",l:"Inicio"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"map",l:"🌍 Mapa"}];
+  const mainNav=[{id:"home",l:"Inicio"},{id:"bracket",l:"🏟️ Bracket"},{id:"compare",l:"Comparar"},{id:"ia",l:"🤖 IA"},{id:"chat",l:"💬 Chat"}];
   // Hamburger - exclude items already in bottom nav (hoy, preds, table, chat, perfil)
-  const moreNav=[{id:"h2h",l:"⚔️ H2H"},{id:"leagues",l:"🏅 Ligas"},{id:"thermo",l:"🌡️ Confianza"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
+  const moreNav=[{id:"map",l:"🌍 Mapa"},{id:"h2h",l:"⚔️ H2H"},{id:"leagues",l:"🏅 Ligas"},{id:"thermo",l:"🌡️ Confianza"},{id:"buscar",l:"🔍 Buscar"},{id:"stats",l:"📊 Stats"},{id:"podio",l:"🏆 Podio"},{id:"rules",l:"Reglas"}];
   const activeInMore=moreNav.some(v=>v.id===view);
   return(
     <header style={{background:"linear-gradient(135deg,#070e1c,#0f2240,#091630)",borderBottom:"2px solid var(--gold)",position:"sticky",top:0,zIndex:100}}>
@@ -1295,7 +1295,7 @@ function HostMapView({results, isAdmin}){
   };
 
   return(
-    <div style={{maxWidth:1100,margin:"0 auto",padding:"24px 16px"}} className="fi">
+    <div style={{maxWidth:1100,margin:"0 auto",padding:"16px 10px"}} className="fi">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:8}}>
         <div>
           <h2 className="hdr" style={{fontSize:26}}>🏟️ SEDES MUNDIAL 2026</h2>
@@ -1337,7 +1337,7 @@ function HostMapView({results, isAdmin}){
 
       <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 300px",gap:12,alignItems:"start"}} className="map-grid">
         {/* MAP */}
-        <div className="card" style={{padding:0,overflow:"hidden"}}>
+        <div className="card" style={{padding:0,overflow:"hidden",width:"100%"}}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",display:"block",background:"radial-gradient(ellipse at 50% 50%,#0a1d3a 0%,#050c18 75%)"}}>
             <defs>
               <radialGradient id="hm-glow"><stop offset="0%" stopColor="#f0d060" stopOpacity="0.5"/><stop offset="100%" stopColor="#f0d060" stopOpacity="0"/></radialGradient>
