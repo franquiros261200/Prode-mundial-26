@@ -1480,28 +1480,30 @@ function HostMapView({results, isAdmin}){
               </div>
               {/* Group matches */}
               {(()=>{
-                const ms=getSedeMatches(focusSede.city);
-                if(ms.length===0)return null;
-                return(
-                  <div>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:"var(--txt3)",letterSpacing:2,marginBottom:6}}>PARTIDOS DE GRUPOS</div>
-                    <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                      {ms.map(m=>{
-                        const r=results[m.n]||{h:"",a:""};
-                        const hasR=r.h!==""&&r.a!=="";
-                        return(
-                          <div key={m.n} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 8px",background:"var(--bg2)",borderRadius:6,fontSize:11}}>
-                            <span style={{color:"var(--txt3)",minWidth:22,fontSize:10}}>#{m.n}</span>
-                            <span style={{flex:1,color:"var(--txt)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{FL[m.h]||""} {m.h}</span>
-                            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:hasR?"var(--gold)":"var(--txt3)",minWidth:36,textAlign:"center"}}>{hasR?`${r.h}-${r.a}`:"vs"}</span>
-                            <span style={{flex:1,color:"var(--txt)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",textAlign:"right"}}>{m.a} {FL[m.a]||""}</span>
-                            <span style={{color:"var(--txt3)",fontSize:9,minWidth:28,textAlign:"right"}}>{m.d}</span>
-                          </div>
-                        );
-                      })}
+                try{
+                  const ms=getSedeMatches(focusSede.city);
+                  if(ms.length===0)return null;
+                  return(
+                    <div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:"var(--txt3)",letterSpacing:2,marginBottom:6}}>PARTIDOS DE GRUPOS</div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                        {ms.map(m=>{
+                          const r=(results||{})[m.n]||{h:"",a:""};
+                          const hasR=r.h!==""&&r.a!=="";
+                          return(
+                            <div key={m.n} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 8px",background:"var(--bg2)",borderRadius:6,fontSize:11}}>
+                              <span style={{color:"var(--txt3)",minWidth:22,fontSize:10}}>#{m.n}</span>
+                              <span style={{flex:1,color:"var(--txt)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{(FL||{})[m.h]||""} {m.h}</span>
+                              <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:hasR?"var(--gold)":"var(--txt3)",minWidth:36,textAlign:"center"}}>{hasR?`${r.h}-${r.a}`:"vs"}</span>
+                              <span style={{flex:1,color:"var(--txt)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",textAlign:"right"}}>{m.a} {(FL||{})[m.a]||""}</span>
+                              <span style={{color:"var(--txt3)",fontSize:9,minWidth:28,textAlign:"right"}}>{m.d}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
+                  );
+                }catch(e){return null;}
               })()}
               {/* KO matches */}
               {(()=>{
@@ -1698,6 +1700,117 @@ function Rules(){
   return(<div style={{maxWidth:680,margin:"0 auto",padding:"24px 16px"}} className="fi"><h2 className="hdr" style={{fontSize:26,textAlign:"center",marginBottom:18}}>📋 REGLAS</h2>{sec.map(s=>(<div key={s.t} className="card" style={{marginBottom:10}}><h3 className="hdr" style={{fontSize:15,marginBottom:8}}>{s.t}</h3>{s.i.map((x,i)=><p key={i} style={{color:"var(--txt)",fontSize:12,margin:"4px 0",lineHeight:1.5}}>{x}</p>)}</div>))}</div>);
 }
 
+// ═══════════════════════════════════════════════════════
+// INVITE SECTION
+// ═══════════════════════════════════════════════════════
+function InviteSection(){
+  const[copied,setCopied]=useState(false);
+  const url="https://project-239kr.vercel.app";
+  const wppText=`⚽ *PRODE MUNDIAL 2026* ⚽
+
+🏆 Sumate al prode del Mundial!
+
+📋 *Cómo anotarse:*
+1️⃣ Entrá a ${url}
+2️⃣ Registrate con tu nombre
+3️⃣ Pagá la inscripción de $25.000
+4️⃣ Alias MP: fran.quiros.mp
+5️⃣ Mandá el comprobante al 2235638732
+
+💰 *El pozo:* 70% al 1°, 20% al 2°, 10% al 3°
+📅 Último día para pagar: 8 de junio
+✏️ Cierre de predicciones: 9 de junio
+
+¡No te lo pierdas!`;
+
+  return(
+    <div className="card" style={{marginBottom:16,borderColor:"rgba(212,168,67,.3)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+        <span style={{fontSize:28}}>📣</span>
+        <div><div className="hdr" style={{fontSize:18}}>INVITÁ A TUS AMIGOS</div><div style={{color:"var(--txt3)",fontSize:11}}>Compartí el prode y armá el grupo</div></div>
+      </div>
+
+      {/* Info rápida */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:8,marginBottom:14}}>
+        {[
+          {i:"💰",t:"Inscripción",v:"$25.000"},
+          {i:"📅",t:"Último pago",v:"8 de junio"},
+          {i:"✏️",t:"Cierre preds",v:"9 de junio"},
+          {i:"🏆",t:"Premio mayor",v:"70% del pozo"},
+        ].map(x=>(
+          <div key={x.t} style={{background:"var(--bg2)",borderRadius:8,padding:"8px 12px",textAlign:"center"}}>
+            <div style={{fontSize:18,marginBottom:2}}>{x.i}</div>
+            <div style={{color:"var(--txt3)",fontSize:9,letterSpacing:1}}>{x.t.toUpperCase()}</div>
+            <div style={{color:"var(--wht)",fontSize:13,fontWeight:700,marginTop:2}}>{x.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pasos para anotarse */}
+      <div style={{marginBottom:14}}>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color:"var(--gold)",letterSpacing:2,marginBottom:8}}>📋 CÓMO ANOTARSE</div>
+        <div style={{display:"flex",flexDirection:"column",gap:5}}>
+          {[
+            "Entrá a la web desde Safari (iPhone) o Chrome (Android)",
+            "Registrate con tu nombre de usuario y contraseña",
+            "Pagá $25.000 al alias MP: fran.quiros.mp",
+            "Mandá el comprobante por WhatsApp al 2235638732",
+            "Una vez aprobado, completá tus 72 predicciones antes del 9/06",
+          ].map((paso,i)=>(
+            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+              <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--gold)",minWidth:20,lineHeight:1.4}}>{i+1}</span>
+              <span style={{color:"var(--txt)",fontSize:12,lineHeight:1.5}}>{paso}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Instalar como app */}
+      <div style={{background:"rgba(59,130,246,.08)",border:"1px solid rgba(59,130,246,.2)",borderRadius:8,padding:"10px 14px",marginBottom:14}}>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:"#3b82f6",letterSpacing:2,marginBottom:6}}>📱 INSTALALO COMO APP</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div>
+            <div style={{color:"var(--gold)",fontSize:11,fontWeight:700,marginBottom:4}}>🍎 iPhone (Safari)</div>
+            {["Abrí Safari (no Chrome)","Tocá los 3 puntos (…) arriba","Tocá Compartir","Tocá la flechita → Ver más","Seleccioná Agregar a inicio"].map((p,i)=>(
+              <div key={i} style={{fontSize:10,color:"var(--txt2)",marginBottom:2}}>{i+1}. {p}</div>
+            ))}
+          </div>
+          <div>
+            <div style={{color:"var(--gold)",fontSize:11,fontWeight:700,marginBottom:4}}>🤖 Android (Chrome)</div>
+            {["Abrí Chrome","Tocá los 3 puntos (⋮) arriba","Tocá Agregar a pantalla de inicio","Confirmá el nombre","Tocá Agregar"].map((p,i)=>(
+              <div key={i} style={{fontSize:10,color:"var(--txt2)",marginBottom:2}}>{i+1}. {p}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Alias */}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+        <span style={{color:"var(--txt3)",fontSize:12}}>💳 Alias MP:</span>
+        <button onClick={()=>{navigator.clipboard.writeText("fran.quiros.mp");setCopied(true);setTimeout(()=>setCopied(false),2000);}}
+          style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--wht)",background:"rgba(0,0,0,.3)",border:"1px solid rgba(212,168,67,.3)",borderRadius:6,padding:"4px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+          fran.quiros.mp 📋
+        </button>
+        {copied&&<span style={{color:"var(--grn)",fontSize:11,fontWeight:700}}>✓ Copiado!</span>}
+        <span style={{color:"var(--txt3)",fontSize:11}}>Comprobante al 2235638732</span>
+      </div>
+
+      {/* Share buttons */}
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <a href={`https://wa.me/?text=${encodeURIComponent(wppText)}`} target="_blank" rel="noreferrer"
+          style={{flex:1,minWidth:140,display:"flex",alignItems:"center",justifyContent:"center",gap:8,background:"#25D366",color:"#fff",padding:"10px 16px",borderRadius:8,fontSize:13,fontWeight:700,textDecoration:"none",fontFamily:"'Bebas Neue',sans-serif",letterSpacing:1}}>
+          📲 COMPARTIR POR WHATSAPP
+        </a>
+        <button onClick={()=>{navigator.clipboard.writeText(url);setCopied(true);setTimeout(()=>setCopied(false),2000);}}
+          style={{display:"flex",alignItems:"center",gap:6,background:"var(--bg2)",color:"var(--txt)",border:"1px solid var(--bd)",padding:"10px 16px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"'Bebas Neue',sans-serif",letterSpacing:1}}>
+          🔗 COPIAR LINK
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 function Home({users,results}){
   const paid=Object.values(users).filter(u=>u.paid).length,pool=paid*FEE;
   const approved=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id)).length;
@@ -1706,6 +1819,7 @@ function Home({users,results}){
   return(
     <div style={{maxWidth:800,margin:"0 auto",padding:"24px 16px"}} className="fi">
       <div style={{textAlign:"center",marginBottom:18}}><h2 className="hdr" style={{fontSize:26}}>BIENVENIDO AL PRODE</h2><p style={{color:"var(--txt2)",fontSize:12,marginTop:3}}>Fase de Grupos • 72 partidos • 12 grupos</p></div>
+      <InviteSection/>
       <Countdown/>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(155px,1fr))",gap:12,marginBottom:20}}>
         {[{i:"🏆",l:"POZO",v:fmt$(pool),s:`${paid} pagaron`},{i:"👥",l:"JUGADORES",v:approved,s:"habilitados"},{i:"⚽",l:"PARTIDOS",v:`${played}/72`,s:"jugados"},{i:locked?"🔒":"✏️",l:"PREDICCIONES",v:locked?"LOCKED":"ABIERTAS",s:locked?"Desde 9/06":"Hasta 9/06"}].map((c,i)=>(
