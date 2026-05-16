@@ -1704,6 +1704,7 @@ function Rules(){
 // INVITE SECTION
 // ═══════════════════════════════════════════════════════
 function InviteSection(){
+  const[open,setOpen]=useState(false);
   const[copied,setCopied]=useState(false);
   const url="https://project-239kr.vercel.app";
   const wppText=`⚽ *PRODE MUNDIAL 2026* ⚽
@@ -1721,14 +1722,20 @@ function InviteSection(){
 📅 Último día para pagar: 8 de junio
 ✏️ Cierre de predicciones: 9 de junio
 
+📱 *Instalalo como app:*
+🍎 iPhone: Abrí Safari → 3 puntos (…) → Compartir → Ver más → Agregar a inicio
+🤖 Android: Abrí Chrome → 3 puntos (⋮) → Agregar a pantalla de inicio
+
 ¡No te lo pierdas!`;
 
   return(
-    <div className="card" style={{marginBottom:16,borderColor:"rgba(212,168,67,.3)"}}>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+    <div className="card" style={{marginBottom:16,borderColor:"rgba(212,168,67,.3)",padding:0,overflow:"hidden"}}>
+      <button onClick={()=>setOpen(o=>!o)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"14px 20px",background:"transparent",border:"none",cursor:"pointer",textAlign:"left"}}>
         <span style={{fontSize:28}}>📣</span>
-        <div><div className="hdr" style={{fontSize:18}}>INVITÁ A TUS AMIGOS</div><div style={{color:"var(--txt3)",fontSize:11}}>Compartí el prode y armá el grupo</div></div>
-      </div>
+        <div style={{flex:1}}><div className="hdr" style={{fontSize:18}}>INVITÁ A TUS AMIGOS</div><div style={{color:"var(--txt3)",fontSize:11}}>Compartí el prode y armá el grupo</div></div>
+        <span style={{color:"var(--gold)",fontSize:18,transition:"transform .3s",display:"inline-block",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▼</span>
+      </button>
+      {open&&<div style={{padding:"0 20px 20px"}}>
 
       {/* Info rápida */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:8,marginBottom:14}}>
@@ -1806,6 +1813,7 @@ function InviteSection(){
           🔗 COPIAR LINK
         </button>
       </div>
+      </div>}
     </div>
   );
 }
