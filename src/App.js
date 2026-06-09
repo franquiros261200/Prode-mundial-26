@@ -2033,12 +2033,33 @@ function Admin({users,setUsers,results,setResults,allPreds}){
         ))}
       </div>
       {tab==="users"&&<div>
+        {(()=>{
+          const all=Object.entries(users).filter(([id])=>!AI_IDS.includes(id)&&users[id].approved);
+          const complete=all.filter(([id])=>M.filter(m=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};return p.h!==""&&p.a!==""}).length===72).length;
+          const partial=all.filter(([id])=>{const f=M.filter(m=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};return p.h!==""&&p.a!==""}).length;return f>0&&f<72;}).length;
+          const empty=all.length-complete-partial;
+          return(<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+            <div className="card" style={{padding:"8px 14px",flex:1,textAlign:"center",borderColor:"#22c55e44"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--grn)"}}>{complete}</div>
+              <div style={{color:"var(--txt3)",fontSize:9}}>COMPLETOS ✅</div>
+            </div>
+            <div className="card" style={{padding:"8px 14px",flex:1,textAlign:"center",borderColor:"#f59e0b44"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--org)"}}>{partial}</div>
+              <div style={{color:"var(--txt3)",fontSize:9}}>PARCIALES ✏️</div>
+            </div>
+            <div className="card" style={{padding:"8px 14px",flex:1,textAlign:"center",borderColor:"#dc354544"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"var(--red)"}}>{empty}</div>
+              <div style={{color:"var(--txt3)",fontSize:9}}>SIN PREDS ❌</div>
+            </div>
+          </div>);
+        })()}
         {Object.entries(users).filter(([id])=>!AI_IDS.includes(id)).sort(([,a],[,b])=>a.approved===b.approved?0:a.approved?1:-1).map(([id,u])=>(
           <div key={id} className="card" style={{display:"flex",alignItems:"center",gap:7,marginBottom:5,padding:"9px 12px",flexWrap:"wrap"}}>
             <div style={{flex:1,minWidth:130}}><span style={{color:"var(--wht)",fontWeight:600,fontSize:12}}>{u.name}</span><span style={{color:"var(--txt3)",fontSize:10,marginLeft:5}}>{u.email}</span>{showPass[id]&&<span style={{color:"#f59e0b",fontSize:10,marginLeft:7,background:"rgba(0,0,0,.4)",padding:"1px 5px",borderRadius:3}}>🔑 {u.pass}</span>}</div>
             <div style={{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap"}}>
               {u.approved?<span className="tg" style={{background:"rgba(34,197,94,.15)",color:"var(--grn)"}}>✓</span>:<span className="tg" style={{background:"rgba(220,53,69,.15)",color:"var(--red)"}}>Pendiente</span>}
               {u.paid?<span className="tg" style={{background:"rgba(212,168,67,.15)",color:"var(--gold)"}}>💰 Pagó</span>:<span style={{color:"var(--txt3)",fontSize:10}}>No pagó</span>}
+              {(()=>{const filled=M.filter(m=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};return p.h!==""&&p.a!==="";}).length;const pct=Math.round(filled/72*100);const c=filled===72?"var(--grn)":filled>0?"var(--org)":"var(--red)";return<span className="tg" style={{background:`${c}22`,color:c,minWidth:70,textAlign:"center"}}>{filled===72?"✅ Completo":`✏️ ${filled}/72 (${pct}%)`}</span>})()}
               <button className="bsm" style={{background:"rgba(99,102,241,.2)",color:"#818cf8",border:"1px solid #818cf833"}} onClick={()=>setShowPass(p=>({...p,[id]:!p[id]}))}>🔑</button>
               {!u.approved&&<button className="bsm" style={{background:"var(--grn)",color:"#fff"}} onClick={()=>approve(id)}>Habilitar</button>}
               {u.approved&&<button className="bsm" style={{background:"transparent",color:"var(--red)",border:"1px solid var(--red)"}} onClick={()=>reject(id)}>Deshab.</button>}
