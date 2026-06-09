@@ -539,14 +539,14 @@ function IAView({results,allPreds,users,currentUser}){
     const up=allPreds[userId]||{};
     const ap=getAIPreds(aiId);
     return M.map(m=>{
-      const u=up[m.n]||{h:"",a:""};
-      const a=ap[m.n]||{h:"",a:""};
+      const uPred=up[m.n]||{h:"",a:""};
+      const aiPred=ap[m.n]||{h:"",a:""};
       const r=results[m.n]||{h:"",a:""};
-      const hasU=u.h!==""&&u.a!=="";
-      const hasA=a.h!==""&&a.a!=="";
-      const agree=hasU&&hasA&&u.h===a.h&&u.a===a.a?"exact":
-        hasU&&hasA&&(+u.h>+u.a&&+a.h>+a.a||+u.h<+u.a&&+a.h<+a.a||+u.h===+u.a&&+a.h===+a.a)?"sign":"diff";
-      return{...m,u,a,r,agree,hasU,hasA};
+      const hasU=uPred.h!==""&&uPred.a!=="";
+      const hasA=aiPred.h!==""&&aiPred.a!=="";
+      const agree=hasU&&hasA&&uPred.h===aiPred.h&&uPred.a===aiPred.a?"exact":
+        hasU&&hasA&&(+uPred.h>+uPred.a&&+aiPred.h>+aiPred.a||+uPred.h<+uPred.a&&+aiPred.h<+aiPred.a||+uPred.h===+uPred.a&&+aiPred.h===+aiPred.a)?"sign":"diff";
+      return{...m,uPred,aiPred,r,agree,hasU,hasA};
     });
   };
 
@@ -674,8 +674,8 @@ function IAView({results,allPreds,users,currentUser}){
                     const rowBg=m.agree==="exact"?"rgba(34,197,94,.08)":m.agree==="sign"?"rgba(245,158,11,.06)":"transparent";
                     return(<tr key={m.n} style={{borderBottom:"1px solid var(--bd)11",background:rowBg}}>
                       <td style={{padding:"4px 5px",fontSize:10,whiteSpace:"nowrap"}}>{FL[m.h]||""}{m.h} vs {m.a}{FL[m.a]||""}</td>
-                      <td style={{padding:"4px 5px",textAlign:"center",color:m.hasU?"var(--wht)":"var(--txt3)"}}>{m.hasU?`${m.u.h}-${m.u.a}`:"—"}</td>
-                      <td style={{padding:"4px 5px",textAlign:"center",color:m.hasA?inf.color:"var(--txt3)"}}>{m.hasA?`${m.a.h}-${m.a.a}`:"—"}</td>
+                      <td style={{padding:"4px 5px",textAlign:"center",color:m.hasU?"var(--wht)":"var(--txt3)"}}>{m.hasU?`${m.uPred.h}-${m.uPred.a}`:"—"}</td>
+                      <td style={{padding:"4px 5px",textAlign:"center",color:m.hasA?inf.color:"var(--txt3)"}}>{m.hasA?`${m.aiPred.h}-${m.aiPred.a}`:"—"}</td>
                       <td style={{padding:"4px 5px",textAlign:"center",color:m.r.h!==""?"var(--wht)":"var(--txt3)",fontWeight:700}}>{m.r.h!==""?`${m.r.h}-${m.r.a}`:"—"}</td>
                       <td style={{padding:"4px 5px",textAlign:"center"}}>{m.agree==="exact"?<span className="bex">= Exacto</span>:m.agree==="sign"?<span className="bsi">≈ Signo</span>:m.hasU&&m.hasA?<span className="bms">✗</span>:"—"}</td>
                     </tr>);
@@ -1980,7 +1980,44 @@ function Admin({users,setUsers,results,setResults,allPreds}){
   const chgR=(n,side,val)=>{const v=val.replace(/[^0-9]/g,"").slice(0,2);setLocalR(p=>({...p,[n]:{...(p[n]||{h:"",a:""}),[side]:v}}))};
   const saveR=async()=>{setSaving(true);setResults(localR);await dbSet("results",localR);setSaving(false)};
   const fetchLive=async()=>{setLiveLoading(true);setLiveMsg("Consultando API...");try{const res=await fetch("https://api.football-data.org/v4/competitions/2000/matches?season=2026",{headers:{"X-Auth-Token":"b865d776d42047e7a862a37bb4b84868"}});if(!res.ok)throw new Error();const data=await res.json();const updated={...localR};data.matches?.forEach(m=>{if(m.status==="FINISHED"&&m.score?.fullTime){const match=M.find(mm=>mm.h===m.homeTeam?.name||mm.a===m.awayTeam?.name);if(match)updated[match.n]={h:String(m.score.fullTime.home??0),a:String(m.score.fullTime.away??0)};}});setLocalR(updated);setResults(updated);await dbSet("results",updated);setLiveMsg("✓ Actualizado desde API");}catch{setLiveMsg("Error con API. Cargá manual.");} setLiveLoading(false);};
-  const dlAll=()=>{const approved=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));let c="=== TABLA GENERAL ===\nPos,Nombre,Email,Pago,Pts,Bonus,Total,Ex,Si\n";approved.map(([id,u])=>({id,name:u.name,email:u.email,paid:u.paid,...calcTotal(allPreds[id]||{},results)})).sort(cmp).forEach((r,i)=>{c+=`${i+1},${r.name},${r.email||""},${r.paid?"Si":"No"},${r.mp},${r.bo},${r.tot},${r.ex},${r.si}\n`;});c+="\n=== PREDICCIONES ===\nPartido,Local,Visitante,Real L,Real V";approved.forEach(([,u])=>{c+=`,${u.name}`;});c+="\n";M.forEach(m=>{const r=results[m.n]||{h:"",a:""};c+=`#${m.n},${m.h},${m.a},${r.h},${r.a}`;approved.forEach(([id])=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};c+=`,${p.h&&p.a?p.h+"-"+p.a:"—"}`;});c+="\n";});const b=new Blob([c],{type:"text/csv;charset=utf-8;"});const url=URL.createObjectURL(b);const a=document.createElement("a");a.href=url;a.download="prode2026_backup_admin.csv";a.click();};
+  const dlAll=()=>{
+    const approved=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
+    let c="PRODE MUNDIAL 2026 - Backup Admin\n\n";
+    // Scoring system explanation
+    c+="=== SISTEMA DE PUNTOS ===\n";
+    c+="Resultado Exacto,3 puntos\n";
+    c+="Signo Correcto (ganador),1 punto\n";
+    c+="Error,0 puntos\n";
+    c+="Bonus 3 exactos seguidos,+1 punto\n";
+    c+="Bonus 5 exactos seguidos,+4 puntos total (ciclo se reinicia)\n";
+    c+="Boost activo,cuando pegás 2+ exactos seguidos (el signo no lo corta - el error sí)\n";
+    c+="Desempate,Pts > Exactos > Rachas x5 > Rachas x3 > Racha más larga > Goles pronosticados\n\n";
+    // General table
+    c+="=== TABLA GENERAL ===\n";
+    c+="Pos,Nombre,Email,Pago,Pts Partidos,Bonus,Total,Exactos,Signos\n";
+    approved.map(([id,u])=>({id,name:u.name,email:u.email,paid:u.paid,...calcTotal(allPreds[id]||{},results)})).sort(cmp).forEach((r,i)=>{
+      c+=`${i+1},${r.name},${r.email||""},${r.paid?"Si":"No"},${r.mp},${r.bo},${r.tot},${r.ex},${r.si}\n`;
+    });
+    // Predictions
+    c+="\n=== PREDICCIONES ===\n";
+    c+="Partido,Fecha,Local,Visitante,Real Local,Real Visitante";
+    approved.forEach(([,u])=>{c+=`,${u.name}`;});
+    c+="\n";
+    M.forEach(m=>{
+      const r=results[m.n]||{h:"",a:""};
+      c+=`#${m.n},${m.d},${m.h},${m.a},${r.h||"-"},${r.a||"-"}`;
+      approved.forEach(([id])=>{
+        const p=(allPreds[id]||{})[m.n]||{h:"",a:""};
+        const pts=r.h&&r.a&&p.h&&p.a?calcPts(p,r):"";
+        c+=`,${p.h&&p.a?p.h+"-"+p.a:"—"}${pts!==""?" ("+pts+"pts)":""}`;
+      });
+      c+="\n";
+    });
+    const b=new Blob(['﻿'+c],{type:"text/csv;charset=utf-8;"});
+    const url=URL.createObjectURL(b);
+    const a=document.createElement("a");
+    a.href=url;a.download="prode2026_admin.csv";a.click();
+  };
   const paid=Object.values(users).filter(u=>u.paid).length,pool=paid*FEE;
   const pending=Object.values(users).filter(u=>!u.approved&&!AI_IDS.includes(Object.keys(users).find(k=>users[k]===u))).length;
   const groups=[...new Set(M.map(m=>m.g))].sort();const filtM=filter==="all"?M:M.filter(m=>m.g===filter);
@@ -1988,7 +2025,7 @@ function Admin({users,setUsers,results,setResults,allPreds}){
     <div style={{maxWidth:950,margin:"0 auto",padding:"24px 16px"}} className="fi">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
         <h2 className="hdr" style={{fontSize:22,color:"var(--red)"}}>⚙️ PANEL ADMIN</h2>
-        <button onClick={dlAll} style={{padding:"7px 14px",background:"var(--grn)",color:"#fff",border:"none",borderRadius:7,fontSize:12,cursor:"pointer",fontWeight:600}}>📥 Descargar TODO en Excel</button>
+        <button onClick={dlAll} style={{padding:"10px 20px",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",border:"none",borderRadius:8,fontSize:14,cursor:"pointer",fontWeight:700,boxShadow:"0 2px 12px rgba(34,197,94,.3)",display:"flex",alignItems:"center",gap:8}}>📥 DESCARGAR EXCEL COMPLETO</button>
       </div>
       <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
         {[{id:"users",l:`Usuarios${pending>0?` (${pending})`:""}`},{id:"results",l:"Resultados"},{id:"avance_admin",l:"📈 Avance"},{id:"ia_admin",l:"🤖 IA"},{id:"stats_s",l:"Resumen"}].map(t=>(
