@@ -356,7 +356,7 @@ function HoyView({users,results,allPreds}){
   );
 }
 
-function Preds({currentUser,results,showAnim,canEdit,myFilled,userConfirmed,confirmPreds}){
+function Preds({currentUser,results,showAnim,canEdit,myFilled}){
   const[preds,setPreds]=useState({});const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
   const locked=!canEdit;const prevR=useRef({});
   useEffect(()=>{(async()=>{const d=await dbGet(`preds-${currentUser}`);if(d)setPreds(d);})()},[currentUser]);
@@ -403,19 +403,6 @@ function Preds({currentUser,results,showAnim,canEdit,myFilled,userConfirmed,conf
         );})}
       </div>
       {!locked&&<div style={{textAlign:"center",marginTop:16}}><button className="bg" onClick={save} disabled={saving} style={{fontSize:15,padding:"11px 36px"}}>{saving?"...":saved?"✓ Guardado":"GUARDAR PREDICCIONES"}</button></div>}
-      {canEdit&&myFilled===72&&!userConfirmed&&(
-        <div style={{textAlign:"center",margin:"20px 0",padding:20,background:"rgba(34,197,94,.1)",border:"2px solid var(--grn)",borderRadius:12}}>
-          <div style={{fontSize:36,marginBottom:8}}>🎉</div>
-          <h3 className="hdr" style={{fontSize:20,color:"var(--grn)"}}>¡72/72 COMPLETADAS!</h3>
-          <p style={{color:"var(--txt)",fontSize:12,margin:"8px 0 14px"}}>Al confirmar se bloquean tus predicciones y se habilitan tabla, comparaciones y más.</p>
-          <button onClick={confirmPreds} className="bg" style={{background:"linear-gradient(135deg,#22c55e,#16a34a)",padding:"12px 30px",fontSize:15}}>✅ CONFIRMAR MIS PREDICCIONES</button>
-        </div>
-      )}
-      {userConfirmed&&(
-        <div style={{textAlign:"center",margin:"10px 0",padding:12,background:"rgba(34,197,94,.08)",border:"1px solid rgba(34,197,94,.3)",borderRadius:8}}>
-          <span style={{color:"var(--grn)",fontSize:13,fontWeight:700}}>✅ Predicciones confirmadas y bloqueadas</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -2533,10 +2520,9 @@ export default function App(){
   const hardLocked=new Date()>=LOCK;
   const myPreds=allPreds[user]||{};
   const myFilled=M.filter(m=>{const p=myPreds[m.n]||{h:"",a:""};return p.h!==""&&p.a!==""}).length;
-  const userConfirmed=!!users[user]?.confirmed;
-  const canSeeAll=hardLocked||userConfirmed;
-  const canEdit=!hardLocked&&!userConfirmed;
-  const confirmPreds=async()=>{if(myFilled<72)return;const u={...users};u[user]={...u[user],confirmed:true};await dbSet("users",u);setUsers(u);};
+  const isComplete=myFilled===72;
+  const canSeeAll=hardLocked||isComplete||isAdmin;
+  const canEdit=!hardLocked&&!isComplete;
 
   return(
     <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:60}}>
@@ -2564,7 +2550,7 @@ export default function App(){
           {!isAdmin&&!users[user]?.paid&&<div style={{maxWidth:700,margin:"16px auto 0",padding:"0 16px"}}><PayBanner/></div>}
           {view==="home"&&<Home users={users} results={results}/>}
           {view==="hoy"&&<HoyView users={users} results={results} allPreds={allPreds}/>}
-          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim} canEdit={canEdit} myFilled={myFilled} userConfirmed={userConfirmed} confirmPreds={confirmPreds}/>}
+          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim} canEdit={canEdit} myFilled={myFilled}/>}
           {view==="preds"&&isAdmin&&adminMode&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
           {view==="table"&&(canSeeAll?<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>:<LockedView msg="Completá tus 72 predicciones para ver la tabla" filled={myFilled}/>)}
           {view==="compare"&&(canSeeAll?<Compare users={users} results={results} allPreds={allPreds}/>:<LockedView msg="Completá tus 72 predicciones para comparar" filled={myFilled}/>)}
@@ -2826,4 +2812,4 @@ function BracketView({results,allPreds,users,currentUser}){
     </div>
   );
 }
-        
+    
