@@ -41,7 +41,7 @@ const M = [
 ];
 const FL={"México":"🇲🇽","Sudáfrica":"🇿🇦","Corea del Sur":"🇰🇷","Chequia":"🇨🇿","Canadá":"🇨🇦","Bosnia":"🇧🇦","Qatar":"🇶🇦","Suiza":"🇨🇭","Brasil":"🇧🇷","Marruecos":"🇲🇦","Haití":"🇭🇹","Escocia":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Estados Unidos":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Turquía":"🇹🇷","Alemania":"🇩🇪","Curazao":"🇨🇼","Costa de Marfil":"🇨🇮","Ecuador":"🇪🇨","Países Bajos":"🇳🇱","Japón":"🇯🇵","Suecia":"🇸🇪","Túnez":"🇹🇳","España":"🇪🇸","Cabo Verde":"🇨🇻","Arabia Saudita":"🇸🇦","Uruguay":"🇺🇾","Bélgica":"🇧🇪","Egipto":"🇪🇬","Irán":"🇮🇷","Nueva Zelanda":"🇳🇿","Francia":"🇫🇷","Senegal":"🇸🇳","Irak":"🇮🇶","Noruega":"🇳🇴","Argentina":"🇦🇷","Argelia":"🇩🇿","Austria":"🇦🇹","Jordania":"🇯🇴","Inglaterra":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croacia":"🇭🇷","Ghana":"🇬🇭","Panamá":"🇵🇦","Portugal":"🇵🇹","RD Congo":"🇨🇩","Uzbekistán":"🇺🇿","Colombia":"🇨🇴"};
 const ADMIN_U="ranieri",ADMIN_P="R.anieri58";
-const LOCK=new Date("2026-06-09T22:00:00-03:00");
+const LOCK=new Date("2026-06-10T01:00:00-03:00");
 const PAY_DL=new Date("2026-06-08T23:59:59-03:00");
 const FEE=25000;
 const fmt$=n=>"$"+n.toLocaleString("es-AR");
@@ -356,9 +356,9 @@ function HoyView({users,results,allPreds}){
   );
 }
 
-function Preds({currentUser,results,showAnim}){
+function Preds({currentUser,results,showAnim,canEdit,myFilled,userConfirmed,confirmPreds}){
   const[preds,setPreds]=useState({});const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
-  const locked=new Date()>=LOCK;const prevR=useRef({});
+  const locked=!canEdit;const prevR=useRef({});
   useEffect(()=>{(async()=>{const d=await dbGet(`preds-${currentUser}`);if(d)setPreds(d);})()},[currentUser]);
   useEffect(()=>{
     M.forEach(m=>{const r=results[m.n]||{h:"",a:""};const pv=prevR.current[m.n]||{h:"",a:""};
@@ -403,6 +403,19 @@ function Preds({currentUser,results,showAnim}){
         );})}
       </div>
       {!locked&&<div style={{textAlign:"center",marginTop:16}}><button className="bg" onClick={save} disabled={saving} style={{fontSize:15,padding:"11px 36px"}}>{saving?"...":saved?"✓ Guardado":"GUARDAR PREDICCIONES"}</button></div>}
+      {canEdit&&myFilled===72&&!userConfirmed&&(
+        <div style={{textAlign:"center",margin:"20px 0",padding:20,background:"rgba(34,197,94,.1)",border:"2px solid var(--grn)",borderRadius:12}}>
+          <div style={{fontSize:36,marginBottom:8}}>🎉</div>
+          <h3 className="hdr" style={{fontSize:20,color:"var(--grn)"}}>¡72/72 COMPLETADAS!</h3>
+          <p style={{color:"var(--txt)",fontSize:12,margin:"8px 0 14px"}}>Al confirmar se bloquean tus predicciones y se habilitan tabla, comparaciones y más.</p>
+          <button onClick={confirmPreds} className="bg" style={{background:"linear-gradient(135deg,#22c55e,#16a34a)",padding:"12px 30px",fontSize:15}}>✅ CONFIRMAR MIS PREDICCIONES</button>
+        </div>
+      )}
+      {userConfirmed&&(
+        <div style={{textAlign:"center",margin:"10px 0",padding:12,background:"rgba(34,197,94,.08)",border:"1px solid rgba(34,197,94,.3)",borderRadius:8}}>
+          <span style={{color:"var(--grn)",fontSize:13,fontWeight:700}}>✅ Predicciones confirmadas y bloqueadas</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -553,9 +566,7 @@ function IAView({results,allPreds,users,currentUser}){
         );})}
       </div>
 
-      {!locked&&<div className="card" style={{textAlign:"center"}}><p style={{color:"var(--txt3)",fontSize:13}}>🔒 Las comparaciones y predicciones se muestran después del 9/06.</p></div>}
-
-      {locked&&<>
+      
         {/* Tabs */}
         <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
           {[{id:"tabla",l:"📊 Predicciones"},{id:"top5",l:"🏅 Quién pensó como cada IA"},{id:"vsIA",l:"🔍 Vos vs IA"}].map(t=>(
@@ -671,7 +682,6 @@ function IAView({results,allPreds,users,currentUser}){
           })()}
           {!selUser&&<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>Elegí un participante para comparar.</p>}
         </div>}
-      </>}
     </div>
   );
 }
@@ -2044,7 +2054,7 @@ function Admin({users,setUsers,results,setResults,allPreds}){
             <div style={{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap"}}>
               {u.approved?<span className="tg" style={{background:"rgba(34,197,94,.15)",color:"var(--grn)"}}>✓</span>:<span className="tg" style={{background:"rgba(220,53,69,.15)",color:"var(--red)"}}>Pendiente</span>}
               {u.paid?<span className="tg" style={{background:"rgba(212,168,67,.15)",color:"var(--gold)"}}>💰 Pagó</span>:<span style={{color:"var(--txt3)",fontSize:10}}>No pagó</span>}
-              {(()=>{const filled=M.filter(m=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};return p.h!==""&&p.a!==""}).length;const pct=Math.round(filled/72*100);const c=filled===72?"#22c55e":filled>0?"#f59e0b":"#dc3545";const bg=filled===72?"rgba(34,197,94,.15)":filled>0?"rgba(245,158,11,.15)":"rgba(220,53,69,.15)";return<span className="tg" style={{background:bg,color:c,minWidth:70,textAlign:"center"}}>{filled===72?"✅ Completo":"✏️ "+filled+"/72 ("+pct+"%)"}  </span>})()}
+              {(()=>{const filled=M.filter(m=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};return p.h!==""&&p.a!==="";}).length;const pct=Math.round(filled/72*100);const c=filled===72?"var(--grn)":filled>0?"var(--org)":"var(--red)";return<span className="tg" style={{background:`${c}22`,color:c,minWidth:70,textAlign:"center"}}>{filled===72?"✅ Completo":`✏️ ${filled}/72 (${pct}%)`}</span>})()}
               <button className="bsm" style={{background:"rgba(99,102,241,.2)",color:"#818cf8",border:"1px solid #818cf833"}} onClick={()=>setShowPass(p=>({...p,[id]:!p[id]}))}>🔑</button>
               {!u.approved&&<button className="bsm" style={{background:"var(--grn)",color:"#fff"}} onClick={()=>approve(id)}>Habilitar</button>}
               {u.approved&&<button className="bsm" style={{background:"transparent",color:"var(--red)",border:"1px solid var(--red)"}} onClick={()=>reject(id)}>Deshab.</button>}
@@ -2414,6 +2424,20 @@ function PlayerSearch({users,allPreds,results,currentUser}){
   );
 }
 
+function LockedView({msg,filled}){
+  return(
+    <div style={{maxWidth:680,margin:"0 auto",padding:"50px 20px",textAlign:"center"}} className="fi">
+      <div style={{fontSize:52,marginBottom:10}}>🔒</div>
+      <h2 className="hdr" style={{fontSize:22}}>SECCIÓN BLOQUEADA</h2>
+      <p style={{color:"var(--txt2)",fontSize:13,margin:"10px 0 20px"}}>{msg}</p>
+      <div style={{background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:10,padding:"14px 20px",display:"inline-block"}}>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:filled===72?"var(--grn)":"var(--gold)"}}>{filled}/72</div>
+        <div style={{color:"var(--txt3)",fontSize:11}}>predicciones completadas</div>
+      </div>
+    </div>
+  );
+}
+
 export default function App(){
   const[user,setUser]=useState(null);
   const[isAdmin,setIsAdmin]=useState(false);
@@ -2506,6 +2530,13 @@ export default function App(){
   if(!user)return<><style>{CSS}</style><Login onLogin={login}/></>;
 
   const approved=isAdmin||users[user]?.approved;
+  const hardLocked=new Date()>=LOCK;
+  const myPreds=allPreds[user]||{};
+  const myFilled=M.filter(m=>{const p=myPreds[m.n]||{h:"",a:""};return p.h!==""&&p.a!==""}).length;
+  const userConfirmed=!!users[user]?.confirmed;
+  const canSeeAll=hardLocked||userConfirmed;
+  const canEdit=!hardLocked&&!userConfirmed;
+  const confirmPreds=async()=>{if(myFilled<72)return;const u={...users};u[user]={...u[user],confirmed:true};await dbSet("users",u);setUsers(u);};
 
   return(
     <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:60}}>
@@ -2533,11 +2564,11 @@ export default function App(){
           {!isAdmin&&!users[user]?.paid&&<div style={{maxWidth:700,margin:"16px auto 0",padding:"0 16px"}}><PayBanner/></div>}
           {view==="home"&&<Home users={users} results={results}/>}
           {view==="hoy"&&<HoyView users={users} results={results} allPreds={allPreds}/>}
-          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim}/>}
+          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim} canEdit={canEdit} myFilled={myFilled} userConfirmed={userConfirmed} confirmPreds={confirmPreds}/>}
           {view==="preds"&&isAdmin&&adminMode&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
-          {view==="table"&&<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>}
-          {view==="compare"&&<Compare users={users} results={results} allPreds={allPreds}/>}
-          {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
+          {view==="table"&&(canSeeAll?<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>:<LockedView msg="Completá tus 72 predicciones para ver la tabla" filled={myFilled}/>)}
+          {view==="compare"&&(canSeeAll?<Compare users={users} results={results} allPreds={allPreds}/>:<LockedView msg="Completá tus 72 predicciones para comparar" filled={myFilled}/>)}
+          {view==="ia"&&(canSeeAll?<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>:<LockedView msg="Completá tus 72 predicciones para ver las IAs" filled={myFilled}/>)}
           {view==="chat"&&<Chat currentUser={user} users={users}/>}
           {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
           {view==="map"&&<HostMapView results={results} isAdmin={isAdmin}/>}
@@ -2550,7 +2581,7 @@ export default function App(){
           </div>}
           {view==="rules"&&<Rules/>}
           {view==="podio"&&<PodiumView users={users} allPreds={allPreds} results={results}/>}
-          {view==="h2h"&&<HeadToHead users={users} allPreds={allPreds} results={results} currentUser={user}/>}
+          {view==="h2h"&&(canSeeAll?<HeadToHead users={users} allPreds={allPreds} results={results} currentUser={user}/>:<LockedView msg="Completá tus 72 predicciones para ver H2H" filled={myFilled}/>)}
           {view==="buscar"&&<PlayerSearch users={users} allPreds={allPreds} results={results} currentUser={user}/>}
           {view==="ranking"&&<RankingHistory users={users} allPreds={allPreds} results={results}/>}
           {view==="bracket"&&<BracketView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
