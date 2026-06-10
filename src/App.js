@@ -41,7 +41,7 @@ const M = [
 ];
 const FL={"México":"🇲🇽","Sudáfrica":"🇿🇦","Corea del Sur":"🇰🇷","Chequia":"🇨🇿","Canadá":"🇨🇦","Bosnia":"🇧🇦","Qatar":"🇶🇦","Suiza":"🇨🇭","Brasil":"🇧🇷","Marruecos":"🇲🇦","Haití":"🇭🇹","Escocia":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Estados Unidos":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Turquía":"🇹🇷","Alemania":"🇩🇪","Curazao":"🇨🇼","Costa de Marfil":"🇨🇮","Ecuador":"🇪🇨","Países Bajos":"🇳🇱","Japón":"🇯🇵","Suecia":"🇸🇪","Túnez":"🇹🇳","España":"🇪🇸","Cabo Verde":"🇨🇻","Arabia Saudita":"🇸🇦","Uruguay":"🇺🇾","Bélgica":"🇧🇪","Egipto":"🇪🇬","Irán":"🇮🇷","Nueva Zelanda":"🇳🇿","Francia":"🇫🇷","Senegal":"🇸🇳","Irak":"🇮🇶","Noruega":"🇳🇴","Argentina":"🇦🇷","Argelia":"🇩🇿","Austria":"🇦🇹","Jordania":"🇯🇴","Inglaterra":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croacia":"🇭🇷","Ghana":"🇬🇭","Panamá":"🇵🇦","Portugal":"🇵🇹","RD Congo":"🇨🇩","Uzbekistán":"🇺🇿","Colombia":"🇨🇴"};
 const ADMIN_U="ranieri",ADMIN_P="R.anieri58";
-const LOCK=new Date("2026-06-10T01:00:00-03:00");
+const LOCK=new Date("2026-06-09T22:00:00-03:00");
 const PAY_DL=new Date("2026-06-08T23:59:59-03:00");
 const FEE=25000;
 const fmt$=n=>"$"+n.toLocaleString("es-AR");
@@ -413,22 +413,7 @@ function Table({users,results,currentUser,allPreds}){
   const ranks=useMemo(()=>Object.entries(users).filter(([id,u])=>u.approved&&u.paid&&!AI_IDS.includes(id)).map(([id,u])=>({id,name:u.name,...calcTotal(allPreds[id]||{},results)})).sort(cmp),[users,allPreds,results]);
   const myS=calcTotal(allPreds[currentUser]||{},results);const myP=users[currentUser]?.paid;
   const dl=()=>{let c="Pos,Nombre,Pts,Bonus,Total,Exactos,Signos,R5,R3\n";ranks.forEach((r,i)=>{c+=`${i+1},${r.name},${r.mp},${r.bo},${r.tot},${r.ex},${r.si},${r.ms5},${r.ms3}\n`;});const b=new Blob([c],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="tabla_general.csv";a.click();};
-  if(!locked)return(
-    <div style={{maxWidth:680,margin:"0 auto",padding:"50px 20px",textAlign:"center"}} className="fi">
-      <div style={{fontSize:52,marginBottom:10}}>🔒</div>
-      <h2 className="hdr" style={{fontSize:26}}>TABLA BLOQUEADA</h2>
-      <p style={{color:"var(--txt2)",fontSize:13,marginTop:6}}>Se habilita el 9 de junio.</p>
-      <div className="card" style={{maxWidth:360,margin:"24px auto 0"}}>
-        <h3 className="hdr" style={{margin:"0 0 8px"}}>💰 POZO</h3>
-        <div className="hdr" style={{fontSize:34,color:"var(--wht)"}}>{fmt$(pool)}</div>
-        <div style={{color:"var(--txt3)",fontSize:10,marginTop:2}}>{paid} pagaron</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginTop:12}}>
-          {[{l:"🥇",p:70,c:"#FFD700"},{l:"🥈",p:20,c:"#C0C0C0"},{l:"🥉",p:10,c:"#CD7F32"}].map(x=>(<div key={x.l} style={{textAlign:"center"}}><div>{x.l}</div><div className="hdr" style={{fontSize:15,color:x.c}}>{fmt$(Math.floor(pool*x.p/100))}</div></div>))}
-        </div>
-      </div>
-    </div>
-  );
-  return(
+    return(
     <div style={{maxWidth:950,margin:"0 auto",padding:"24px 16px"}} className="fi">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:8}}>
         <h2 className="hdr" style={{fontSize:24}}>🏆 TABLA GENERAL</h2>
@@ -462,7 +447,7 @@ function Table({users,results,currentUser,allPreds}){
 
 function Compare({users,results,allPreds}){
   const locked=new Date()>=LOCK;const[sel,setSel]=useState("");
-  if(!locked)return(<div style={{maxWidth:680,margin:"0 auto",padding:"50px 20px",textAlign:"center"}} className="fi"><div style={{fontSize:44,marginBottom:10}}>🔒</div><h2 className="hdr" style={{fontSize:22}}>SE HABILITA EL 9/06</h2></div>);
+  
   const approved=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
   return(
     <div style={{maxWidth:950,margin:"0 auto",padding:"24px 16px"}} className="fi">
@@ -2303,7 +2288,7 @@ function HeadToHead({users,allPreds,results,currentUser}){
               </tr>);
             })}</tbody>
           </table></div>}
-          {!locked&&<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>El detalle partido a partido se habilita el 9/06.</p>}
+          
         </div>
       )}
       {!p2&&<p style={{color:"var(--txt3)",fontSize:13,textAlign:"center",padding:30}}>Elegí dos jugadores para comparar.</p>}
