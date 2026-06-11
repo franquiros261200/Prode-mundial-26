@@ -1119,6 +1119,13 @@ function Chat({currentUser,users}){
   const[showMentions,setShowMentions]=useState(false);
   const bottomRef=useRef(null);
   const inputRef=useRef(null);
+  const prevMsgCount=useRef(0);
+
+  const userColor=(name)=>{
+    let h=0;for(let i=0;i<name.length;i++){h=name.charCodeAt(i)+((h<<5)-h);}
+    const colors=["#3b82f6","#22c55e","#f59e0b","#ef4444","#8b5cf6","#ec4899","#06b6d4","#f97316","#14b8a6","#a855f7","#e11d48","#0ea5e9","#84cc16","#d946ef","#fb923c","#2dd4bf","#f43f5e","#7c3aed"];
+    return colors[Math.abs(h)%colors.length];
+  };
 
   useEffect(()=>{
     (async()=>{const d=await dbGet("chat");if(d)setMsgs(d);})();
@@ -1126,20 +1133,32 @@ function Chat({currentUser,users}){
     return()=>clearInterval(iv);
   },[]);
 
+  // Notify when someone replies to you or mentions you
+  useEffect(()=>{
+    if(msgs.length<=prevMsgCount.current){prevMsgCount.current=msgs.length;return;}
+    const newMsgs=msgs.slice(prevMsgCount.current);
+    prevMsgCount.current=msgs.length;
+    const myName=users[currentUser]?.name||"";
+    newMsgs.forEach(m=>{
+      if(m.user===currentUser)return;
+      const mentionsMe=m.text.includes("@"+myName);
+      const repliesToMe=m.replyTo&&m.replyTo.user===currentUser;
+      if((mentionsMe||repliesToMe)&&"Notification" in window&&Notification.permission==="granted"){
+        new Notification("Prode Mundial 2026 💬",{body:(repliesToMe?"↩ ":"")+(mentionsMe?"@"+myName+" ":"")+m.name+": "+m.text.slice(0,60),icon:"⚽"});
+      }
+    });
+  },[msgs]);
+
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 
   const onTextChange=(e)=>{
     const val=e.target.value;
     setText(val);
-    // Detect @ mention
     const atIdx=val.lastIndexOf("@");
-    if(atIdx>=0 && atIdx===val.length-1-val.slice(atIdx+1).replace(/\S+/,"")){
+    if(atIdx>=0&&!val.slice(atIdx+1).includes(" ")){
       setMentionQ(val.slice(atIdx+1));
       setShowMentions(true);
-    } else if(atIdx>=0 && !val.slice(atIdx).includes(" ")){
-      setMentionQ(val.slice(atIdx+1));
-      setShowMentions(true);
-    } else {
+    }else{
       setShowMentions(false);
     }
   };
@@ -1165,13 +1184,12 @@ function Chat({currentUser,users}){
     setText("");setReplyTo(null);setSending(false);
   };
 
-  const formatTime=(ts)=>{const d=new Date(ts);return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;};
+  const formatTime=(ts)=>{const d=new Date(ts);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
 
   const renderText=(txt)=>{
     const parts=txt.split(/(@\S+)/g);
     return parts.map((p,i)=>{
       if(p.startsWith("@")){
-        const mentioned=Object.values(users).find(u=>u.name===p.slice(1));
         return<span key={i} style={{color:"var(--gold)",fontWeight:700,background:"rgba(212,168,67,.15)",borderRadius:3,padding:"0 3px"}}>{p}</span>;
       }
       return<span key={i}>{p}</span>;
@@ -1179,35 +1197,35 @@ function Chat({currentUser,users}){
   };
 
   const approvedUsers=Object.values(users).filter(u=>u.approved&&u.name);
-  const mentionList=approvedUsers.filter(u=>u.name.toLowerCase().includes(mentionQ.toLowerCase())&&u.name!==users[currentUser]?.name);
+  const mentionList=approvedUsers.filter(u=>u.name.toLowerCase().includes(mentionQ.toLowerCase())&&u.name!==(users[currentUser]?.name||""));
 
   return(
     <div style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",height:"calc(100vh - 120px)",display:"flex",flexDirection:"column"}} className="fi">
       <h2 className="hdr" style={{fontSize:22,textAlign:"center",marginBottom:12}}>💬 CHAT</h2>
-      {/* Messages */}
       <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:6,padding:"0 2px",marginBottom:8}}>
         {msgs.length===0&&<p style={{color:"var(--txt3)",fontSize:12,textAlign:"center",padding:20}}>Nadie escribió todavía. ¡Sé el primero!</p>}
         {msgs.map((m,i)=>{
           const isMe=m.user===currentUser;
           const isMentioned=m.text.includes("@"+(users[currentUser]?.name||""));
+          const col=userColor(m.name||"anon");
           return(
             <div key={i} style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start",gap:2}}>
-              {/* Reply preview */}
               {m.replyTo&&(
-                <div style={{fontSize:10,color:"var(--txt3)",background:"var(--bg2)",borderLeft:"2px solid var(--gold)",padding:"2px 8px",borderRadius:4,maxWidth:"80%",opacity:.8}}>
-                  <span style={{color:"var(--gold)",fontWeight:600}}>{m.replyTo.name}: </span>{m.replyTo.text}
+                <div style={{fontSize:10,color:"var(--txt3)",background:"var(--bg2)",borderLeft:"2px solid "+col,padding:"2px 8px",borderRadius:4,maxWidth:"80%",opacity:.8}}>
+                  <span style={{color:col,fontWeight:600}}>{m.replyTo.name}: </span>{m.replyTo.text}
                 </div>
               )}
               <div style={{
                 maxWidth:"80%",padding:"7px 11px",borderRadius:isMe?"12px 12px 3px 12px":"12px 12px 12px 3px",
                 background:isMe?"linear-gradient(135deg,rgba(212,168,67,.25),rgba(212,168,67,.15))":isMentioned?"rgba(212,168,67,.1)":"var(--bg3)",
                 border:isMentioned?"1px solid rgba(212,168,67,.4)":isMe?"1px solid rgba(212,168,67,.2)":"1px solid var(--bd)",
-                position:"relative",cursor:"pointer"
+                borderLeft:isMe?"none":"3px solid "+col,
+                cursor:"pointer"
               }}
                 onClick={()=>setReplyTo(m)}
                 title="Toca para responder"
               >
-                {!isMe&&<div style={{fontSize:10,fontWeight:700,color:"var(--gold)",marginBottom:3}}>{m.name}</div>}
+                {!isMe&&<div style={{fontSize:10,fontWeight:700,color:col,marginBottom:3}}>{m.name}</div>}
                 <div style={{fontSize:13,color:"var(--wht)",lineHeight:1.4}}>{renderText(m.text)}</div>
                 <div style={{fontSize:9,color:"var(--txt3)",textAlign:"right",marginTop:3}}>{formatTime(m.ts)}</div>
               </div>
@@ -1217,30 +1235,27 @@ function Chat({currentUser,users}){
         <div ref={bottomRef}/>
       </div>
 
-      {/* Reply banner */}
       {replyTo&&(
-        <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"var(--bg2)",borderLeft:"3px solid var(--gold)",borderRadius:6,marginBottom:6,fontSize:11}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"var(--bg2)",borderLeft:"3px solid "+userColor(replyTo.name||""),borderRadius:6,marginBottom:6,fontSize:11}}>
           <div style={{flex:1,minWidth:0}}>
-            <span style={{color:"var(--gold)",fontWeight:700}}>↩ {replyTo.name}: </span>
+            <span style={{color:userColor(replyTo.name||""),fontWeight:700}}>↩ {replyTo.name}: </span>
             <span style={{color:"var(--txt2)"}}>{replyTo.text.slice(0,50)}{replyTo.text.length>50?"...":""}</span>
           </div>
           <button onClick={()=>setReplyTo(null)} style={{background:"transparent",border:"none",color:"var(--txt3)",cursor:"pointer",fontSize:14}}>✕</button>
         </div>
       )}
 
-      {/* Mention suggestions */}
       {showMentions&&mentionList.length>0&&(
         <div style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:8,marginBottom:6,overflow:"hidden",maxHeight:160,overflowY:"auto"}}>
           {mentionList.map(u=>(
             <button key={u.name} onClick={()=>insertMention(u.name)}
               style={{display:"block",width:"100%",padding:"8px 12px",background:"transparent",border:"none",borderBottom:"1px solid var(--bd)",color:"var(--wht)",fontSize:12,cursor:"pointer",textAlign:"left"}}>
-              <span style={{color:"var(--gold)",fontWeight:700}}>@{u.name}</span>
+              <span style={{color:userColor(u.name),fontWeight:700}}>@{u.name}</span>
             </button>
           ))}
         </div>
       )}
 
-      {/* Input */}
       <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
         <input ref={inputRef} className="inp" value={text} onChange={onTextChange}
           onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}if(e.key==="Escape"){setShowMentions(false);setReplyTo(null);}}}
@@ -1255,31 +1270,6 @@ function Chat({currentUser,users}){
     </div>
   );
 }
-
-
-// ═══════════════════════════════════════════════════════
-// HOST MAP - Sedes Mundial 2026 (pure React, no D3)
-// ═══════════════════════════════════════════════════════
-const SEDES_DATA=[
-  {city:"Atlanta",stadium:"Mercedes-Benz Stadium",lon:-84.40,lat:33.755,country:"USA",games:8,type:"semi"},
-  {city:"Boston",stadium:"Gillette Stadium",lon:-71.26,lat:42.090,country:"USA",games:7,type:"cuartos"},
-  {city:"Dallas",stadium:"AT&T Stadium",lon:-97.09,lat:32.747,country:"USA",games:9,type:"semi"},
-  {city:"Houston",stadium:"NRG Stadium",lon:-95.41,lat:29.685,country:"USA",games:7,type:"octavos"},
-  {city:"Kansas City",stadium:"Arrowhead Stadium",lon:-94.48,lat:39.049,country:"USA",games:6,type:"cuartos"},
-  {city:"Los Angeles",stadium:"SoFi Stadium",lon:-118.34,lat:33.953,country:"USA",games:8,type:"cuartos"},
-  {city:"Miami",stadium:"Hard Rock Stadium",lon:-80.24,lat:25.957,country:"USA",games:7,type:"cuartos"},
-  {city:"Nueva York/NJ",stadium:"MetLife Stadium",lon:-74.07,lat:40.813,country:"USA",games:8,type:"final"},
-  {city:"Philadelphia",stadium:"Lincoln Financial Field",lon:-75.17,lat:39.901,country:"USA",games:6,type:"octavos"},
-  {city:"San Francisco",stadium:"Levi\'s Stadium",lon:-121.97,lat:37.403,country:"USA",games:6,type:"octavos"},
-  {city:"Seattle",stadium:"Lumen Field",lon:-122.33,lat:47.595,country:"USA",games:6,type:"octavos"},
-  {city:"Ciudad de México",stadium:"Estadio Azteca",lon:-99.15,lat:19.302,country:"MEX",games:5,type:"inaugural"},
-  {city:"Guadalajara",stadium:"Estadio Akron",lon:-103.46,lat:20.681,country:"MEX",games:4,type:"grupos"},
-  {city:"Monterrey",stadium:"Estadio BBVA",lon:-100.24,lat:25.668,country:"MEX",games:4,type:"grupos"},
-  {city:"Toronto",stadium:"BMO Field",lon:-79.42,lat:43.633,country:"CAN",games:6,type:"grupos"},
-  {city:"Vancouver",stadium:"BC Place",lon:-123.11,lat:49.276,country:"CAN",games:7,type:"octavos"},
-];
-const SEDE_COLORS={inaugural:"#f0d060",final:"#f0d060",semi:"#d4a843",cuartos:"#3b82f6",octavos:"#22c55e",grupos:"#6b8299"};
-const SEDE_LABELS={inaugural:"INAUGURAL",final:"FINAL",semi:"SEMIFINAL",cuartos:"CUARTOS",octavos:"OCTAVOS",grupos:"GRUPOS"};
 
 
 function projectNA(lon,lat){
@@ -2006,7 +1996,7 @@ function Admin({users,setUsers,results,setResults,allPreds}){
   return(
     <div style={{maxWidth:950,margin:"0 auto",padding:"24px 16px"}} className="fi">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
-        <h2 className="hdr" style={{fontSize:22,color:"var(--red)"}}>⚙️ PANEL ADMIN ({Object.keys(users).length} users cargados)</h2>
+        <h2 className="hdr" style={{fontSize:22,color:"var(--red)"}}>⚙️ PANEL ADMIN</h2>
         <button onClick={dlAll} style={{padding:"10px 20px",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",border:"none",borderRadius:8,fontSize:14,cursor:"pointer",fontWeight:700,boxShadow:"0 2px 12px rgba(34,197,94,.3)",display:"flex",alignItems:"center",gap:8}}>📥 DESCARGAR EXCEL COMPLETO</button>
       </div>
       <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
@@ -2408,8 +2398,8 @@ export default function App(){
   const showAnim=useCallback((type)=>{setAnimType(type);setTimeout(()=>setAnimType(null),4000);},[]);
 
   useEffect(()=>{(async()=>{
-    const u=await dbGet("users");console.log("USERS LOADED:",u?Object.keys(u).length:"NULL");if(u)setUsers(u);
-    const r=await dbGet("results");console.log("RESULTS LOADED:",r?Object.keys(r).length:"NULL");if(r)setResults(r);
+    const u=await dbGet("users");if(u)setUsers(u);
+    const r=await dbGet("results");if(r)setResults(r);
     const sess=JSON.parse(localStorage.getItem("prode-session")||"null");
     if(sess){setUser(sess.user);setIsAdmin(sess.isAdmin);}
     setLoading(false);
