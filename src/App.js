@@ -2006,7 +2006,7 @@ function Admin({users,setUsers,results,setResults,allPreds}){
   return(
     <div style={{maxWidth:950,margin:"0 auto",padding:"24px 16px"}} className="fi">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
-        <h2 className="hdr" style={{fontSize:22,color:"var(--red)"}}>⚙️ PANEL ADMIN</h2>
+        <h2 className="hdr" style={{fontSize:22,color:"var(--red)"}}>⚙️ PANEL ADMIN ({Object.keys(users).length} users cargados)</h2>
         <button onClick={dlAll} style={{padding:"10px 20px",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",border:"none",borderRadius:8,fontSize:14,cursor:"pointer",fontWeight:700,boxShadow:"0 2px 12px rgba(34,197,94,.3)",display:"flex",alignItems:"center",gap:8}}>📥 DESCARGAR EXCEL COMPLETO</button>
       </div>
       <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
@@ -2408,8 +2408,8 @@ export default function App(){
   const showAnim=useCallback((type)=>{setAnimType(type);setTimeout(()=>setAnimType(null),4000);},[]);
 
   useEffect(()=>{(async()=>{
-    const u=await dbGet("users");if(u)setUsers(u);
-    const r=await dbGet("results");if(r)setResults(r);
+    const u=await dbGet("users");console.log("USERS LOADED:",u?Object.keys(u).length:"NULL");if(u)setUsers(u);
+    const r=await dbGet("results");console.log("RESULTS LOADED:",r?Object.keys(r).length:"NULL");if(r)setResults(r);
     const sess=JSON.parse(localStorage.getItem("prode-session")||"null");
     if(sess){setUser(sess.user);setIsAdmin(sess.isAdmin);}
     setLoading(false);
