@@ -41,7 +41,7 @@ const M = [
 ];
 const FL={"México":"🇲🇽","Sudáfrica":"🇿🇦","Corea del Sur":"🇰🇷","Chequia":"🇨🇿","Canadá":"🇨🇦","Bosnia":"🇧🇦","Qatar":"🇶🇦","Suiza":"🇨🇭","Brasil":"🇧🇷","Marruecos":"🇲🇦","Haití":"🇭🇹","Escocia":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Estados Unidos":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Turquía":"🇹🇷","Alemania":"🇩🇪","Curazao":"🇨🇼","Costa de Marfil":"🇨🇮","Ecuador":"🇪🇨","Países Bajos":"🇳🇱","Japón":"🇯🇵","Suecia":"🇸🇪","Túnez":"🇹🇳","España":"🇪🇸","Cabo Verde":"🇨🇻","Arabia Saudita":"🇸🇦","Uruguay":"🇺🇾","Bélgica":"🇧🇪","Egipto":"🇪🇬","Irán":"🇮🇷","Nueva Zelanda":"🇳🇿","Francia":"🇫🇷","Senegal":"🇸🇳","Irak":"🇮🇶","Noruega":"🇳🇴","Argentina":"🇦🇷","Argelia":"🇩🇿","Austria":"🇦🇹","Jordania":"🇯🇴","Inglaterra":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croacia":"🇭🇷","Ghana":"🇬🇭","Panamá":"🇵🇦","Portugal":"🇵🇹","RD Congo":"🇨🇩","Uzbekistán":"🇺🇿","Colombia":"🇨🇴"};
 const ADMIN_U="ranieri",ADMIN_P="R.anieri58";
-const LOCK=new Date("2026-06-10T20:00:00-03:00");
+const LOCK=new Date("2026-06-09T22:00:00-03:00");
 const PAY_DL=new Date("2026-06-08T23:59:59-03:00");
 const FEE=25000;
 const fmt$=n=>"$"+n.toLocaleString("es-AR");
@@ -356,9 +356,9 @@ function HoyView({users,results,allPreds}){
   );
 }
 
-function Preds({currentUser,results,showAnim,canEdit,myFilled}){
+function Preds({currentUser,results,showAnim}){
   const[preds,setPreds]=useState({});const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
-  const locked=!canEdit;const prevR=useRef({});
+  const locked=new Date()>=LOCK;const prevR=useRef({});
   useEffect(()=>{(async()=>{const d=await dbGet(`preds-${currentUser}`);if(d)setPreds(d);})()},[currentUser]);
   useEffect(()=>{
     M.forEach(m=>{const r=results[m.n]||{h:"",a:""};const pv=prevR.current[m.n]||{h:"",a:""};
@@ -2411,19 +2411,6 @@ function PlayerSearch({users,allPreds,results,currentUser}){
   );
 }
 
-function LockedView({msg,filled}){
-  return(
-    <div style={{maxWidth:680,margin:"0 auto",padding:"50px 20px",textAlign:"center"}} className="fi">
-      <div style={{fontSize:52,marginBottom:10}}>🔒</div>
-      <h2 className="hdr" style={{fontSize:22}}>SECCIÓN BLOQUEADA</h2>
-      <p style={{color:"var(--txt2)",fontSize:13,margin:"10px 0 20px"}}>{msg}</p>
-      <div style={{background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:10,padding:"14px 20px",display:"inline-block"}}>
-        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:filled===72?"var(--grn)":"var(--gold)"}}>{filled}/72</div>
-        <div style={{color:"var(--txt3)",fontSize:11}}>predicciones completadas</div>
-      </div>
-    </div>
-  );
-}
 
 export default function App(){
   const[user,setUser]=useState(null);
@@ -2517,12 +2504,6 @@ export default function App(){
   if(!user)return<><style>{CSS}</style><Login onLogin={login}/></>;
 
   const approved=isAdmin||users[user]?.approved;
-  const hardLocked=new Date()>=LOCK;
-  const myPreds=allPreds[user]||{};
-  const myFilled=M.filter(m=>{const p=myPreds[m.n]||{h:"",a:""};return p.h!==""&&p.a!==""}).length;
-  const isComplete=myFilled===72;
-  const canSeeAll=hardLocked||isComplete||isAdmin;
-  const canEdit=!hardLocked&&!isComplete;
 
   return(
     <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:60}}>
@@ -2550,11 +2531,11 @@ export default function App(){
           {!isAdmin&&!users[user]?.paid&&<div style={{maxWidth:700,margin:"16px auto 0",padding:"0 16px"}}><PayBanner/></div>}
           {view==="home"&&<Home users={users} results={results}/>}
           {view==="hoy"&&<HoyView users={users} results={results} allPreds={allPreds}/>}
-          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim} canEdit={canEdit} myFilled={myFilled}/>}
+          {view==="preds"&&(!isAdmin||!adminMode)&&<Preds currentUser={user} results={results} showAnim={showAnim}/>}
           {view==="preds"&&isAdmin&&adminMode&&<Admin users={users} setUsers={setUsers} results={results} setResults={setResults} allPreds={allPreds}/>}
-          {view==="table"&&(canSeeAll?<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>:<LockedView msg="Completá tus 72 predicciones para ver la tabla" filled={myFilled}/>)}
-          {view==="compare"&&(canSeeAll?<Compare users={users} results={results} allPreds={allPreds}/>:<LockedView msg="Completá tus 72 predicciones para comparar" filled={myFilled}/>)}
-          {view==="ia"&&(canSeeAll?<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>:<LockedView msg="Completá tus 72 predicciones para ver las IAs" filled={myFilled}/>)}
+          {view==="table"&&<Table users={users} results={results} currentUser={user} allPreds={allPreds}/>}
+          {view==="compare"&&<Compare users={users} results={results} allPreds={allPreds}/>}
+          {view==="ia"&&<IAView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
           {view==="chat"&&<Chat currentUser={user} users={users}/>}
           {view==="leagues"&&<Leagues users={users} allPreds={allPreds} results={results} currentUser={user}/>}
           {view==="map"&&<HostMapView results={results} isAdmin={isAdmin}/>}
@@ -2567,7 +2548,7 @@ export default function App(){
           </div>}
           {view==="rules"&&<Rules/>}
           {view==="podio"&&<PodiumView users={users} allPreds={allPreds} results={results}/>}
-          {view==="h2h"&&(canSeeAll?<HeadToHead users={users} allPreds={allPreds} results={results} currentUser={user}/>:<LockedView msg="Completá tus 72 predicciones para ver H2H" filled={myFilled}/>)}
+          {view==="h2h"&&<HeadToHead users={users} allPreds={allPreds} results={results} currentUser={user}/>}
           {view==="buscar"&&<PlayerSearch users={users} allPreds={allPreds} results={results} currentUser={user}/>}
           {view==="ranking"&&<RankingHistory users={users} allPreds={allPreds} results={results}/>}
           {view==="bracket"&&<BracketView results={results} allPreds={allPreds} users={users} currentUser={user}/>}
@@ -2812,4 +2793,3 @@ function BracketView({results,allPreds,users,currentUser}){
     </div>
   );
 }
-    
