@@ -1272,6 +1272,32 @@ function Chat({currentUser,users}){
 }
 
 
+// ═══════════════════════════════════════════════════════
+// HOST MAP DATA
+// ═══════════════════════════════════════════════════════
+const SEDES_DATA=[
+  {city:"Atlanta",stadium:"Mercedes-Benz Stadium",lon:-84.40,lat:33.755,country:"USA",games:8,type:"semi"},
+  {city:"Boston",stadium:"Gillette Stadium",lon:-71.26,lat:42.090,country:"USA",games:7,type:"cuartos"},
+  {city:"Dallas",stadium:"AT&T Stadium",lon:-97.09,lat:32.747,country:"USA",games:9,type:"semi"},
+  {city:"Houston",stadium:"NRG Stadium",lon:-95.41,lat:29.685,country:"USA",games:7,type:"octavos"},
+  {city:"Kansas City",stadium:"Arrowhead Stadium",lon:-94.48,lat:39.049,country:"USA",games:6,type:"cuartos"},
+  {city:"Los Angeles",stadium:"SoFi Stadium",lon:-118.34,lat:33.953,country:"USA",games:8,type:"cuartos"},
+  {city:"Miami",stadium:"Hard Rock Stadium",lon:-80.24,lat:25.957,country:"USA",games:7,type:"cuartos"},
+  {city:"Nueva York/NJ",stadium:"MetLife Stadium",lon:-74.07,lat:40.813,country:"USA",games:8,type:"final"},
+  {city:"Philadelphia",stadium:"Lincoln Financial Field",lon:-75.17,lat:39.901,country:"USA",games:6,type:"octavos"},
+  {city:"San Francisco",stadium:"Levi Stadium",lon:-121.97,lat:37.403,country:"USA",games:6,type:"octavos"},
+  {city:"Seattle",stadium:"Lumen Field",lon:-122.33,lat:47.595,country:"USA",games:6,type:"octavos"},
+  {city:"Ciudad de Mexico",stadium:"Estadio Azteca",lon:-99.15,lat:19.302,country:"MEX",games:5,type:"inaugural"},
+  {city:"Guadalajara",stadium:"Estadio Akron",lon:-103.46,lat:20.681,country:"MEX",games:4,type:"grupos"},
+  {city:"Monterrey",stadium:"Estadio BBVA",lon:-100.24,lat:25.668,country:"MEX",games:4,type:"grupos"},
+  {city:"Toronto",stadium:"BMO Field",lon:-79.42,lat:43.633,country:"CAN",games:6,type:"grupos"},
+  {city:"Vancouver",stadium:"BC Place",lon:-123.11,lat:49.276,country:"CAN",games:7,type:"octavos"},
+];
+const SEDE_COLORS={inaugural:"#f0d060",final:"#f0d060",semi:"#d4a843",cuartos:"#3b82f6",octavos:"#22c55e",grupos:"#6b8299"};
+const SEDE_LABELS={inaugural:"INAUGURAL",final:"FINAL",semi:"SEMIFINAL",cuartos:"CUARTOS",octavos:"OCTAVOS",grupos:"GRUPOS"};
+const MATCH_SEDE={1:"Ciudad de Mexico",2:"Guadalajara",3:"Toronto",4:"Los Angeles",5:"Nueva York/NJ",6:"Vancouver",7:"Boston",8:"San Francisco",9:"Houston",10:"Philadelphia",11:"Dallas",12:"Monterrey",13:"Atlanta",14:"Miami",15:"Seattle",16:"Los Angeles",17:"Nueva York/NJ",18:"Boston",19:"Kansas City",20:"San Francisco",21:"Dallas",22:"Atlanta",23:"Houston",24:"Seattle",25:"Houston",26:"Toronto",27:"Toronto",28:"Ciudad de Mexico",29:"Nueva York/NJ",30:"Boston",31:"Dallas",32:"Seattle",33:"Philadelphia",34:"Houston",35:"Dallas",36:"Monterrey",37:"Atlanta",38:"Miami",39:"Los Angeles",40:"Vancouver",41:"Kansas City",42:"San Francisco",43:"Kansas City",44:"San Francisco",45:"Boston",46:"Atlanta",47:"Houston",48:"Seattle",49:"Philadelphia",50:"Dallas",51:"Toronto",52:"Toronto",53:"Ciudad de Mexico",54:"Guadalajara",55:"Philadelphia",56:"Houston",57:"Monterrey",58:"Dallas",59:"Seattle",60:"Los Angeles",61:"Nueva York/NJ",62:"Boston",63:"Vancouver",64:"Los Angeles",65:"Atlanta",66:"Miami",67:"Boston",68:"Atlanta",69:"Kansas City",70:"San Francisco",71:"Seattle",72:"Houston"};
+
+
 function projectNA(lon,lat){
   const W=1000,H=520,scale=640;
   const x=(lon-(-97))*(Math.PI/180)*scale+W/2;
