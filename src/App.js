@@ -40,6 +40,10 @@ const M = [
   {n:69,d:"27/06",t:"23:00",g:"J",h:"Jordania",a:"Argentina"},{n:70,d:"27/06",t:"23:00",g:"J",h:"Argelia",a:"Austria"},
 ]
 const FL={"México":"🇲🇽","Sudáfrica":"🇿🇦","Corea del Sur":"🇰🇷","Chequia":"🇨🇿","Canadá":"🇨🇦","Bosnia":"🇧🇦","Qatar":"🇶🇦","Suiza":"🇨🇭","Brasil":"🇧🇷","Marruecos":"🇲🇦","Haití":"🇭🇹","Escocia":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Estados Unidos":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Turquía":"🇹🇷","Alemania":"🇩🇪","Curazao":"🇨🇼","Costa de Marfil":"🇨🇮","Ecuador":"🇪🇨","Países Bajos":"🇳🇱","Japón":"🇯🇵","Suecia":"🇸🇪","Túnez":"🇹🇳","España":"🇪🇸","Cabo Verde":"🇨🇻","Arabia Saudita":"🇸🇦","Uruguay":"🇺🇾","Bélgica":"🇧🇪","Egipto":"🇪🇬","Irán":"🇮🇷","Nueva Zelanda":"🇳🇿","Francia":"🇫🇷","Senegal":"🇸🇳","Irak":"🇮🇶","Noruega":"🇳🇴","Argentina":"🇦🇷","Argelia":"🇩🇿","Austria":"🇦🇹","Jordania":"🇯🇴","Inglaterra":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croacia":"🇭🇷","Ghana":"🇬🇭","Panamá":"🇵🇦","Portugal":"🇵🇹","RD Congo":"🇨🇩","Uzbekistán":"🇺🇿","Colombia":"🇨🇴"};
+
+const API_NAMES={"Mexico":"México","South Korea":"Corea del Sur","Czech Republic":"Chequia","Czechia":"Chequia","Canada":"Canadá","Bosnia and Herzegovina":"Bosnia","Bosnia-Herzegovina":"Bosnia","Switzerland":"Suiza","Brazil":"Brasil","Morocco":"Marruecos","Haiti":"Haití","Scotland":"Escocia","United States":"Estados Unidos","USA":"Estados Unidos","Paraguay":"Paraguay","Australia":"Australia","Turkey":"Turquía","Türkiye":"Turquía","Germany":"Alemania","Curaçao":"Curazao","Curacao":"Curazao","Ivory Coast":"Costa de Marfil","Côte d'Ivoire":"Costa de Marfil","Ecuador":"Ecuador","Netherlands":"Países Bajos","Japan":"Japón","Sweden":"Suecia","Tunisia":"Túnez","Spain":"España","Cape Verde":"Cabo Verde","Cabo Verde":"Cabo Verde","Saudi Arabia":"Arabia Saudita","Uruguay":"Uruguay","Belgium":"Bélgica","Egypt":"Egipto","Iran":"Irán","New Zealand":"Nueva Zelanda","France":"Francia","Senegal":"Senegal","Iraq":"Irak","Norway":"Noruega","Argentina":"Argentina","Algeria":"Argelia","Austria":"Austria","Jordan":"Jordania","England":"Inglaterra","Croatia":"Croacia","Ghana":"Ghana","Panama":"Panamá","Portugal":"Portugal","DR Congo":"RD Congo","Congo DR":"RD Congo","Uzbekistan":"Uzbekistán","Colombia":"Colombia","South Africa":"Sudáfrica"};
+  const toLocal=(name)=>API_NAMES[name]||name;
+
 const ADMIN_U="ranieri",ADMIN_P="R.anieri58";
 const LOCK=new Date("2026-06-09T22:00:00-03:00");
 const PAY_DL=new Date("2026-06-08T23:59:59-03:00");
@@ -307,44 +311,142 @@ function Login({onLogin}){
   );
 }
 
-function HoyView({users,results,allPreds}){
+function HoyView({users,results,setResults,allPreds}){
+  const[liveScores,setLiveScores]=useState({});
+  const[liveStatus,setLiveStatus]=useState({});
+  const[lastFetch,setLastFetch]=useState("");
+  const[fetching,setFetching]=useState(false);
+
   const now=new Date();
   const todayStr=`${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}`;
   const todayM=M.filter(m=>m.d===todayStr);
   const paid=Object.entries(users).filter(([id,u])=>u.approved&&u.paid&&!AI_IDS.includes(id));
+
+  const fetchLive=useCallback(async()=>{
+    setFetching(true);
+    try{
+      const res=await fetch("https://api.football-data.org/v4/competitions/2000/matches?season=2026",{headers:{"X-Auth-Token":"b865d776d42047e7a862a37bb4b84868"}});
+      if(!res.ok)throw new Error("API "+res.status);
+      const data=await res.json();
+      const scores={};const statuses={};const updated={...results};let saved=false;
+      (data.matches||[]).forEach(m=>{
+        const hN=toLocal(m.homeTeam?.name||"");
+        const aN=toLocal(m.awayTeam?.name||"");
+        const match=M.find(mm=>(mm.h===hN&&mm.a===aN)||(mm.h===aN&&mm.a===hN));
+        if(!match)return;
+        const st=m.status;
+        statuses[match.n]=st;
+        if(st==="IN_PLAY"||st==="PAUSED"||st==="HALFTIME"||st==="LIVE"){
+          scores[match.n]={h:String(m.score?.fullTime?.home??m.score?.halfTime?.home??0),a:String(m.score?.fullTime?.away??m.score?.halfTime?.away??0),min:m.minute||""};
+        }
+        if(st==="FINISHED"&&m.score?.fullTime){
+          const r={h:String(m.score.fullTime.home),a:String(m.score.fullTime.away)};
+          scores[match.n]=r;
+          if(!updated[match.n]||updated[match.n].h===""){updated[match.n]=r;saved=true;}
+        }
+      });
+      setLiveScores(scores);setLiveStatus(statuses);
+      if(saved){setResults(updated);await dbSet("results",updated);}
+      setLastFetch(new Date().toLocaleTimeString());
+    }catch(e){console.error("Live fetch error:",e);}
+    setFetching(false);
+  },[results,setResults]);
+
+  // Poll every 60s
+  useEffect(()=>{
+    fetchLive();
+    const iv=setInterval(fetchLive,30000);
+    return()=>clearInterval(iv);
+  },[]);
+
+  // Points calculation helpers
   const exactToday=[];
-  todayM.forEach(m=>{const r=results[m.n]||{h:"",a:""};if(r.h===""||r.a==="")return;paid.forEach(([id,u])=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};if(calcPts(p,r)===3)exactToday.push({name:u.name,match:`${FL[m.h]||""}${m.h} ${r.h}-${r.a} ${m.a}${FL[m.a]||""}`});});});
+  todayM.forEach(m=>{const r=results[m.n]||liveScores[m.n]||{h:"",a:""};if(r.h===""||r.a==="")return;paid.forEach(([id,u])=>{const p=(allPreds[id]||{})[m.n]||{h:"",a:""};if(calcPts(p,r)===3)exactToday.push({name:u.name,match:`${FL[m.h]||""}${m.h} ${r.h}-${r.a} ${m.a}${FL[m.a]||""}`});});});
   const top3=paid.map(([id,u])=>({name:u.name,...calcTotal(allPreds[id]||{},results)})).sort(cmp).slice(0,3);
+
+  const getStatus=(n)=>{
+    const st=liveStatus[n];
+    if(st==="IN_PLAY"||st==="LIVE")return{label:"🔴 EN VIVO",color:"#ef4444"};
+    if(st==="HALFTIME"||st==="PAUSED")return{label:"🟡 ENTRETIEMPO",color:"#f59e0b"};
+    if(st==="FINISHED")return{label:"✅ FINAL",color:"#22c55e"};
+    return{label:"⏳ "+todayM.find(m=>m.n===n)?.t+"h",color:"var(--txt3)"};
+  };
+
   return(
     <div style={{maxWidth:780,margin:"0 auto",padding:"24px 16px"}} className="fi">
-      <h2 className="hdr" style={{fontSize:26,textAlign:"center",marginBottom:18}}>📅 HOY — {todayStr}</h2>
-      <div className="card" style={{marginBottom:12}}>
-        <h3 className="hdr" style={{fontSize:15,marginBottom:10}}>⚽ PARTIDOS DE HOY</h3>
-        {todayM.length===0?<p style={{color:"var(--txt3)",fontSize:13}}>No hay partidos hoy.</p>:todayM.map(m=>{const r=results[m.n]||{h:"",a:""};const hr=r.h!==""&&r.a!=="";return(
-          <div key={m.n} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid var(--bd)22"}}>
-            <span style={{color:"var(--txt3)",fontSize:10,minWidth:28}}>#{m.n}</span>
-            <span className="tg" style={{background:"var(--bd)",color:"var(--gold)",fontSize:9}}>G{m.g}</span>
-            <span style={{color:"var(--txt3)",fontSize:10,minWidth:40}}>{m.t}h</span>
-            <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-              <span style={{fontSize:11,flex:1,textAlign:"right"}}>{FL[m.h]||""} {m.h}</span>
-              {hr?<span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"var(--gold)",minWidth:44,textAlign:"center"}}>{r.h} - {r.a}</span>:<span style={{color:"var(--txt3)",fontSize:11,minWidth:44,textAlign:"center"}}>vs</span>}
-              <span style={{fontSize:11,flex:1}}>{m.a} {FL[m.a]||""}</span>
-            </div>
-          </div>
-        );})}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <h2 className="hdr" style={{fontSize:26}}>📅 HOY — {todayStr}</h2>
+          {Object.values(liveStatus).some(s=>s==="IN_PLAY"||s==="LIVE"||s==="HALFTIME"||s==="PAUSED")&&
+            <span style={{display:"inline-flex",alignItems:"center",gap:4,background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.4)",borderRadius:6,padding:"3px 10px",fontSize:11,fontWeight:700,color:"#ef4444",animation:"pls 2s infinite"}}>🔴 EN VIVO</span>}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{color:"var(--txt3)",fontSize:9}}>{fetching?"Actualizando...":lastFetch?"Últ: "+lastFetch:"Conectando..."}</span>
+          <span style={{width:6,height:6,borderRadius:"50%",background:lastFetch?"#22c55e":"#f59e0b",animation:fetching?"pls 1s infinite":"none"}}/>
+        </div>
       </div>
-      <div className="card" style={{marginBottom:12}}>
+
+      {todayM.length===0?<div className="card"><p style={{color:"var(--txt3)",fontSize:13}}>No hay partidos hoy.</p></div>:
+      todayM.map(m=>{
+        const r=results[m.n]||liveScores[m.n]||{h:"",a:""};
+        const hr=r.h!==""&&r.a!=="";
+        const live=liveScores[m.n];
+        const st=getStatus(m.n);
+        return(
+          <div key={m.n} className="card" style={{marginBottom:10,padding:"12px 14px"}}>
+            {/* Match header */}
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:hr?10:0}}>
+              <span className="tg" style={{background:"var(--bd)",color:"var(--gold)",fontSize:9}}>G{m.g}</span>
+              <span style={{fontSize:11,color:st.color,fontWeight:700,letterSpacing:1,fontFamily:"'Bebas Neue',sans-serif"}}>{st.label}</span>
+              {live?.min&&<span style={{color:"var(--txt3)",fontSize:10}}>min {live.min}</span>}
+              <span style={{flex:1}}/>
+              <span style={{color:"var(--txt3)",fontSize:10}}>#{m.n}</span>
+            </div>
+            {/* Score */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"6px 0"}}>
+              <span style={{fontSize:14,flex:1,textAlign:"right",fontWeight:600,color:"var(--wht)"}}>{FL[m.h]||""} {m.h}</span>
+              {hr||live?
+                <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:st.color==="var(--txt3)"?"var(--gold)":st.color,minWidth:60,textAlign:"center"}}>{(live||r).h} - {(live||r).a}</span>:
+                <span style={{color:"var(--txt3)",fontSize:14,minWidth:60,textAlign:"center"}}>vs</span>}
+              <span style={{fontSize:14,flex:1,fontWeight:600,color:"var(--wht)"}}>{m.a} {FL[m.a]||""}</span>
+            </div>
+            {/* Per-user predictions + points */}
+            {hr&&<div style={{borderTop:"1px solid var(--bd)",paddingTop:8,marginTop:4}}>
+              <div style={{fontSize:9,color:"var(--txt3)",letterSpacing:1.5,fontFamily:"'Bebas Neue',sans-serif",marginBottom:6}}>PREDICCIONES</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:4}}>
+                {paid.map(([id,u])=>{
+                  const p=(allPreds[id]||{})[m.n]||{h:"",a:""};
+                  const hp=p.h!==""&&p.a!=="";
+                  const pt=hp?calcPts(p,r):null;
+                  const bg=pt===3?"rgba(34,197,94,.15)":pt===1?"rgba(245,158,11,.12)":pt===0?"rgba(220,53,69,.1)":"var(--bg)";
+                  const clr=pt===3?"#22c55e":pt===1?"#f59e0b":pt===0?"#dc3545":"var(--txt3)";
+                  return(
+                    <div key={id} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px",background:bg,borderRadius:5,border:"1px solid "+clr+"33"}}>
+                      <span style={{fontSize:11,color:"var(--txt)",flex:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.name}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:clr,fontFamily:"'Bebas Neue',sans-serif",minWidth:28,textAlign:"center"}}>{hp?p.h+"-"+p.a:"—"}</span>
+                      {pt!==null&&<span style={{fontSize:10,fontWeight:700,color:clr,minWidth:16,textAlign:"right"}}>+{pt}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>}
+          </div>
+        );
+      })}
+
+      {exactToday.length>0&&<div className="card" style={{marginBottom:10}}>
         <h3 className="hdr" style={{fontSize:15,marginBottom:10}}>🎯 EXACTOS DEL DÍA</h3>
-        {exactToday.length===0?<p style={{color:"var(--txt3)",fontSize:12}}>Todavía no hay exactos hoy.</p>:exactToday.map((e,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid var(--bd)22"}}>
+        {exactToday.map((e,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(22,40,69,.5)"}}>
             <span>🎯</span><span style={{fontWeight:700,color:"var(--wht)",fontSize:12}}>{e.name}</span><span style={{color:"var(--txt3)",fontSize:11}}>{e.match}</span>
           </div>
         ))}
-      </div>
+      </div>}
+
       <div className="card">
         <h3 className="hdr" style={{fontSize:15,marginBottom:10}}>🏆 TOP 3 GENERAL</h3>
-        {top3.length===0?<p style={{color:"var(--txt3)",fontSize:12}}>La tabla se activa el 9/06.</p>:top3.map((r,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderBottom:i<2?"1px solid var(--bd)22":"none"}}>
+        {top3.length===0?<p style={{color:"var(--txt3)",fontSize:12}}>Sin resultados todavía.</p>:top3.map((r,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderBottom:i<2?"1px solid rgba(22,40,69,.5)":"none"}}>
             <span style={{fontSize:18}}>{i===0?"🥇":i===1?"🥈":"🥉"}</span>
             <span style={{fontWeight:700,color:i===0?"var(--gold)":"var(--wht)",fontSize:13,flex:1}}>{r.name}</span>
             <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"var(--wht)"}}>{r.tot}</span>
@@ -355,6 +457,7 @@ function HoyView({users,results,allPreds}){
     </div>
   );
 }
+
 
 function Preds({currentUser,results,showAnim}){
   const[preds,setPreds]=useState({});const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);const[filter,setFilter]=useState("all");
@@ -1977,9 +2080,7 @@ function Admin({users,setUsers,results,setResults,allPreds}){
   const pay=async(id,p)=>{const u={...users,[id]:{...users[id],paid:p}};setUsers(u);await dbSet("users",u)};
   const chgR=(n,side,val)=>{const v=val.replace(/[^0-9]/g,"").slice(0,2);setLocalR(p=>({...p,[n]:{...(p[n]||{h:"",a:""}),[side]:v}}))};
   const saveR=async()=>{setSaving(true);setResults(localR);await dbSet("results",localR);setSaving(false)};
-  const API_NAMES={"Mexico":"México","South Korea":"Corea del Sur","Czech Republic":"Chequia","Czechia":"Chequia","Canada":"Canadá","Bosnia and Herzegovina":"Bosnia","Bosnia-Herzegovina":"Bosnia","Switzerland":"Suiza","Brazil":"Brasil","Morocco":"Marruecos","Haiti":"Haití","Scotland":"Escocia","United States":"Estados Unidos","USA":"Estados Unidos","Paraguay":"Paraguay","Australia":"Australia","Turkey":"Turquía","Türkiye":"Turquía","Germany":"Alemania","Curaçao":"Curazao","Curacao":"Curazao","Ivory Coast":"Costa de Marfil","Côte d'Ivoire":"Costa de Marfil","Ecuador":"Ecuador","Netherlands":"Países Bajos","Japan":"Japón","Sweden":"Suecia","Tunisia":"Túnez","Spain":"España","Cape Verde":"Cabo Verde","Cabo Verde":"Cabo Verde","Saudi Arabia":"Arabia Saudita","Uruguay":"Uruguay","Belgium":"Bélgica","Egypt":"Egipto","Iran":"Irán","New Zealand":"Nueva Zelanda","France":"Francia","Senegal":"Senegal","Iraq":"Irak","Norway":"Noruega","Argentina":"Argentina","Algeria":"Argelia","Austria":"Austria","Jordan":"Jordania","England":"Inglaterra","Croatia":"Croacia","Ghana":"Ghana","Panama":"Panamá","Portugal":"Portugal","DR Congo":"RD Congo","Congo DR":"RD Congo","Uzbekistan":"Uzbekistán","Colombia":"Colombia","South Africa":"Sudáfrica"};
-  const toLocal=(name)=>API_NAMES[name]||name;
-  const fetchLive=async()=>{setLiveLoading(true);setLiveMsg("Consultando API...");try{const res=await fetch("https://api.football-data.org/v4/competitions/2000/matches?season=2026",{headers:{"X-Auth-Token":"b865d776d42047e7a862a37bb4b84868"}});if(!res.ok)throw new Error("API "+res.status);const data=await res.json();const updated={...localR};let count=0;data.matches?.forEach(m=>{if(m.status==="FINISHED"&&m.score?.fullTime){const hN=toLocal(m.homeTeam?.name||"");const aN=toLocal(m.awayTeam?.name||"");const match=M.find(mm=>(mm.h===hN&&mm.a===aN)||(mm.h===aN&&mm.a===hN));if(match){updated[match.n]={h:String(m.score.fullTime.home??0),a:String(m.score.fullTime.away??0)};count++;}}});setLocalR(updated);setResults(updated);await dbSet("results",updated);setLiveMsg(count>0?"✓ "+count+" resultados actualizados":"No hay partidos finalizados aún (arranca el 11/06)");}catch(e){setLiveMsg("Error API: "+e.message+". Cargá manual.");} setLiveLoading(false);};
+    const fetchLive=async()=>{setLiveLoading(true);setLiveMsg("Consultando API...");try{const res=await fetch("https://api.football-data.org/v4/competitions/2000/matches?season=2026",{headers:{"X-Auth-Token":"b865d776d42047e7a862a37bb4b84868"}});if(!res.ok)throw new Error("API "+res.status);const data=await res.json();const updated={...localR};let count=0;data.matches?.forEach(m=>{if(m.status==="FINISHED"&&m.score?.fullTime){const hN=toLocal(m.homeTeam?.name||"");const aN=toLocal(m.awayTeam?.name||"");const match=M.find(mm=>(mm.h===hN&&mm.a===aN)||(mm.h===aN&&mm.a===hN));if(match){updated[match.n]={h:String(m.score.fullTime.home??0),a:String(m.score.fullTime.away??0)};count++;}}});setLocalR(updated);setResults(updated);await dbSet("results",updated);setLiveMsg(count>0?"✓ "+count+" resultados actualizados":"No hay partidos finalizados aún (arranca el 11/06)");}catch(e){setLiveMsg("Error API: "+e.message+". Cargá manual.");} setLiveLoading(false);};
   const dlAll=()=>{
     const approved=Object.entries(users).filter(([id,u])=>u.approved&&!AI_IDS.includes(id));
     let c="PRODE MUNDIAL 2026 - Backup Admin\n\n";
