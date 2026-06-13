@@ -2791,5 +2791,4 @@ function BracketView({results,allPreds,users,currentUser}){
       {tab==="bracket"&&!groupsDone&&<div style={{textAlign:"center",padding:40}}><div style={{fontSize:40,marginBottom:10}}>⏳</div><h3 className="hdr" style={{fontSize:18}}>FASE DE GRUPOS EN CURSO</h3><p style={{color:"var(--txt3)",fontSize:13,marginTop:6}}>El bracket de eliminatorias aparece cuando terminen todos los grupos.</p></div>}
     </div>
   );
-}const M=[
-]mport React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+}
